@@ -43,6 +43,7 @@ func translateOllama(inputFilePath string, outputFilePath string) {
 		translation, err := ChatgptOllama(line)
 		fmt.Print("开始通过ollama进行转换prompt，当前正在转换第", i, "段\n")
 		if err != nil {
+			log.Fatal("转换失败:", err)
 			return
 		}
 		jsonContent = append(jsonContent, map[string]string{

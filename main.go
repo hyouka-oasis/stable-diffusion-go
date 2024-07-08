@@ -18,6 +18,7 @@ func main() {
 	global.OriginBookPath = bookName + ".txt"
 	global.BookPath = global.OutPath + global.OriginBookPath
 	global.BookJsonPath = global.OutPath + bookName + ".json"
+	global.BookMp3Path = global.OutPath + bookName + ".mp3"
 	// 1. 读取测试.txt文件
 	file, err := os.Open(global.OriginBookPath)
 	fmt.Print("开始读取:" + bookName + "\n")
@@ -39,6 +40,8 @@ func main() {
 	core.ProcessText()
 	// 4. 翻译文本
 	core.Translate()
+	// 5.翻译成功后进行字幕提取
+	core.TextToSrt()
 	// 5.调用
-	core.StableDiffusion()
+	//core.StableDiffusion()
 }

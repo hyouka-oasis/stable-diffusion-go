@@ -35,10 +35,6 @@ func processLines(inputFilePath string, outputFilePath string) {
 		log.Fatal("写入文件失败:", err)
 		return
 	}
-	//err = os.WriteFile(outputFilePath, []byte(processedContent), 0644)
-	//if err != nil {
-	//	log.Fatal("写入文件失败:", err)
-	//}
 }
 
 func readFileContent(file *os.File) *bufio.Scanner {

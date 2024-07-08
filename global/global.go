@@ -11,4 +11,5 @@ var (
 	OriginBookPath string
 	BookJsonPath   string
 	BookPath       string
+	BookMp3Path    string
 )
