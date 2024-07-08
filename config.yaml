@@ -21,7 +21,7 @@ audio:
   limit: 18
   # 角色 终端输入 edge-tts --list-voices 可以查看所有声音
   # 推荐 zh-CN-YunxiNeural 男  zh-CN-XiaoyiNeural  一般  女  zh-CN-XiaoxiaoNeural 最好  女
-  voice: ja-JP-KeitaNeural
+  voice: zh-CN-YunxiNeural
   # 语速
   rate: +30%
   # 音量

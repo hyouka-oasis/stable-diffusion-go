@@ -9,6 +9,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
+	"strings"
 	"sync"
 	"time"
 )
@@ -51,7 +53,7 @@ func processTextToSrt() {
 
 func createVoiceSrt(name string, fileContent string) (err error) {
 	if len(fileContent) <= 0 {
-		return errors.New("错误的内容")
+		return errors.New("错误的内容1")
 	}
 	voice := global.Config.Audio.Voice
 	rate := global.Config.Audio.Rate
@@ -59,6 +61,38 @@ func createVoiceSrt(name string, fileContent string) (err error) {
 	pitch := global.Config.Audio.Pitch
 	proxyURL := global.Config.Audio.ProxyUrl
 	bookMp3Path := global.BookMp3Path
+	bookMp3SrtPath := global.BookMp3SrtPath
+	bookPath := global.BookPath
+	content, err := os.ReadFile(bookPath)
+	if err != nil {
+		fmt.Println("打开文件错误", err)
+		return
+	}
+	fmt.Print(string(content))
+	text := strings.TrimSpace(string(content))
+	if err != nil {
+		return
+	}
+	cmd := exec.Command("edge-tts", "--text", string(text))
+	// 添加可选参数
+	if voice != "" {
+		cmd.Args = append(cmd.Args, "--voice", voice) // 角色
+	}
+	if rate != "" {
+		cmd.Args = append(cmd.Args, "--rate", rate+"%") // 语速
+	}
+	if volume != "" {
+		cmd.Args = append(cmd.Args, "--volume", volume+"%") // 音量
+	}
+	if pitch != "" {
+		cmd.Args = append(cmd.Args, "--pitch", pitch) // 分贝
+	}
+	cmd.Args = append(cmd.Args, "--write-subtitles", bookMp3SrtPath)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf(string(output))
+		return err
+	}
 	connOptions := []edge_tts.CommunicateOption{
 		edge_tts.SetVoice(voice),
 		edge_tts.SetRate(rate),

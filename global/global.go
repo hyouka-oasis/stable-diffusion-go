@@ -12,4 +12,5 @@ var (
 	BookJsonPath   string
 	BookPath       string
 	BookMp3Path    string
+	BookMp3SrtPath string
 )

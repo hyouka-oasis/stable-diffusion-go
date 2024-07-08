@@ -19,6 +19,7 @@ func main() {
 	global.BookPath = global.OutPath + global.OriginBookPath
 	global.BookJsonPath = global.OutPath + bookName + ".json"
 	global.BookMp3Path = global.OutPath + bookName + ".mp3"
+	global.BookMp3SrtPath = global.OutPath + bookName + ".srt"
 	// 1. 读取测试.txt文件
 	file, err := os.Open(global.OriginBookPath)
 	fmt.Print("开始读取:" + bookName + "\n")
