@@ -3,8 +3,40 @@ import argparse
 import asyncio
 import aiofiles
 import re
+import os
+from datetime import datetime
 
+async def time_difference(time1, time2, time_format=r"%H:%M:%S.%f"):
+    time1 = datetime.strptime(time1, time_format)
+    time2 = datetime.strptime(time2, time_format)
+    print()
+    # 计算时间差
+    delta = time2 - time1
+    time_diff = str(delta)[:11]
+    return time_diff
 
+async def srt_to_list(filename):
+    subtitles = []  # 存储最终结果的列表
+    text = []  # 临时存储当前字幕块的文本行
+    time_code = None  # 初始化时间码变量
+
+    with open(filename, "r", encoding="utf-8") as file:
+        for line in file:
+            line = line.strip()  # 移除行首尾的空白字符
+
+            if "-->" in line:  # 检测时间码行
+                if text:  # 如果前一个字幕块的文本已经读取，存储前一个字幕块
+                    subtitles.append((time_code, " ".join(text)))
+                    text = []  # 重置文本列表为下一个字幕块做准备
+                time_code = line  # 更新时间码
+
+            elif line:  # 非空行即为字幕文本行
+                text.append(line)
+
+        # 添加文件末尾的最后一个字幕块（如果有）
+        if text:
+            subtitles.append((time_code, " ".join(text)))
+    return subtitles
 
 class SubMarker(edge_tts.SubMaker):
 
@@ -20,6 +52,7 @@ class SubMarker(edge_tts.SubMaker):
         print(text, "获取到的文本")
         # 定义要指定的字符
         punctuation = ["，", "。", "！", "？", "；", "：", "”", ",", "!", "…", "+", "-"]
+
         def clause():
             start = 0
             i = 0
@@ -57,7 +90,6 @@ class SubMarker(edge_tts.SubMaker):
         return data
 
 
-
 """
 text_path 文本路径
 mp3_path 输出的音频路径
@@ -70,22 +102,51 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
 
     communicate = edge_tts.Communicate(
         text=content,
-        voice=edge_tts_args.voice,
-        rate="+30%",
-        volume="+100%"
+        voice="Microsoft Server Speech Text to Speech Voice (en-US, AriaNeural)" if edge_tts_args[0] is None else edge_tts_args[0],
+        rate="+0%" if edge_tts_args[1] is None else edge_tts_args[1],
+        volume="+0%" if edge_tts_args[2] is None else edge_tts_args[2],
+        pitch="+0Hz" if edge_tts_args[3] is None else edge_tts_args[3],
     )
     sub_marker = SubMarker()
+    #写入音频文件
     async with aiofiles.open(mp3_path, "wb") as file:
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 await file.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
                 sub_marker.create_sub((chunk["offset"], chunk["duration"]), chunk["text"])
+    #写入字幕文件
     async with aiofiles.open(srt_path, "w", encoding="utf-8") as file:
         content_to_write = await sub_marker.generate_cn_subs(content)
         await file.write(content_to_write)
-
-
+# 生成字幕时间列表
+async def create_processing_time(srt_path, text_path):
+    subtitles = await srt_to_list(srt_path)
+    with open(text_path, "r", encoding="utf-8") as f:
+        section_list = f.readlines()
+        section_time_list = []
+        index_ = 0
+        time = "00:00:00.000"
+        for si, section in enumerate(section_list):
+            if len(section_list) == si + 1:
+                # 最后这段不处理 默认使用剩余所有time
+                next_start_time = subtitles[-1][0].split(" --> ")[1]
+                diff = await time_difference(time, next_start_time)
+                section_time_list.append(diff)
+                break
+            content_ = await SubMarker().remove_non_chinese_chars(section)
+            for i, v in enumerate(subtitles):
+                if i <= index_:
+                    continue
+                if v[1] not in content_:
+                    next_start_time = v[0].split(" --> ")[0]
+                    diff = await time_difference(time, next_start_time)
+                    section_time_list.append(diff)
+                    index_ = i
+                    time = next_start_time
+                    break
+        with open(os.path.join("测试time.txt"), "w", encoding="utf-8") as f3:
+            f3.write(str(section_time_list))
 # 初始化edge_tts
 async def create_voice_caption():
     parser = argparse.ArgumentParser()
@@ -108,7 +169,8 @@ async def create_voice_caption():
     if srt_path is None:
         raise Exception("字幕输出路径不能为空")
     voice, rate, volume, pitch = args.voice, args.rate, args.volume, args.pitch
+    # 通过edge-tts生成音频和字幕
     await edge_tts_create_srt(text_path, mp3_path, srt_path, voice, rate, volume, pitch)
-
-
+    # 通过字幕生成时间表
+    await create_processing_time(srt_path, text_path)
 asyncio.run(create_voice_caption())

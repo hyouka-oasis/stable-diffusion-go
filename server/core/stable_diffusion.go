@@ -18,11 +18,12 @@ type Response struct {
 	Images []string `json:"images"`
 }
 
-func StableDiffusion() {
+func StableDiffusion() (err error) {
 	// 读取 JSON 文件内容
 	jsonContent, err := os.ReadFile(global.OutBookJsonPath)
 	if err != nil {
 		log.Fatal("读取 JSON 文件失败:", err)
+		return err
 	}
 
 	// 解析 JSON 数据
@@ -30,18 +31,21 @@ func StableDiffusion() {
 	err = json.Unmarshal(jsonContent, &jsonData)
 	if err != nil {
 		log.Fatal("解析 JSON 数据失败:", err)
+		return err
 	}
 
 	// 读取 Stable Diffusion 配置文件
 	stableDiffusionConfig, err := os.ReadFile("stable_diffusion.json")
 	if err != nil {
 		log.Fatal("读取 Stable Diffusion 配置文件失败:", err)
+		return err
 	}
 	// 解析 Stable Diffusion 配置
 	var stableDiffusionParams map[string]interface{}
 	err = json.Unmarshal(stableDiffusionConfig, &stableDiffusionParams)
 	if err != nil {
 		log.Fatal("解析 Stable Diffusion 配置失败:", err)
+		return err
 	}
 	height := global.Config.StableDiffusionConfig.Height
 	width := global.Config.StableDiffusionConfig.Width
@@ -50,7 +54,6 @@ func StableDiffusion() {
 	for index, data := range jsonData {
 		wg.Add(1)
 		go func(index int, data map[string]string) {
-			defer wg.Done()
 			// 构造 Stable Diffusion 请求参数
 			request := map[string]interface{}{
 				"prompt":          data["prompt"],
@@ -64,12 +67,15 @@ func StableDiffusion() {
 			}
 			// 发送请求并生成图片
 			err := generateImage(request, index)
+			defer wg.Done()
 			if err != nil {
 				log.Fatal("生成图片失败:", err)
+				return
 			}
 		}(index+1, data)
 	}
 	wg.Wait()
+	return nil
 }
 
 // 生成图片函数
