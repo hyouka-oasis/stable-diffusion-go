@@ -1,9 +1,9 @@
 package core
 
 import (
-	"ComicTweetsGo/global"
 	"bufio"
 	"fmt"
+	"github/stable-diffusion-go/server/global"
 	"log"
 	"os"
 	"strings"
@@ -16,7 +16,7 @@ func ProcessText() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		processLines(global.OriginBookPath, global.BookPath)
+		processLines(global.OriginBookPath, global.OutBookPath)
 	}()
 	wg.Wait()
 }

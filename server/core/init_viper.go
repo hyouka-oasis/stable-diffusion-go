@@ -1,10 +1,10 @@
 package core
 
 import (
-	"ComicTweetsGo/global"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	"github/stable-diffusion-go/server/global"
 )
 
 func InitPiver() *viper.Viper {

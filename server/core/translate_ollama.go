@@ -1,9 +1,9 @@
 package core
 
 import (
-	"ComicTweetsGo/global"
 	"context"
 	"github.com/sashabaranov/go-openai"
+	"github/stable-diffusion-go/server/global"
 	"log"
 )
 

@@ -1,25 +1,17 @@
 package main
 
 import (
-	"ComicTweetsGo/core"
-	"ComicTweetsGo/global"
 	"fmt"
+	"github/stable-diffusion-go/server/core"
+	"github/stable-diffusion-go/server/global"
 	"log"
 	"os"
 )
 
-// ... (OpenAI API key and endpoint)
-
 func main() {
 	core.InitPiver()
 	bookName := global.Config.Book.Name
-	global.OutPath = bookName + "/participle/"
-	global.ImagesPath = bookName + "/images/"
-	global.OriginBookPath = bookName + ".txt"
-	global.BookPath = global.OutPath + global.OriginBookPath
-	global.BookJsonPath = global.OutPath + bookName + ".json"
-	global.BookMp3Path = global.OutPath + bookName + ".mp3"
-	global.BookMp3SrtPath = global.OutPath + bookName + ".srt"
+	core.InitGlobalConfig()
 	// 1. 读取测试.txt文件
 	file, err := os.Open(global.OriginBookPath)
 	fmt.Print("开始读取:" + bookName + "\n")
@@ -27,13 +19,16 @@ func main() {
 		log.Fatal("文件不存在:", err)
 	}
 	defer file.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 	// 2. 创建participle目录
 	err = core.EnsureDirectory(global.OutPath)
 	if err != nil {
 		log.Fatal("创建目录失败:", err)
 	}
 	// 2. 创建participle目录
-	err = core.EnsureDirectory(global.ImagesPath)
+	err = core.EnsureDirectory(global.OutImagesPath)
 	if err != nil {
 		log.Fatal("创建图片目录失败:", err)
 	}

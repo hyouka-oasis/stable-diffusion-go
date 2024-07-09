@@ -1,11 +1,11 @@
 package core
 
 import (
-	"ComicTweetsGo/global"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github/stable-diffusion-go/server/global"
 	"io"
 	"log"
 	"net/http"
@@ -20,7 +20,7 @@ type Response struct {
 
 func StableDiffusion() {
 	// 读取 JSON 文件内容
-	jsonContent, err := os.ReadFile(global.BookJsonPath)
+	jsonContent, err := os.ReadFile(global.OutBookJsonPath)
 	if err != nil {
 		log.Fatal("读取 JSON 文件失败:", err)
 	}
@@ -104,7 +104,7 @@ func generateImage(request map[string]interface{}, index int) error {
 	// 将 base64 编码的字符串解码为 []byte
 	imageData, err := base64.StdEncoding.DecodeString(image)
 	// 保存图片
-	imagePath := filepath.Join(global.ImagesPath, fmt.Sprintf("%d.png", index))
+	imagePath := filepath.Join(global.OutImagesPath, fmt.Sprintf("%d.png", index))
 	err = os.WriteFile(imagePath, imageData, 0644)
 	if err != nil {
 		log.Fatalf("保存图片失败: %v", err)

@@ -1,4 +1,4 @@
-module ComicTweetsGo
+module github/stable-diffusion-go/server
 
 go 1.22.5
 

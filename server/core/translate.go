@@ -1,10 +1,10 @@
 package core
 
 import (
-	"ComicTweetsGo/global"
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github/stable-diffusion-go/server/global"
 	"log"
 	"os"
 	"sync"
@@ -18,7 +18,7 @@ func Translate() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			translateOllama(global.BookPath, global.BookJsonPath)
+			translateOllama(global.OutBookPath, global.OutBookJsonPath)
 		}()
 		wg.Wait()
 	} else if translateType == "chatgpt" {
