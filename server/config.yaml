@@ -66,7 +66,7 @@ video:
   # 字体颜色
   fontcolor: FFFFFF
   # 字体文件 要求在项目目录下
-  fontfile: simhei.ttf
+  font_file: simhei.ttf
   # 描边颜色 内描边
   stroke_color: yellow
   # 描边宽
