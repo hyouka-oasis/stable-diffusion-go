@@ -45,8 +45,7 @@ potential:
   min_words: 30
   #  每张图片的最大文字数量
   max_words: 40
-  # 是否进行切割
-  split: false
+
 # 这里只放常规参数，更多参数请修改stable diffusion.json
 stable_diffusion:
   # 服务器ip

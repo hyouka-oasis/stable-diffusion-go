@@ -16,3 +16,5 @@ var (
 	VoiceCaptionPath   string        // 执行生成srt的Python路径
 	OutAudioSrtMapPath string        // 执行生成srt的Python路径
 )
+
+var PUNCTUATION = []string{"，", "。", "！", "？", "；", "：", "”", ",", "!", "…"}

@@ -1,10 +1,8 @@
 package core
 
 import (
-	"bufio"
 	"fmt"
 	"github/stable-diffusion-go/server/global"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -20,118 +18,120 @@ func ProcessText() {
 	}()
 	wg.Wait()
 }
+func combineStrings(strings []string, min_words, max_words int) []string {
+	var combined []string
+	currentStr := ""
+	for _, s := range strings {
+		fmt.Println(s, "文本")
+		if len(currentStr)+len(s) <= max_words && len(currentStr)+len(s) >= min_words {
+			combined = append(combined, currentStr+s+"\n")
+			currentStr = ""
+		} else if len(currentStr) > max_words {
+			combined = append(combined, currentStr+"\n")
+			currentStr = s
+		} else {
+			currentStr += s + " "
+		}
+	}
+	if currentStr != "" {
+		combined = append(combined, currentStr+"\n")
+	}
+	return combined
+}
 
 func processLines(inputFilePath string, outputFilePath string) {
 	file, err := os.Open(inputFilePath)
 	if err != nil {
-		log.Fatal("打开文件失败:", err)
-	}
-	defer file.Close()
-
-	content := readFileContent(file)
-	processedContent := processLine(content)
-	err = writeToFile(outputFilePath, processedContent)
-	if err != nil {
-		log.Fatal("写入文件失败:", err)
 		return
 	}
-}
+	defer file.Close()
+	// 读取文件的前 1024 个字节
 
-func readFileContent(file *os.File) *bufio.Scanner {
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	if err := scanner.Err(); err != nil {
-		log.Fatal("读取文件失败:", err)
-	}
-	return scanner
+	//for i := 0; i < len(file); i++ {
+	//	char := fmt.Sprintf("%c", file[i])
+	//	fmt.Println(char, string(file[i]), "内容1")
+	//}
+	fmt.Println(file, "内容")
+	//strings := []string{"This is the first sentence.", "This is the second sentence.", "This is the third sentence.", "This is the fourth sentence."}
+	//min_words := 20
+	//max_words := 50
+	//fmt.Println(strings)
+	//combined := combineStrings(strings, min_words, max_words)
+	//text := "检测到宿主已经非常完美，本系统教无可教，就此解散，拜拜~\n你特么把老子带到这里，自己就这么跑了？系统！\n\n李念凡在心中疯狂的咆哮，然而空无回应。\n\n我去你妹的！狗系统！"
+
+	//arrayStrings, err := ReadStringsFromFile(inputFilePath)
+	//if err != nil {
+	//	log.Fatal("打开文件失败:", err)
+	//	return
+	//}
+	//content := ReplaceBlankBatch(arrayStrings)
+	//processedContent := processLine(content)
+	//writeToFile(combined, outputFilePath)
+	//err = WriteToFile(outputFilePath, processedContent)
+	//if err != nil {
+	//	log.Fatal("写入文件失败:", err)
+	//	return
+	//}
 }
 
 // removeLeadingTrailingSpaces 函数接受一个字符串切片,并返回去除前后空格的字符串切片
 func removeLeadingTrailingSpaces(lines []string) []string {
-	var result []string
-	for index, line := range lines {
-		fmt.Print("开始处理", index+1, "段\n")
-		if strings.TrimSpace(line) != "" {
-			result = append(result, strings.TrimSpace(line))
+	maxWords := global.Config.Potential.MaxWords
+	minWords := global.Config.Potential.MinWords
+	var combined []string
+	currentStr := ""
+	for _, s := range lines {
+		fmt.Println("文本", s)
+		if len(currentStr)+len(s) <= maxWords && len(currentStr)+len(s) >= minWords {
+			combined = append(combined, currentStr+s+"\n")
+			currentStr = ""
+		} else if len(currentStr) > maxWords {
+			combined = append(combined, currentStr+"\n")
+			currentStr = s
+		} else {
+			currentStr += s + " "
 		}
+	}
+	if currentStr != "" {
+		combined = append(combined, currentStr+"\n")
+	}
+	return combined
+}
+
+var PUNCTUATION = []string{",", ".", "!", "？", ";", ":", "”", ",", "!", "…"}
+
+// clause 处理非正常符号
+func clause(text string) []string {
+	result := []string{}
+	start := 0
+	for i := 0; i < len(text); i++ {
+		char := fmt.Sprintf("%c", text[i])
+		fmt.Println(char, text[i], "内容")
+		if contains(PUNCTUATION, string(text[i])) {
+			for contains(PUNCTUATION, string(text[i])) {
+				i++
+			}
+			result = append(result, strings.TrimSpace(text[start:i]))
+			start = i
+		}
+	}
+	// Add the last clause if it exists
+	if start < len(text) {
+		result = append(result, strings.TrimSpace(text[start:]))
 	}
 	return result
 }
-
-func processLine(scanner *bufio.Scanner) []string {
-	// 初始化变量
-	var currentParagraph []string
-	var paragraphs []string
-	const maxLineLength = 30
-	isSplit := global.Config.Potential.Split
-	if !isSplit {
-		for scanner.Scan() {
-			paragraphs = append(paragraphs, scanner.Text())
-		}
-		return removeLeadingTrailingSpaces(paragraphs)
-	}
-	// 逐行扫描文件
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		// 如果当前行为空行,说明一个段落结束
-		if line == "" {
-			// 处理当前段落
-			if len(currentParagraph) > 0 {
-				paragraph := strings.Join(currentParagraph, " ")
-				if len(paragraph) >= maxLineLength {
-					// 如果段落长度超过 maxLineLength,则需要换行
-					for len(paragraph) >= maxLineLength {
-						paragraphs = append(paragraphs, paragraph[:maxLineLength])
-						paragraph = paragraph[maxLineLength:]
-					}
-					if len(paragraph) > 0 {
-						paragraphs = append(paragraphs, paragraph)
-					}
-				} else {
-					paragraphs = append(paragraphs, paragraph)
-				}
-				currentParagraph = nil
-			}
-		} else {
-			// 将当前行添加到当前段落
-			currentParagraph = append(currentParagraph, line)
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
 		}
 	}
-
-	// 处理最后一个段落
-	if len(currentParagraph) > 0 {
-		paragraph := strings.Join(currentParagraph, " ")
-		if len(paragraph) >= maxLineLength {
-			// 如果段落长度超过 maxLineLength,则需要换行
-			for len(paragraph) >= maxLineLength {
-				paragraphs = append(paragraphs, paragraph[:maxLineLength])
-				paragraph = paragraph[maxLineLength:]
-			}
-			if len(paragraph) > 0 {
-				paragraphs = append(paragraphs, paragraph)
-			}
-		} else {
-			paragraphs = append(paragraphs, paragraph)
-		}
-	}
-	return paragraphs
+	return false
 }
-
-// writeToFile 函数将字符串切片写入到指定的输出文件中
-func writeToFile(filename string, lines []string) error {
-	outputFile, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer outputFile.Close()
-
-	writer := bufio.NewWriter(outputFile)
-	for _, line := range lines {
-		_, err := fmt.Fprintln(writer, line)
-		if err != nil {
-			return err
-		}
-	}
-	return writer.Flush()
+func processLine(content []string) {
+	//paragraphs := clause(content)
+	//fmt.Println("处理后的内容")
+	//resultContext := removeLeadingTrailingSpaces(paragraphs)
+	//return resultContext
 }

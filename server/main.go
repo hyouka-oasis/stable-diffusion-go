@@ -35,11 +35,11 @@ func main() {
 	// 3. 处理文本文件
 	core.ProcessText()
 	// 4. 翻译文本
-	core.Translate()
+	//core.Translate()
 	// 5.翻译成功后进行字幕提取
-	core.TextToSrt()
+	//core.TextToSrt()
 	// 6.调用
 	//core.StableDiffusion()
 	// 7.合成视频
-	core.VideoComposition()
+	//core.VideoComposition()
 }
