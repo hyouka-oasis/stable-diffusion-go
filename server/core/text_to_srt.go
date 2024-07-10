@@ -53,15 +53,16 @@ func createVoiceSrt(filepath string) (err error) {
 	rate := global.Config.Audio.Rate
 	volume := global.Config.Audio.Volume
 	pitch := global.Config.Audio.Pitch
-	bookMp3Path := global.OutAudioPath
-	bookMp3SrtPath := global.OutAudioSrtPath
-	//bookPath := global.OutBookPath
+	audioPath := global.OutAudioPath
+	audioSrtPath := global.OutAudioSrtPath
 	voiceCaptionPythonPath := global.VoiceCaptionPath
+	audioSrtMapPath := global.OutAudioSrtMapPath
 	args := []string{
 		voiceCaptionPythonPath,
-		"--text_path", filepath,
-		"--mp3_path", bookMp3Path,
-		"--srt_path", bookMp3SrtPath,
+		"--book_path", filepath,
+		"--audi_srt_map_path", audioSrtMapPath,
+		"--audio_path", audioPath,
+		"--audio_srt_path", audioSrtPath,
 		"--voice", voice, // 角色
 		"--rate", windowCmdArgsConversion(rate), // 语速
 		"--volume", windowCmdArgsConversion(volume), // 音量

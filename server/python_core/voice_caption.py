@@ -1,3 +1,5 @@
+import ast
+
 import edge_tts
 import argparse
 import asyncio
@@ -119,8 +121,9 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
     async with aiofiles.open(srt_path, "w", encoding="utf-8") as file:
         content_to_write = await sub_marker.generate_cn_subs(content)
         await file.write(content_to_write)
+
 # 生成字幕时间列表
-async def create_processing_time(srt_path, text_path):
+async def create_processing_time(srt_path, text_path, txt_time_path):
     subtitles = await srt_to_list(srt_path)
     with open(text_path, "r", encoding="utf-8") as f:
         section_list = f.readlines()
@@ -145,32 +148,48 @@ async def create_processing_time(srt_path, text_path):
                     index_ = i
                     time = next_start_time
                     break
-        with open(os.path.join("测试time.txt"), "w", encoding="utf-8") as f3:
+        with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
             f3.write(str(section_time_list))
+
 # 初始化edge_tts
 async def create_voice_caption():
     parser = argparse.ArgumentParser()
     # 从go那边获取过来的文本路径
-    parser.add_argument("--text_path", help="需要转字幕的文本路径地址")
-    parser.add_argument("--mp3_path", help="输出的音频路径地址")
-    parser.add_argument("--srt_path", help="输出的字幕路径地址")
+    parser.add_argument("--book_path", help="字幕的文本路径地址")
+    parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
+    parser.add_argument("--audio_path", help="输出的音频路径地址")
+    parser.add_argument("--audio_srt_path", help="输出的字幕路径地址")
     parser.add_argument("--voice", help="角色")
     parser.add_argument("--rate", help="语速")
     parser.add_argument("--volume", help="音量")
     parser.add_argument("--pitch", help="分贝")
     args = parser.parse_args()
-    text_path = args.text_path
-    if text_path is None:
-        raise Exception("文件路径不能为空")
-    mp3_path = args.mp3_path
-    if mp3_path is None:
+    book_path = args.book_path
+    if book_path is None:
+        raise Exception("输出路径不能为空")
+    audi_srt_map_path = args.audi_srt_map_path
+    if audi_srt_map_path is None:
+        raise Exception("字幕切片文本路径不能为空")
+    audio_path = args.audio_path
+    if audio_path is None:
         raise Exception("音频输出路径不能为空")
-    srt_path = args.srt_path
-    if srt_path is None:
+    audio_srt_path = args.audio_srt_path
+    if audio_srt_path is None:
         raise Exception("字幕输出路径不能为空")
     voice, rate, volume, pitch = args.voice, args.rate, args.volume, args.pitch
     # 通过edge-tts生成音频和字幕
-    await edge_tts_create_srt(text_path, mp3_path, srt_path, voice, rate, volume, pitch)
+    await edge_tts_create_srt(book_path, audio_path, audio_srt_path, voice, rate, volume, pitch)
     # 通过字幕生成时间表
-    await create_processing_time(srt_path, text_path)
-asyncio.run(create_voice_caption())
+    await create_processing_time(audio_srt_path, book_path, audi_srt_map_path)
+
+
+if __name__ == "__main__":
+    # with open("1.txt", "r", encoding="utf-8") as f:
+    #     content = f.read()
+    # time_list = ast.literal_eval(content)
+    # print(time_list)
+    # for index, (image_path, duration) in enumerate(
+    #         zip(["1.png", "2.png", "3.png", "4.png", "5.png"], time_list)
+    # ):
+    #     print(image_path, duration, index, "时间列表")
+    asyncio.run(create_voice_caption())
