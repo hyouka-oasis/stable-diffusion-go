@@ -8,6 +8,7 @@ import re
 import os
 from datetime import datetime
 
+
 async def time_difference(time1, time2, time_format=r"%H:%M:%S.%f"):
     time1 = datetime.strptime(time1, time_format)
     time2 = datetime.strptime(time2, time_format)
@@ -16,6 +17,7 @@ async def time_difference(time1, time2, time_format=r"%H:%M:%S.%f"):
     delta = time2 - time1
     time_diff = str(delta)[:11]
     return time_diff
+
 
 async def srt_to_list(filename):
     subtitles = []  # 存储最终结果的列表
@@ -39,6 +41,7 @@ async def srt_to_list(filename):
         if text:
             subtitles.append((time_code, " ".join(text)))
     return subtitles
+
 
 class SubMarker(edge_tts.SubMaker):
 
@@ -92,11 +95,7 @@ class SubMarker(edge_tts.SubMaker):
         return data
 
 
-"""
-text_path 文本路径
-mp3_path 输出的音频路径
-srt_path 输出的字幕路径
-"""
+# 通过edge-tts生成字幕文件
 async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> None:
     # 打开文件
     with open(text_path, "r", encoding="utf-8") as f:
@@ -110,17 +109,18 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
         pitch="+0Hz" if edge_tts_args[3] is None else edge_tts_args[3],
     )
     sub_marker = SubMarker()
-    #写入音频文件
+    # 写入音频文件
     async with aiofiles.open(mp3_path, "wb") as file:
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 await file.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
                 sub_marker.create_sub((chunk["offset"], chunk["duration"]), chunk["text"])
-    #写入字幕文件
+    # 写入字幕文件
     async with aiofiles.open(srt_path, "w", encoding="utf-8") as file:
         content_to_write = await sub_marker.generate_cn_subs(content)
         await file.write(content_to_write)
+
 
 # 生成字幕时间列表
 async def create_processing_time(srt_path, text_path, txt_time_path):
@@ -151,11 +151,12 @@ async def create_processing_time(srt_path, text_path, txt_time_path):
         with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
             f3.write(str(section_time_list))
 
+
 # 初始化edge_tts
 async def create_voice_caption():
     parser = argparse.ArgumentParser()
     # 从go那边获取过来的文本路径
-    parser.add_argument("--book_path", help="字幕的文本路径地址")
+    parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
     parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
     parser.add_argument("--audio_path", help="输出的音频路径地址")
     parser.add_argument("--audio_srt_path", help="输出的字幕路径地址")
@@ -164,8 +165,8 @@ async def create_voice_caption():
     parser.add_argument("--volume", help="音量")
     parser.add_argument("--pitch", help="分贝")
     args = parser.parse_args()
-    book_path = args.book_path
-    if book_path is None:
+    participle_book_path = args.participle_book_path
+    if participle_book_path is None:
         raise Exception("输出路径不能为空")
     audi_srt_map_path = args.audi_srt_map_path
     if audi_srt_map_path is None:
@@ -178,18 +179,10 @@ async def create_voice_caption():
         raise Exception("字幕输出路径不能为空")
     voice, rate, volume, pitch = args.voice, args.rate, args.volume, args.pitch
     # 通过edge-tts生成音频和字幕
-    await edge_tts_create_srt(book_path, audio_path, audio_srt_path, voice, rate, volume, pitch)
+    await edge_tts_create_srt(participle_book_path, audio_path, audio_srt_path, voice, rate, volume, pitch)
     # 通过字幕生成时间表
-    await create_processing_time(audio_srt_path, book_path, audi_srt_map_path)
+    await create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path)
 
 
 if __name__ == "__main__":
-    # with open("1.txt", "r", encoding="utf-8") as f:
-    #     content = f.read()
-    # time_list = ast.literal_eval(content)
-    # print(time_list)
-    # for index, (image_path, duration) in enumerate(
-    #         zip(["1.png", "2.png", "3.png", "4.png", "5.png"], time_list)
-    # ):
-    #     print(image_path, duration, index, "时间列表")
     asyncio.run(create_voice_caption())

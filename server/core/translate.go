@@ -18,7 +18,7 @@ func Translate() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			translateOllama(global.OutBookPath, global.OutBookJsonPath)
+			translateOllama(global.OutParticipleBookPathBookPath, global.OutBookJsonPath)
 		}()
 		wg.Wait()
 	} else if translateType == "chatgpt" {
@@ -37,7 +37,7 @@ func translateOllama(inputFilePath string, outputFilePath string) (err error) {
 		return err
 	}
 	defer file.Close()
-	jsonContent := []map[string]string{} // 数组对象
+	var jsonContent []map[string]string // 数组对象
 	scanner := bufio.NewScanner(file)
 	lora := global.Config.StableDiffusionConfig.Lora
 

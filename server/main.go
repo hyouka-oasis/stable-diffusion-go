@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	core.InitPiver()
+	core.InitViper()
 	bookName := global.Config.Book.Name
 	core.InitGlobalConfig()
 	// 1. 读取测试.txt文件
@@ -33,13 +33,16 @@ func main() {
 		log.Fatal("创建图片目录失败:", err)
 	}
 	// 3. 处理文本文件
-	core.ProcessText()
+	err = core.ProcessText()
+	if err != nil {
+		panic(err)
+	}
 	// 4. 翻译文本
-	//core.Translate()
+	core.Translate()
 	// 5.翻译成功后进行字幕提取
 	//core.TextToSrt()
 	// 6.调用
 	//core.StableDiffusion()
 	// 7.合成视频
-	//core.VideoComposition()
+	core.VideoComposition()
 }

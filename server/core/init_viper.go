@@ -7,7 +7,7 @@ import (
 	"github/stable-diffusion-go/server/global"
 )
 
-func InitPiver() *viper.Viper {
+func InitViper() *viper.Viper {
 	v := viper.New()
 	v.SetConfigName("config") // name of config file (without extension)
 	v.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name

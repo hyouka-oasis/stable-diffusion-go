@@ -7,4 +7,5 @@ type Config struct {
 	Potential             Potential             `yaml:"potential" mapstructure:"potential"`
 	StableDiffusionConfig StableDiffusionConfig `yaml:"stable_diffusion" mapstructure:"stable_diffusion"`
 	Audio                 Audio                 `yaml:"audio" mapstructure:"audio"`
+	Video                 Video                 `yaml:"video" mapstructure:"video"`
 }

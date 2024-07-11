@@ -30,11 +30,11 @@ func TextToSrt() {
 
 func processTextToSrt() {
 	fmt.Println("开始生成字幕和音频")
-	filepath := global.OutBookPath
+	participleBookPath := global.OutParticipleBookPathBookPath
 	maxAttempts := 10 // 设置最大尝试次数
 	attempts := 0     // 初始化尝试次数计数器
 	for attempts < maxAttempts {
-		err := createVoiceSrt(filepath)
+		err := createVoiceSrt(participleBookPath)
 		if err == nil {
 			// 如果成功，则返回
 			return

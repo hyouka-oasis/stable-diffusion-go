@@ -122,3 +122,29 @@ func WriteToFile(filename string, lines []string) error {
 	}
 	return nil
 }
+
+func Zip(a []string, b []string) [][]string {
+	maxLen := maxLength(len(a), len(b))
+	result := make([][]string, maxLen)
+	for i := range result {
+		result[i] = make([]string, 2)
+		if i < len(a) {
+			result[i][0] = a[i]
+		} else {
+			result[i][0] = ""
+		}
+		if i < len(b) {
+			result[i][1] = b[i]
+		} else {
+			result[i][1] = "0.0"
+		}
+	}
+	return result
+}
+
+func maxLength(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}

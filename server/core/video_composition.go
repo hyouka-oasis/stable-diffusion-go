@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"log"
+	"math/rand"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -67,13 +71,120 @@ func getImagesMap() (picturePathList []string, err error) {
 	return picturePathList, nil
 }
 
+func convertTimeToSeconds(timeStr string) (float64, error) {
+	// Split the string by colon
+	timeParts := strings.Split(timeStr, ":")
+
+	// If milliseconds are included, split them by the comma
+	var seconds, milliseconds float64
+	if strings.Contains(timeParts[len(timeParts)-1], ".") {
+		secAndMs := strings.Split(timeParts[len(timeParts)-1], ".")
+		seconds, _ = strconv.ParseFloat(secAndMs[0], 64)
+		milliseconds, _ = strconv.ParseFloat(secAndMs[1], 64)
+	} else {
+		seconds, _ = strconv.ParseFloat(timeParts[len(timeParts)-1], 64)
+		milliseconds = 0
+	}
+
+	// Convert each part to an integer
+	hours, _ := strconv.Atoi(timeParts[0])
+	minutes, _ := strconv.Atoi(timeParts[1])
+
+	// Calculate total seconds
+	totalSeconds := float64(hours*3600+minutes*60) + seconds + milliseconds/1000
+
+	return totalSeconds, nil
+}
+
+func createAnimatedSegment(imagePath string, srtDuration string, animation string, catchVideoPath string) error {
+	animationSpeed := global.Config.Video.AnimationSpeed
+	initialZoom := 1.0
+	srtDuration = strings.Replace(srtDuration, "'", "", -1)
+	// 将时间字符串转换为时间结构体
+	duration, err := convertTimeToSeconds(srtDuration)
+	if err != nil {
+		panic(err)
+	}
+	imageWidth := float64(global.Config.StableDiffusionConfig.Width)
+	imageHeight := float64(global.Config.StableDiffusionConfig.Height)
+	zoomSteps := (animationSpeed - initialZoom) / (25 * duration)
+	leftRightMove := (imageWidth*animationSpeed - imageWidth - 25) / (25 * duration)
+	upDownMove := (imageHeight*animationSpeed - imageHeight - 25 - 25) / (25 * duration)
+	ffmpegWidthAndHeight := strconv.Itoa(int(imageWidth)) + "x" + strconv.Itoa(int(imageHeight))
+	var scale string
+	if animation == "shrink" {
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan=z='if(lte(zoom,%f),%f,max(zoom-%f,1))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=%f:s=%s",
+			initialZoom, animationSpeed, zoomSteps, 25*duration, ffmpegWidthAndHeight)
+	} else if animation == "left_move" {
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,-1),(iw-iw/zoom)/2,x+%f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=%f:s=%s",
+			animationSpeed, leftRightMove*10, 25*duration, ffmpegWidthAndHeight)
+	} else if animation == "right_move" {
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw/zoom)/2,x+%f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=%f:s=%s",
+			animationSpeed, leftRightMove*10, 25*duration, ffmpegWidthAndHeight)
+	} else if animation == "up_move" {
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,-1),(ih-ih/zoom)/2,y+%f)':d=%f:s=%s",
+			animationSpeed, upDownMove*10, 25*duration, ffmpegWidthAndHeight)
+	} else if animation == "down_move" {
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,1),(ih/zoom)/2,y+%f)':d=%f:s=%s",
+			animationSpeed, upDownMove*10, 25*duration, ffmpegWidthAndHeight)
+	} else {
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan=z='min(zoom+%f,%f)*if(gte(zoom,1),1,0)+if(lt(zoom,1),1,0)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=%f:s=%s",
+			zoomSteps, animationSpeed, 25*duration, ffmpegWidthAndHeight)
+	}
+	args := []string{
+		"-y",
+		"-r",
+		"25",
+		"-loop",
+		"1",
+		"-t",
+		fmt.Sprintf("%.3f", duration),
+		"-i",
+		imagePath,
+		"-filter_complex",
+		scale,
+		"-vframes",
+		fmt.Sprintf("%d", int(25*duration)),
+		"-c:v",
+		"libx264",
+		"-pix_fmt",
+		"yuv420p",
+		catchVideoPath,
+	}
+	cmd := exec.Command("ffmpeg", args...)
+	fmt.Println(cmd.Args, "最终的参数")
+	err = cmd.Start()
+	if err != nil {
+		log.Fatalln("执行ffmpeg错误", err)
+		return err
+	}
+	err = cmd.Wait()
+	if err != nil {
+		log.Fatalln("执行ffmpeg错误-wait", err)
+		return err
+	}
+	output, _ := cmd.CombinedOutput()
+	fmt.Println("视频转换完成:", string(output))
+	return nil
+}
+
 // 整合视频
 func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
-	for _, tuple := range zip(picturePathList, timeSrtMap) {
-		fmt.Println(tuple)
-		//imagePath, duration := tuple[0], tuple[1]
-		//fmt.Printf("下标: %d, 图片: %s, 时间1: %.2f\n", index, imagePath, duration)
+	var catchVideoList []string
+	for index, tuple := range Zip(picturePathList, timeSrtMap) {
+		// 设置随机数种子
+		//rand.New(rand.NewSource(time.Now().UnixNano()))
+		// 随机选择一个动画效果
+		selectedAnimation := global.Animations[rand.Intn(len(global.Animations))]
+		imagePath, duration := tuple[0], tuple[1]
+		catchVideoPath := filepath.Join(global.OutVideoPath, "catch_video_"+strconv.Itoa(index)+".mp4")
+		catchVideoList = append(catchVideoList, catchVideoPath)
+		err := createAnimatedSegment(imagePath, duration, selectedAnimation, catchVideoPath)
+		if err != nil {
+			log.Fatalln("错误信息:", err)
+		}
 	}
+	fmt.Println(catchVideoList)
 }
 
 func VideoComposition() (err error) {
@@ -81,9 +192,6 @@ func VideoComposition() (err error) {
 	audioSrtMap, audioSrtMapError := getAudioSrtMap()
 	if audioSrtMapError != nil || imageError != nil {
 		return fmt.Errorf("读取图片列表或者字幕切片时失败")
-	}
-	for _, a := range audioSrtMap {
-		fmt.Println(a, "便利")
 	}
 	disposableSynthesisVideo(picturePathList, audioSrtMap)
 	return nil
