@@ -71,6 +71,7 @@ func getImagesMap() (picturePathList []string, err error) {
 	return picturePathList, nil
 }
 
+// 转换字幕时间为float
 func convertTimeToSeconds(timeStr string) (float64, error) {
 	// Split the string by colon
 	timeParts := strings.Split(timeStr, ":")
@@ -96,6 +97,59 @@ func convertTimeToSeconds(timeStr string) (float64, error) {
 	return totalSeconds, nil
 }
 
+// 合并视频
+func splicingVideo(catchVideoList []string) (err error) {
+	audioPath := global.OutAudioPath
+	videoPath := global.OutVideoFinalPath
+	// 打开一个文件用于写入
+	file, err := os.Create(global.OutVideoCatchTxtPath)
+	if err != nil {
+		fmt.Println("打开文件失败:", err)
+		return
+	}
+	defer file.Close()
+
+	for _, video := range catchVideoList {
+		_, err := fmt.Fprintln(file, "file "+"'"+video+"'")
+		if err != nil {
+			fmt.Println("写入文件失败:", err)
+			return err
+		}
+	}
+	fmt.Println("开始合成视频")
+	args := []string{
+		"-y",
+		"-f",
+		"concat",
+		"-safe",
+		"0",
+		"-i",
+		global.OutVideoCatchTxtPath,
+		"-i",
+		audioPath,
+		"-vsync",
+		"cfr",
+		"-pix_fmt",
+		"yuv420p",
+		videoPath,
+	}
+	cmd := exec.Command("ffmpeg", args...)
+	err = cmd.Start()
+	if err != nil {
+		log.Fatalln("执行ffmpeg错误-start-合成", err)
+		return err
+	}
+	err = cmd.Wait()
+	if err != nil {
+		log.Fatalln("执行ffmpeg错误-wait-合成", err)
+		return err
+	}
+	output, _ := cmd.CombinedOutput()
+	fmt.Println("合成视频成功:", global.OutVideoCatchTxtPath, string(output))
+	return nil
+}
+
+// 创建单个视频
 func createAnimatedSegment(imagePath string, srtDuration string, animation string, catchVideoPath string) error {
 	animationSpeed := global.Config.Video.AnimationSpeed
 	initialZoom := 1.0
@@ -113,23 +167,23 @@ func createAnimatedSegment(imagePath string, srtDuration string, animation strin
 	ffmpegWidthAndHeight := strconv.Itoa(int(imageWidth)) + "x" + strconv.Itoa(int(imageHeight))
 	var scale string
 	if animation == "shrink" {
-		scale = fmt.Sprintf("scale=-2:ih*10,zoompan=z='if(lte(zoom,%f),%f,max(zoom-%f,1))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=%f:s=%s",
-			initialZoom, animationSpeed, zoomSteps, 25*duration, ffmpegWidthAndHeight)
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan=z='if(lte(zoom,%f),%f,max(zoom-%.19f,1))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=25*%f:s=%s",
+			initialZoom, animationSpeed, zoomSteps, duration, ffmpegWidthAndHeight)
 	} else if animation == "left_move" {
-		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,-1),(iw-iw/zoom)/2,x+%f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=%f:s=%s",
-			animationSpeed, leftRightMove*10, 25*duration, ffmpegWidthAndHeight)
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,-1),(iw-iw/zoom)/2,x+%.13f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=25*%f:s=%s",
+			animationSpeed, leftRightMove*10, duration, ffmpegWidthAndHeight)
 	} else if animation == "right_move" {
-		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw/zoom)/2,x+%f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=%f:s=%s",
-			animationSpeed, leftRightMove*10, 25*duration, ffmpegWidthAndHeight)
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw/zoom)/2,x+%.13f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=25*%f:s=%s",
+			animationSpeed, leftRightMove*10, duration, ffmpegWidthAndHeight)
 	} else if animation == "up_move" {
-		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,-1),(ih-ih/zoom)/2,y+%f)':d=%f:s=%s",
-			animationSpeed, upDownMove*10, 25*duration, ffmpegWidthAndHeight)
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,-1),(ih-ih/zoom)/2,y+%.13f)':d=25*%f:s=%s",
+			animationSpeed, upDownMove*10, duration, ffmpegWidthAndHeight)
 	} else if animation == "down_move" {
-		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,1),(ih/zoom)/2,y+%f)':d=%f:s=%s",
-			animationSpeed, upDownMove*10, 25*duration, ffmpegWidthAndHeight)
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,1),(ih/zoom)/2,y+%.13f)':d=25*%f:s=%s",
+			animationSpeed, upDownMove*10, duration, ffmpegWidthAndHeight)
 	} else {
-		scale = fmt.Sprintf("scale=-2:ih*10,zoompan=z='min(zoom+%f,%f)*if(gte(zoom,1),1,0)+if(lt(zoom,1),1,0)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=%f:s=%s",
-			zoomSteps, animationSpeed, 25*duration, ffmpegWidthAndHeight)
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan=z='min(zoom+%.19f,%f)*if(gte(zoom,1),1,0)+if(lt(zoom,1),1,0)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=25*%f:s=%s",
+			zoomSteps, animationSpeed, duration, ffmpegWidthAndHeight)
 	}
 	args := []string{
 		"-y",
@@ -152,10 +206,10 @@ func createAnimatedSegment(imagePath string, srtDuration string, animation strin
 		catchVideoPath,
 	}
 	cmd := exec.Command("ffmpeg", args...)
-	fmt.Println(cmd.Args, "最终的参数")
+	fmt.Println("最终参数", cmd.Args, duration)
 	err = cmd.Start()
 	if err != nil {
-		log.Fatalln("执行ffmpeg错误", err)
+		log.Fatalln("执行ffmpeg错误-start", err)
 		return err
 	}
 	err = cmd.Wait()
@@ -163,14 +217,51 @@ func createAnimatedSegment(imagePath string, srtDuration string, animation strin
 		log.Fatalln("执行ffmpeg错误-wait", err)
 		return err
 	}
+	return nil
+}
+
+func createSubtitle() error {
+	fontName := strings.Split(global.Config.Video.FontFile, ".")[0]
+	fontSize := global.Config.Video.FontSize
+	fontColor := global.Config.Video.FontColor
+	fontPosition := global.Config.Video.Position
+	audioSrtPath := global.OutAudioSrtPath
+	videoPath := global.Config.Book.Name + ".mp4"
+	subtitleVideoName := global.OutSubtitleVideoName
+	outVideoPath := global.OutVideoPath
+	subtitleStyle := "FontName=" + fontName + "," + "Fontsize=" + fontSize + "," + "PrimaryColour=&H" + fontColor + "," + "Alignment=" + fontPosition
+	args := []string{
+		outVideoPath,
+		" && ffmpeg",
+		"-i",
+		videoPath,
+		"-vf",
+		"\"subtitles=" + audioSrtPath + ":force_style=" + subtitleStyle + "\"",
+		"-c:a",
+		"copy",
+		subtitleVideoName,
+	}
+	cmd := exec.Command("cd", args...)
+	fmt.Println("最终参数1", cmd.Args)
+	err := cmd.Start()
+	if err != nil {
+		log.Fatalln("执行ffmpeg错误-start-合成", err)
+		return err
+	}
+	err = cmd.Wait()
+	if err != nil {
+		log.Fatalln("执行ffmpeg错误-wait-合成", err)
+		return err
+	}
 	output, _ := cmd.CombinedOutput()
-	fmt.Println("视频转换完成:", string(output))
+	fmt.Println("生成字幕视频成功:", subtitleVideoName, string(output))
 	return nil
 }
 
 // 整合视频
 func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 	var catchVideoList []string
+	fmt.Println("开始处理视频")
 	for index, tuple := range Zip(picturePathList, timeSrtMap) {
 		// 设置随机数种子
 		//rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -178,13 +269,26 @@ func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 		selectedAnimation := global.Animations[rand.Intn(len(global.Animations))]
 		imagePath, duration := tuple[0], tuple[1]
 		catchVideoPath := filepath.Join(global.OutVideoPath, "catch_video_"+strconv.Itoa(index)+".mp4")
-		catchVideoList = append(catchVideoList, catchVideoPath)
 		err := createAnimatedSegment(imagePath, duration, selectedAnimation, catchVideoPath)
 		if err != nil {
 			log.Fatalln("错误信息:", err)
 		}
+		catchVideoList = append(catchVideoList, catchVideoPath)
 	}
-	fmt.Println(catchVideoList)
+	fmt.Println("视频处理完成")
+	err := splicingVideo(catchVideoList)
+	if err != nil {
+		log.Fatalln("合成视频失败", err)
+		return
+	}
+	subtitles := global.Config.Video.Subtitles
+	if subtitles {
+		err = createSubtitle()
+		if err != nil {
+			fmt.Println("生成字幕视频失败", err)
+			return
+		}
+	}
 }
 
 func VideoComposition() (err error) {

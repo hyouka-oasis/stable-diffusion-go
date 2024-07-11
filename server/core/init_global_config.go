@@ -15,6 +15,9 @@ func InitGlobalConfig() {
 	global.OutPath = filepath.Join(wd, bookName+"/participle/")                           // 输出的路径
 	global.OutImagesPath = filepath.Join(wd, bookName+"/images/")                         // 图片输出路径
 	global.OutVideoPath = filepath.Join(wd, bookName+"/video/")                           // 图片输出路径
+	global.OutVideoFinalPath = filepath.Join(global.OutVideoPath, bookName+".mp4")        // 最终输出的视频文件
+	global.OutVideoCatchTxtPath = filepath.Join(wd, bookName+"/catchVideo.txt")           // 需要合并的视频路径
+	global.OutSubtitleVideoName = "subtitleVideo.mp4"                                     // 需要合并的视频路径
 	global.OriginBookPath = filepath.Join(wd, bookName+".txt")                            // 原路径
 	global.VoiceCaptionPath = filepath.Join(wd, "python_core/voice_caption.py")           // 进行字幕转换的python代码
 	global.ParticiplePythonPath = filepath.Join(wd, "python_core/participle.py")          // 进行文本分词的python代码
