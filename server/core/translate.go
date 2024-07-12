@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func Translate() {
+func Translate() error {
 	translateType := global.Config.TranslateConfig.Type
 	if translateType == "ollama" {
 		// 异步处理翻译
@@ -18,7 +18,10 @@ func Translate() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			translateOllama(global.OutParticipleBookPathBookPath, global.OutBookJsonPath)
+			err := translateOllama(global.OutParticipleBookPath, global.OutBookJsonPath)
+			if err != nil {
+				return
+			}
 		}()
 		wg.Wait()
 	} else if translateType == "chatgpt" {
@@ -28,6 +31,7 @@ func Translate() {
 	} else {
 		print("必须要传入翻译类型")
 	}
+	return nil
 }
 
 func translateOllama(inputFilePath string, outputFilePath string) (err error) {

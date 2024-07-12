@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"log"
-	"os/exec"
 	"runtime"
 	"sync"
 	"time"
@@ -30,7 +29,7 @@ func TextToSrt() {
 
 func processTextToSrt() {
 	fmt.Println("开始生成字幕和音频")
-	participleBookPath := global.OutParticipleBookPathBookPath
+	participleBookPath := global.OutParticipleBookPath
 	maxAttempts := 10 // 设置最大尝试次数
 	attempts := 0     // 初始化尝试次数计数器
 	for attempts < maxAttempts {
@@ -48,7 +47,7 @@ func processTextToSrt() {
 	log.Fatal("尝试生成语音字幕失败次数过多，停止重试")
 }
 
-func createVoiceSrt(filepath string) (err error) {
+func createVoiceSrt(filepath string) error {
 	voice := global.Config.Audio.Voice
 	rate := global.Config.Audio.Rate
 	volume := global.Config.Audio.Volume
@@ -56,10 +55,10 @@ func createVoiceSrt(filepath string) (err error) {
 	audioPath := global.OutAudioPath
 	audioSrtPath := global.OutAudioSrtPath
 	voiceCaptionPythonPath := global.VoiceCaptionPath
-	audioSrtMapPath := global.OutAudioSrtMapPath
+	audioSrtMapPath := global.CatchMergeConfig.AudioSrtMapPath
 	args := []string{
 		voiceCaptionPythonPath,
-		"--book_path", filepath,
+		"--participle_book_path", filepath,
 		"--audi_srt_map_path", audioSrtMapPath,
 		"--audio_path", audioPath,
 		"--audio_srt_path", audioSrtPath,
@@ -68,10 +67,8 @@ func createVoiceSrt(filepath string) (err error) {
 		"--volume", windowCmdArgsConversion(volume), // 音量
 		"--pitch", pitch, // 分贝
 	}
-	cmd := exec.Command("python", args...)
-	output, err := cmd.CombinedOutput()
+	err := ExecCommand("python", args)
 	if err != nil {
-		log.Fatalln("错误的执行代码", string(output))
 		return err
 	}
 	fmt.Println("字幕和音频生成完成")

@@ -7,3 +7,5 @@ images
 .air.toml
 tmp
 *.txt
+*.png
+*.mp4

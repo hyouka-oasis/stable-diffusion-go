@@ -13,7 +13,7 @@ func main() {
 	bookName := global.Config.Book.Name
 	core.InitGlobalConfig()
 	// 1. 读取测试.txt文件
-	file, err := os.Open(global.OriginBookPath)
+	file, err := os.Open(global.BookPath)
 	fmt.Print("开始读取:" + bookName + "\n")
 	if err != nil {
 		log.Fatal("文件不存在:", err)
@@ -23,14 +23,19 @@ func main() {
 		log.Fatal(err)
 	}
 	// 2. 创建participle目录
-	err = core.EnsureDirectory(global.OutPath)
+	err = core.EnsureDirectory(global.OutParticiplePath)
 	if err != nil {
 		log.Fatal("创建目录失败:", err)
 	}
-	// 2. 创建participle目录
+	// 2. 创建images目录
 	err = core.EnsureDirectory(global.OutImagesPath)
 	if err != nil {
 		log.Fatal("创建图片目录失败:", err)
+	}
+	// 2. 创建video目录
+	err = core.EnsureDirectory(global.OutVideoPath)
+	if err != nil {
+		log.Fatal("创建视频目录失败:", err)
 	}
 	// 3. 处理文本文件
 	err = core.ProcessText()
@@ -38,9 +43,12 @@ func main() {
 		panic(err)
 	}
 	// 4. 翻译文本
-	core.Translate()
+	err = core.Translate()
+	if err != nil {
+		panic(err)
+	}
 	// 5.翻译成功后进行字幕提取
-	//core.TextToSrt()
+	core.TextToSrt()
 	// 6.调用
 	//core.StableDiffusion()
 	// 7.合成视频

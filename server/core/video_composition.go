@@ -7,7 +7,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -17,7 +16,7 @@ import (
 // 获取字幕切片
 func getAudioSrtMap() (audioSrtMap []string, err error) {
 	// 指定的srt_map路径
-	txtFilePath := global.OutAudioSrtMapPath
+	txtFilePath := global.CatchMergeConfig.AudioSrtMapPath
 
 	file, err := os.Open(txtFilePath)
 	if err != nil {
@@ -98,14 +97,14 @@ func convertTimeToSeconds(timeStr string) (float64, error) {
 }
 
 // 合并视频
-func splicingVideo(catchVideoList []string) (err error) {
+func splicingVideo(catchVideoList []string) error {
 	audioPath := global.OutAudioPath
-	videoPath := global.OutVideoFinalPath
+	videoPath := global.OutVideoName
 	// 打开一个文件用于写入
-	file, err := os.Create(global.OutVideoCatchTxtPath)
+	file, err := os.Create(global.CatchMergeConfig.VideoCatchTxtPath)
 	if err != nil {
 		fmt.Println("打开文件失败:", err)
-		return
+		return err
 	}
 	defer file.Close()
 
@@ -124,7 +123,7 @@ func splicingVideo(catchVideoList []string) (err error) {
 		"-safe",
 		"0",
 		"-i",
-		global.OutVideoCatchTxtPath,
+		global.CatchMergeConfig.VideoCatchTxtPath,
 		"-i",
 		audioPath,
 		"-vsync",
@@ -133,19 +132,10 @@ func splicingVideo(catchVideoList []string) (err error) {
 		"yuv420p",
 		videoPath,
 	}
-	cmd := exec.Command("ffmpeg", args...)
-	err = cmd.Start()
+	err = ExecCommand("ffmpeg", args)
 	if err != nil {
-		log.Fatalln("执行ffmpeg错误-start-合成", err)
 		return err
 	}
-	err = cmd.Wait()
-	if err != nil {
-		log.Fatalln("执行ffmpeg错误-wait-合成", err)
-		return err
-	}
-	output, _ := cmd.CombinedOutput()
-	fmt.Println("合成视频成功:", global.OutVideoCatchTxtPath, string(output))
 	return nil
 }
 
@@ -205,56 +195,37 @@ func createAnimatedSegment(imagePath string, srtDuration string, animation strin
 		"yuv420p",
 		catchVideoPath,
 	}
-	cmd := exec.Command("ffmpeg", args...)
-	fmt.Println("最终参数", cmd.Args, duration)
-	err = cmd.Start()
+	err = ExecCommand("ffmpeg", args)
 	if err != nil {
-		log.Fatalln("执行ffmpeg错误-start", err)
-		return err
-	}
-	err = cmd.Wait()
-	if err != nil {
-		log.Fatalln("执行ffmpeg错误-wait", err)
 		return err
 	}
 	return nil
 }
 
-func createSubtitle() error {
+// 创建字幕视频
+func createSubtitleVideo() error {
 	fontName := strings.Split(global.Config.Video.FontFile, ".")[0]
 	fontSize := global.Config.Video.FontSize
 	fontColor := global.Config.Video.FontColor
 	fontPosition := global.Config.Video.Position
 	audioSrtPath := global.OutAudioSrtPath
-	videoPath := global.Config.Book.Name + ".mp4"
-	subtitleVideoName := global.OutSubtitleVideoName
-	outVideoPath := global.OutVideoPath
+	videoPath := global.OutVideoName
+	subtitleVideoName := global.CatchMergeConfig.VideoSubtitlesName
 	subtitleStyle := "FontName=" + fontName + "," + "Fontsize=" + fontSize + "," + "PrimaryColour=&H" + fontColor + "," + "Alignment=" + fontPosition
 	args := []string{
-		outVideoPath,
-		" && ffmpeg",
 		"-i",
 		videoPath,
 		"-vf",
-		"\"subtitles=" + audioSrtPath + ":force_style=" + subtitleStyle + "\"",
+		"subtitles=" + audioSrtPath + ":force_style='" + subtitleStyle + "'",
 		"-c:a",
 		"copy",
+		"-y",
 		subtitleVideoName,
 	}
-	cmd := exec.Command("cd", args...)
-	fmt.Println("最终参数1", cmd.Args)
-	err := cmd.Start()
+	err := ExecCommand("ffmpeg", args)
 	if err != nil {
-		log.Fatalln("执行ffmpeg错误-start-合成", err)
 		return err
 	}
-	err = cmd.Wait()
-	if err != nil {
-		log.Fatalln("执行ffmpeg错误-wait-合成", err)
-		return err
-	}
-	output, _ := cmd.CombinedOutput()
-	fmt.Println("生成字幕视频成功:", subtitleVideoName, string(output))
 	return nil
 }
 
@@ -283,7 +254,7 @@ func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 	}
 	subtitles := global.Config.Video.Subtitles
 	if subtitles {
-		err = createSubtitle()
+		err = createSubtitleVideo()
 		if err != nil {
 			fmt.Println("生成字幕视频失败", err)
 			return
@@ -294,6 +265,10 @@ func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 func VideoComposition() (err error) {
 	picturePathList, imageError := getImagesMap()
 	audioSrtMap, audioSrtMapError := getAudioSrtMap()
+	if len(picturePathList) != len(audioSrtMap) {
+		log.Fatalln("字幕长度和图片长度不一致")
+		return err
+	}
 	if audioSrtMapError != nil || imageError != nil {
 		return fmt.Errorf("读取图片列表或者字幕切片时失败")
 	}

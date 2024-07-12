@@ -3,8 +3,6 @@ package core
 import (
 	"fmt"
 	"github/stable-diffusion-go/server/global"
-	"log"
-	"os/exec"
 	"sync"
 )
 
@@ -25,8 +23,8 @@ func ProcessText() (err error) {
 
 func startCmd() error {
 	participlePythonPath := global.ParticiplePythonPath
-	bookPath := global.OriginBookPath
-	outParticipleBookPathBookPath := global.OutParticipleBookPathBookPath
+	bookPath := global.BookPath
+	outParticipleBookPathBookPath := global.OutParticipleBookPath
 	maxWords := global.Config.Potential.MaxWords
 	minWords := global.Config.Potential.MinWords
 	args := []string{
@@ -36,10 +34,8 @@ func startCmd() error {
 		"--max_word", maxWords,
 		"--min_word", minWords,
 	}
-	cmd := exec.Command("python", args...)
-	output, err := cmd.CombinedOutput()
+	err := ExecCommand("python", args)
 	if err != nil {
-		log.Fatalln("错误的执行代码", string(output))
 		return err
 	}
 	fmt.Println("进行分词完成")

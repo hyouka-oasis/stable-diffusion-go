@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -147,4 +149,22 @@ func maxLength(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// ExecCommand 异步执行cmd
+func ExecCommand(name string, args []string) error {
+	cmd := exec.Command(name, args...)
+	err := cmd.Start()
+	if err != nil {
+		log.Fatalln("执行"+name+"start失败:", err)
+		return err
+	}
+	err = cmd.Wait()
+	if err != nil {
+		log.Fatalln("执行"+name+"wait失败:", err)
+		return err
+	}
+	output, err := cmd.CombinedOutput()
+	fmt.Println("执行"+name+"成功:", string(output), err)
+	return nil
 }
