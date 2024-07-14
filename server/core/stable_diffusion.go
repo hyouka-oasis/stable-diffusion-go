@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
+	"sort"
 )
 
 type Response struct {
@@ -49,32 +49,33 @@ func StableDiffusion() (err error) {
 	}
 	height := global.Config.StableDiffusionConfig.Height
 	width := global.Config.StableDiffusionConfig.Width
-
-	var wg sync.WaitGroup
-	for index, data := range jsonData {
-		wg.Add(1)
-		go func(index int, data map[string]string) {
-			// 构造 Stable Diffusion 请求参数
-			request := map[string]interface{}{
-				"prompt":          data["prompt"],
-				"negative_prompt": data["negative_prompt"],
-				"height":          height,
-				"width":           width,
-			}
-			// 合并 Stable Diffusion 配置参数
-			for key, value := range stableDiffusionParams {
-				request[key] = value
-			}
-			// 发送请求并生成图片
-			err := generateImage(request, index)
-			defer wg.Done()
-			if err != nil {
-				log.Fatal("生成图片失败:", err)
-				return
-			}
-		}(index+1, data)
+	//取出map中的所有key存入切片keys
+	var keys = make([]int, 0, len(jsonData))
+	for key := range jsonData {
+		keys = append(keys, key)
 	}
-	wg.Wait()
+	//对切片进行排序
+	sort.Ints(keys)
+	for _, index := range keys {
+		data := jsonData[index]
+		// 构造 Stable Diffusion 请求参数
+		request := map[string]interface{}{
+			"prompt":          data["prompt"],
+			"negative_prompt": data["negative_prompt"],
+			"height":          height,
+			"width":           width,
+		}
+		// 合并 Stable Diffusion 配置参数
+		for key, value := range stableDiffusionParams {
+			request[key] = value
+		}
+		// 发送请求并生成图片
+		err = generateImage(request, index+1)
+		if err != nil {
+			log.Fatal("生成图片失败:", err)
+			return
+		}
+	}
 	return nil
 }
 
@@ -106,15 +107,20 @@ func generateImage(request map[string]interface{}, index int) error {
 	if err != nil {
 		log.Fatalf("解析响应数据失败: %v", err)
 	}
-	image := respData.Images[0]
-	// 将 base64 编码的字符串解码为 []byte
-	imageData, err := base64.StdEncoding.DecodeString(image)
-	// 保存图片
-	imagePath := filepath.Join(global.OutImagesPath, fmt.Sprintf("%d.png", index))
-	err = os.WriteFile(imagePath, imageData, 0644)
-	if err != nil {
-		log.Fatalf("保存图片失败: %v", err)
+	if len(respData.Images) > 0 {
+		image := respData.Images[0]
+		// 将 base64 编码的字符串解码为 []byte
+		imageData, err := base64.StdEncoding.DecodeString(image)
+		// 保存图片
+		imagePath := filepath.Join(global.OutImagesPath, fmt.Sprintf("%d.png", index))
+		err = os.WriteFile(imagePath, imageData, 0644)
+		if err != nil {
+			log.Fatalf("保存图片失败: %v", err)
+		}
+		fmt.Print("第", index, "张图片生成完成\n")
+	} else {
+		fmt.Print("第", index, "张图片生成失败\n", respData, err)
 	}
-	fmt.Print("第", index, "张图片生成完成\n")
+
 	return nil
 }
