@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 
 
-async def time_difference(time1, time2, time_format=r"%H:%M:%S.%f"):
+async def time_difference(time1, time2, time_format=r"%H:%M:%S,%f"):
     time1 = datetime.strptime(time1, time_format)
     time2 = datetime.strptime(time2, time_format)
     print()
@@ -109,6 +109,7 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
         pitch="+0Hz" if edge_tts_args[3] is None else edge_tts_args[3],
     )
     sub_marker = SubMarker()
+    vtt_path = srt_path.replace(".srt", ".vtt")
     # 写入音频文件
     async with aiofiles.open(mp3_path, "wb") as file:
         async for chunk in communicate.stream():
@@ -117,10 +118,19 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
             elif chunk["type"] == "WordBoundary":
                 sub_marker.create_sub((chunk["offset"], chunk["duration"]), chunk["text"])
     # 写入字幕文件
-    async with aiofiles.open(srt_path, "w", encoding="utf-8") as file:
+    async with aiofiles.open(vtt_path, "w", encoding="utf-8") as file:
         content_to_write = await sub_marker.generate_cn_subs(content)
         await file.write(content_to_write)
-
+    # vtt -》 srt
+    idx = 1  # 字幕序号
+    with open(srt_path, "w", encoding="utf-8") as f_out:
+        for line in open(vtt_path, encoding="utf-8"):
+            if "-->" in line:
+                f_out.write("%d\n" % idx)
+                idx += 1
+                line = line.replace(".", ",")  # 这行不是必须的，srt也能识别'.'
+            if idx > 1:  # 跳过header部分
+                f_out.write(line)
 
 # 生成字幕时间列表
 async def create_processing_time(srt_path, text_path, txt_time_path):
@@ -129,7 +139,7 @@ async def create_processing_time(srt_path, text_path, txt_time_path):
         section_list = f.readlines()
         section_time_list = []
         index_ = 0
-        time = "00:00:00.000"
+        time = "00:00:00,000"
         for si, section in enumerate(section_list):
             if len(section_list) == si + 1:
                 # 最后这段不处理 默认使用剩余所有time

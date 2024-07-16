@@ -8,10 +8,29 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
 )
+
+func windowCmdArgsConversionPath(path string) (absPath string, err error) {
+	if runtime.GOOS == "windows" {
+		projPath, err := filepath.Abs("./")
+		if err != nil {
+			fmt.Println("获取项目绝对路径失败:", err)
+			return absPath, err
+		}
+		absPath, err = filepath.Rel(projPath, path)
+		if err != nil {
+			fmt.Println("转换相对路径失败:", err)
+			return absPath, err
+		}
+		absPath := filepath.ToSlash(absPath)
+		return absPath, err
+	}
+	return path, nil
+}
 
 // 获取字幕切片
 func getAudioSrtMap() (audioSrtMap []string, err error) {
@@ -163,13 +182,13 @@ func createAnimatedSegment(imagePath string, srtDuration string, animation strin
 		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,-1),(iw-iw/zoom)/2,x+%.13f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=25*%f:s=%s",
 			animationSpeed, leftRightMove*10, duration, ffmpegWidthAndHeight)
 	} else if animation == "right_move" {
-		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw/zoom)/2,x+%.13f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=25*%f:s=%s",
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw/zoom)/2,x-%.13f)':y='if(lte(on,1),(ih-ih/zoom)/2,y)':d=25*%f:s=%s",
 			animationSpeed, leftRightMove*10, duration, ffmpegWidthAndHeight)
 	} else if animation == "up_move" {
 		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,-1),(ih-ih/zoom)/2,y+%.13f)':d=25*%f:s=%s",
 			animationSpeed, upDownMove*10, duration, ffmpegWidthAndHeight)
 	} else if animation == "down_move" {
-		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,1),(ih/zoom)/2,y+%.13f)':d=25*%f:s=%s",
+		scale = fmt.Sprintf("scale=-2:ih*10,zoompan='%f':x='if(lte(on,1),(iw-iw/zoom)/2,x)':y='if(lte(on,1),(ih/zoom)/2,y-%.13f)':d=25*%f:s=%s",
 			animationSpeed, upDownMove*10, duration, ffmpegWidthAndHeight)
 	} else {
 		scale = fmt.Sprintf("scale=-2:ih*10,zoompan=z='min(zoom+%.19f,%f)*if(gte(zoom,1),1,0)+if(lt(zoom,1),1,0)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=25*%f:s=%s",
@@ -212,6 +231,21 @@ func createSubtitleVideo() error {
 	videoPath := global.OutVideoName
 	subtitleVideoName := global.CatchMergeConfig.VideoSubtitlesName
 	subtitleStyle := "FontName=" + fontName + "," + "Fontsize=" + fontSize + "," + "PrimaryColour=&H" + fontColor + "," + "Alignment=" + fontPosition
+	subtitleVideoName, err := windowCmdArgsConversionPath(subtitleVideoName)
+	if err != nil {
+		fmt.Println("Error getting relative out path:", err)
+		return err
+	}
+	videoPath, err = windowCmdArgsConversionPath(videoPath)
+	if err != nil {
+		fmt.Println("Error getting relative video path:", err)
+		return err
+	}
+	audioSrtPath, err = windowCmdArgsConversionPath(audioSrtPath)
+	if err != nil {
+		fmt.Println("Error getting relative SRT path:", err)
+		return err
+	}
 	args := []string{
 		"-i",
 		videoPath,
@@ -222,7 +256,7 @@ func createSubtitleVideo() error {
 		"-y",
 		subtitleVideoName,
 	}
-	err := ExecCommand("ffmpeg", args)
+	err = ExecCommand("ffmpeg", args)
 	if err != nil {
 		return err
 	}
@@ -239,7 +273,7 @@ func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 		// 随机选择一个动画效果
 		selectedAnimation := global.Animations[rand.Intn(len(global.Animations))]
 		imagePath, duration := tuple[0], tuple[1]
-		catchVideoPath := filepath.Join(global.OutVideoPath, "catch_video_"+strconv.Itoa(index)+".mp4")
+		catchVideoPath := filepath.Join(global.OutVideoPath, "catch_video_"+strconv.Itoa(index+1)+".mp4")
 		err := createAnimatedSegment(imagePath, duration, selectedAnimation, catchVideoPath)
 		if err != nil {
 			log.Fatalln("错误信息:", err)
@@ -254,7 +288,7 @@ func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 	}
 	subtitles := global.Config.Video.Subtitles
 	if subtitles {
-		err = createSubtitleVideo()
+		err := createSubtitleVideo()
 		if err != nil {
 			fmt.Println("生成字幕视频失败", err)
 			return
