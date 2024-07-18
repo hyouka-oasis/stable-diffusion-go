@@ -15,7 +15,7 @@ async def time_difference(time1, time2, time_format=r"%H:%M:%S,%f"):
     print()
     # 计算时间差
     delta = time2 - time1
-    time_diff = str(delta)[:11]
+    time_diff = str(delta).replace(".", ",")[:11]
     return time_diff
 
 
@@ -27,6 +27,9 @@ async def srt_to_list(filename):
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
             line = line.strip()  # 移除行首尾的空白字符
+
+            if line.isdigit():  # 跳过字幕编号行
+                continue
 
             if "-->" in line:  # 检测时间码行
                 if text:  # 如果前一个字幕块的文本已经读取，存储前一个字幕块
@@ -132,34 +135,35 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
             if idx > 1:  # 跳过header部分
                 f_out.write(line)
 
+
 # 生成字幕时间列表
 async def create_processing_time(srt_path, text_path, txt_time_path):
     subtitles = await srt_to_list(srt_path)
     with open(text_path, "r", encoding="utf-8") as f:
         section_list = f.readlines()
-        section_time_list = []
-        index_ = 0
-        time = "00:00:00,000"
-        for si, section in enumerate(section_list):
-            if len(section_list) == si + 1:
-                # 最后这段不处理 默认使用剩余所有time
-                next_start_time = subtitles[-1][0].split(" --> ")[1]
+    section_time_list = []
+    index_ = 0
+    time = "00:00:00,000"
+    for si, section in enumerate(section_list):
+        if len(section_list) == si + 1:
+            # 最后这段不处理 默认使用剩余所有time
+            next_start_time = subtitles[-1][0].split(" --> ")[1]
+            diff = await time_difference(time, next_start_time)
+            section_time_list.append(diff)
+            break
+        content_ = await SubMarker().remove_non_chinese_chars(section)
+        for i, v in enumerate(subtitles):
+            if i <= index_:
+                continue
+            if v[1] not in content_:
+                next_start_time = v[0].split(" --> ")[0]
                 diff = await time_difference(time, next_start_time)
                 section_time_list.append(diff)
+                index_ = i
+                time = next_start_time
                 break
-            content_ = await SubMarker().remove_non_chinese_chars(section)
-            for i, v in enumerate(subtitles):
-                if i <= index_:
-                    continue
-                if v[1] not in content_:
-                    next_start_time = v[0].split(" --> ")[0]
-                    diff = await time_difference(time, next_start_time)
-                    section_time_list.append(diff)
-                    index_ = i
-                    time = next_start_time
-                    break
-        with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
-            f3.write(str(section_time_list))
+    with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
+        f3.write(str(section_time_list))
 
 
 # 初始化edge_tts
@@ -195,4 +199,8 @@ async def create_voice_caption():
 
 
 if __name__ == "__main__":
+    # audio_srt_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/participle/原来我是修仙大佬.srt"
+    # participle_book_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/participle/原来我是修仙大佬.txt"
+    # audi_srt_map_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/原来我是修仙大佬map.txt"
+    # asyncio.run(create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path))
     asyncio.run(create_voice_caption())
