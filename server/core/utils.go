@@ -168,3 +168,22 @@ func ExecCommand(name string, args []string) error {
 	fmt.Println("执行"+name+"成功:", string(output), err)
 	return nil
 }
+
+func extractStr(content string) (string, string) {
+	parts := strings.Split(content, "**Negative Prompt:**")
+	if len(parts) < 2 {
+		return "", ""
+	}
+
+	prompt := strings.TrimSpace(strings.Replace(parts[0], "**Prompt:**", "", 1))
+	prompt = strings.Replace(prompt, "Prompt:", "", 1)
+	prompt = strings.Replace(prompt, "\n", "", -1)
+
+	negativePrompt := strings.TrimSpace(strings.Replace(parts[1], "**Negative Prompt:**", "", 1))
+	negativePrompt = strings.Replace(negativePrompt, "Negative", "", 1)
+	negativePrompt = strings.Replace(negativePrompt, "Prompt:", "", 1)
+	negativePrompt = strings.Replace(negativePrompt, "**Prompt:**", "", 1)
+	negativePrompt = strings.Replace(negativePrompt, "\n", "", -1)
+
+	return prompt, negativePrompt
+}

@@ -13,11 +13,20 @@ func ChatgptOllama(message string) (prompt string, err error) {
 	config.BaseURL = global.Config.Ollama.Url
 	model := global.Config.Ollama.Model
 	client := openai.NewClientWithConfig(config)
+	//file, err := os.ReadFile(global.SdPrompt)
+	//if err != nil {
+	//	log.Fatal("读取文件失败", err)
+	//	return
+	//}
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
 			Model: model,
 			Messages: []openai.ChatCompletionMessage{
+				//{
+				//	Role:    openai.ChatMessageRoleSystem,
+				//	Content: string(file),
+				//},
 				{
 					Role:    openai.ChatMessageRoleUser,
 					Content: message,

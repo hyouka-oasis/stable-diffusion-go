@@ -53,9 +53,12 @@ func translateOllama(inputFilePath string, outputFilePath string) (err error) {
 			log.Fatal("转换失败:", err)
 			return err
 		}
+		//prompt, negativePrompt := extractStr(translation)
 		jsonContent = append(jsonContent, map[string]string{
 			"prompt":          translation + "," + lora,
 			"negative_prompt": "nsfw,(low quality,normal quality,worst quality,jpeg artifacts),cropped,monochrome,lowres,low saturation,((watermark)),(white letters)",
+			//"negative_prompt": negativePrompt,
+			"origin_txt": line,
 		})
 	}
 	if err := scanner.Err(); err != nil {
