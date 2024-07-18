@@ -57,7 +57,6 @@ class SubMarker(edge_tts.SubMaker):
         return cleaned_text
 
     async def generate_cn_subs(self, text) -> str:
-        print(text, "获取到的文本")
         # 定义要指定的字符
         punctuation = ["，", "。", "！", "？", "；", "：", "”", ",", "!", "…", "+", "-"]
 
@@ -133,7 +132,17 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
                 idx += 1
                 line = line.replace(".", ",")  # 这行不是必须的，srt也能识别'.'
             if idx > 1:  # 跳过header部分
-                f_out.write(line)
+                if "-->" not in line:
+                    if len(line.strip()) > 10:
+                        mid = len(line) // 2
+                        print(line, mid)
+                        txt1 = line[:mid]
+                        txt2 = line[mid:]
+                        f_out.write(txt1+"\n"+txt2)
+                    else:
+                        f_out.write(line)
+                else:
+                    f_out.write(line)
 
 
 # 生成字幕时间列表
@@ -170,34 +179,34 @@ async def create_processing_time(srt_path, text_path, txt_time_path):
 
 # 初始化edge_tts
 async def create_voice_caption():
-    parser = argparse.ArgumentParser()
-    # 从go那边获取过来的文本路径
-    parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
-    parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
-    parser.add_argument("--audio_path", help="输出的音频路径地址")
-    parser.add_argument("--audio_srt_path", help="输出的字幕路径地址")
-    parser.add_argument("--voice", help="角色")
-    parser.add_argument("--rate", help="语速")
-    parser.add_argument("--volume", help="音量")
-    parser.add_argument("--pitch", help="分贝")
-    args = parser.parse_args()
-    participle_book_path = args.participle_book_path
+    # parser = argparse.ArgumentParser()
+    # # 从go那边获取过来的文本路径
+    # parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
+    # parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
+    # parser.add_argument("--audio_path", help="输出的音频路径地址")
+    # parser.add_argument("--audio_srt_path", help="输出的字幕路径地址")
+    # parser.add_argument("--voice", help="角色")
+    # parser.add_argument("--rate", help="语速")
+    # parser.add_argument("--volume", help="音量")
+    # parser.add_argument("--pitch", help="分贝")
+    # args = parser.parse_args()
+    participle_book_path = "D:\ComicTweetsGo\server\神秘复苏\participle\神秘复苏.txt"
     if participle_book_path is None:
         raise Exception("输出路径不能为空")
-    audi_srt_map_path = args.audi_srt_map_path
+    audi_srt_map_path = "D:\ComicTweetsGo\server\神秘复苏\神秘复苏map.txt"
     if audi_srt_map_path is None:
         raise Exception("字幕切片文本路径不能为空")
-    audio_path = args.audio_path
+    audio_path = "D:\ComicTweetsGo\server\神秘复苏\participle\神秘复苏.mp3"
     if audio_path is None:
         raise Exception("音频输出路径不能为空")
-    audio_srt_path = args.audio_srt_path
+    audio_srt_path = "D:\ComicTweetsGo\server\神秘复苏\participle\神秘复苏.srt"
     if audio_srt_path is None:
         raise Exception("字幕输出路径不能为空")
-    voice, rate, volume, pitch = args.voice, args.rate, args.volume, args.pitch
+    voice, rate, volume, pitch = "zh-CN-YunxiNeural", "+10%", "+100%", "+0Hz"
     # 通过edge-tts生成音频和字幕
     await edge_tts_create_srt(participle_book_path, audio_path, audio_srt_path, voice, rate, volume, pitch)
     # 通过字幕生成时间表
-    await create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path)
+    # await create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path)
 
 
 if __name__ == "__main__":
