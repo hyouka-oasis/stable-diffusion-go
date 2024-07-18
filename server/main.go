@@ -50,7 +50,7 @@ func main() {
 	// 5.翻译成功后进行字幕提取
 	core.TextToSrt()
 	// 6.调用
-	//core.StableDiffusion()
+	core.StableDiffusion()
 	// 7.合成视频
 	core.VideoComposition()
 }
