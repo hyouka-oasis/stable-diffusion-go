@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"log"
+	"runtime"
 	"sync"
 	"time"
 )
 
 func windowCmdArgsConversion(value string) string {
-	//if runtime.GOOS == "windows" {
-	//	return value + "%"
-	//}
+	if runtime.GOOS == "windows" {
+		return value + "%"
+	}
 	return value
 }
 

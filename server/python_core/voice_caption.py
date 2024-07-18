@@ -149,6 +149,7 @@ async def create_processing_time(srt_path, text_path, txt_time_path):
             # 最后这段不处理 默认使用剩余所有time
             next_start_time = subtitles[-1][0].split(" --> ")[1]
             diff = await time_difference(time, next_start_time)
+            diff = diff.replace(",", ".")
             section_time_list.append(diff)
             break
         content_ = await SubMarker().remove_non_chinese_chars(section)
@@ -158,6 +159,7 @@ async def create_processing_time(srt_path, text_path, txt_time_path):
             if v[1] not in content_:
                 next_start_time = v[0].split(" --> ")[0]
                 diff = await time_difference(time, next_start_time)
+                diff = diff.replace(",", ".")
                 section_time_list.append(diff)
                 index_ = i
                 time = next_start_time

@@ -230,7 +230,7 @@ func createSubtitleVideo() error {
 	audioSrtPath := global.OutAudioSrtPath
 	videoPath := global.OutVideoName
 	subtitleVideoName := global.CatchMergeConfig.VideoSubtitlesName
-	subtitleStyle := "FontName=" + fontName + "," + "Fontsize=" + fontSize + "," + "PrimaryColour=&H" + fontColor + "," + "Alignment=" + fontPosition
+	subtitleStyle := "FontName=" + fontName + "," + "Fontsize=" + fontSize + "," + "PrimaryColour=&H" + fontColor + "," + "Alignment=" + fontPosition + "WrapStyle=0"
 	subtitleVideoName, err := windowCmdArgsConversionPath(subtitleVideoName)
 	if err != nil {
 		fmt.Println("Error getting relative out path:", err)
