@@ -268,16 +268,17 @@ func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 	var catchVideoList []string
 	fmt.Println("开始处理视频")
 	for index, tuple := range Zip(picturePathList, timeSrtMap) {
-		// 设置随机数种子
-		//rand.New(rand.NewSource(time.Now().UnixNano()))
 		// 随机选择一个动画效果
 		selectedAnimation := global.Animations[rand.Intn(len(global.Animations))]
 		imagePath, duration := tuple[0], tuple[1]
-		catchVideoPath := filepath.Join(global.OutVideoPath, "catch_video_"+strconv.Itoa(index+1)+".mp4")
+		catchVideoIndex := strconv.Itoa(index + 1)
+		catchVideoPath := filepath.Join(global.OutVideoPath, "catch_video_"+catchVideoIndex+".mp4")
+		fmt.Println("开始处理第", catchVideoIndex, "段视频")
 		err := createAnimatedSegment(imagePath, duration, selectedAnimation, catchVideoPath)
 		if err != nil {
-			log.Fatalln("错误信息:", err)
+			log.Fatalln("第:", catchVideoIndex, "段视频处理失败:", err)
 		}
+		fmt.Println("第", catchVideoIndex, "段视频处理成功")
 		catchVideoList = append(catchVideoList, catchVideoPath)
 	}
 	fmt.Println("视频处理完成")
@@ -286,13 +287,16 @@ func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 		log.Fatalln("合成视频失败", err)
 		return
 	}
+	fmt.Println("合并视频完成")
 	subtitles := global.Config.Video.Subtitles
 	if subtitles {
+		fmt.Println("开始添加字幕")
 		err := createSubtitleVideo()
 		if err != nil {
 			fmt.Println("生成字幕视频失败", err)
 			return
 		}
+		fmt.Println("字幕添加完成")
 	}
 }
 
