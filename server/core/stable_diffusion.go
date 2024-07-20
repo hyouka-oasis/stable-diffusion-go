@@ -69,12 +69,14 @@ func StableDiffusion() (err error) {
 		for key, value := range stableDiffusionParams {
 			request[key] = value
 		}
+		generateIndex := index + 1
 		// 发送请求并生成图片
-		err = generateImage(request, index+1)
+		err = generateImage(request, generateIndex)
 		if err != nil {
 			log.Fatal("生成图片失败:", err)
 			return
 		}
+		fmt.Println("第", generateIndex, "张图片生成完成", "剩余", len(jsonData)-generateIndex)
 	}
 	return nil
 }
@@ -117,7 +119,6 @@ func generateImage(request map[string]interface{}, index int) error {
 		if err != nil {
 			log.Fatalf("保存图片失败: %v", err)
 		}
-		fmt.Print("第", index, "张图片生成完成\n")
 	} else {
 		fmt.Print("第", index, "张图片生成失败\n", respData, err)
 	}

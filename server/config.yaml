@@ -1,29 +1,26 @@
 # 书配置 记得要加一个空格！！！！！！！！
 book:
   # 小说书名 要和文件同目录 不要带.txt
-  name: 原来我是修仙大佬
+  name: 神秘复苏6-10
   # 小说使用的语言 默认 zh | en 为英语 具体请查看阿里云翻译的文档
   language: zh
+  # 是否批量处理
+  batch: true
 
 translate_config:
   type: ollama
-# 批量文件处理 使用mass_production.py 文件
-batch:
-  # 资源文件目录
-  source_path:
-  # 输出文件目录
-  output_path:
-  # 尾部视频拼接路径
-  ending_splice_path:
+
+
 # 音频
 audio:
   # 每行的字数限制
   limit: 18
   # 角色 终端输入 edge-tts --list-voices 可以查看所有声音
   # 推荐 zh-CN-YunxiNeural 男  zh-CN-XiaoyiNeural  一般  女  zh-CN-XiaoxiaoNeural 最好  女
+#  voice: ja-JP-KeitaNeural
   voice: zh-CN-YunxiNeural
   # 语速
-  rate: +30%
+  rate: +10%
   # 音量
   volume: +100%
   # 是否开启bgm 开启bgm 项目下要有一个bgm的目录
@@ -55,7 +52,11 @@ stable_diffusion:
   # 图片宽
   width: 540
   # lora <lora:lora name:weight> 多个用英文,隔开
-  lora: <lora:Fantasy x Guofeng Xianxia Realm_v1.0(国风仙侠-shakker):1>
+  lora: ""
+  # 使用什么模型
+#  override_settings: {
+#    "sd_model_checkpoint": "GhostMix_V2.0.safetensors"
+#  }
 
 # 合成视频配置
 video:

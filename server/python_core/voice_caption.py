@@ -12,7 +12,6 @@ from datetime import datetime
 async def time_difference(time1, time2, time_format=r"%H:%M:%S.%f"):
     time1 = datetime.strptime(time1, time_format)
     time2 = datetime.strptime(time2, time_format)
-    print()
     # 计算时间差
     delta = time2 - time1
     time_diff = str(delta).replace(".", ",")[:11]
@@ -211,6 +210,11 @@ async def create_voice_caption():
 
 
 if __name__ == "__main__":
+    # audio_srt_path = "D:\\ComicTweetsGo\\server\\神秘复苏2-10\\participle\\test.wav"
+    # participle_book_path = "D:\ComicTweetsGo\server\神秘复苏2-10\participle\神秘复苏2-10.txt"
+    # audi_srt_map_path = "D:\ComicTweetsGo\server"
+    # asyncio.run(map3_to_srt(audio_srt_path))
+
     # audio_srt_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/participle/原来我是修仙大佬.srt"
     # participle_book_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/participle/原来我是修仙大佬.txt"
     # audi_srt_map_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/原来我是修仙大佬map.txt"

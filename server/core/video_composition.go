@@ -278,7 +278,7 @@ func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 		if err != nil {
 			log.Fatalln("第:", catchVideoIndex, "段视频处理失败:", err)
 		}
-		fmt.Println("第", catchVideoIndex, "段视频处理成功")
+		fmt.Println("第", catchVideoIndex, "段视频处理成功", "剩余:", len(picturePathList)-index+1)
 		catchVideoList = append(catchVideoList, catchVideoPath)
 	}
 	fmt.Println("视频处理完成")

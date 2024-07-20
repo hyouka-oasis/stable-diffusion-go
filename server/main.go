@@ -6,12 +6,12 @@ import (
 	"github/stable-diffusion-go/server/global"
 	"log"
 	"os"
+	"regexp"
+	"strconv"
+	"sync"
 )
 
-func main() {
-	core.InitViper()
-	bookName := global.Config.Book.Name
-	core.InitGlobalConfig()
+func batchGoRun(bookName string) {
 	// 1. 读取测试.txt文件
 	file, err := os.Open(global.BookPath)
 	fmt.Print("开始读取:" + bookName + "\n")
@@ -53,4 +53,33 @@ func main() {
 	core.StableDiffusion()
 	// 7.合成视频
 	core.VideoComposition()
+}
+
+func main() {
+	core.InitViper()
+	bookName := global.Config.Book.Name
+	if global.Config.Book.Batch {
+		// 使用正则表达式提取名称和数字
+		re := regexp.MustCompile(`(.*?)(\d+)-(\d+)`)
+		matches := re.FindStringSubmatch(bookName)
+		if len(matches) >= 4 {
+			var wg sync.WaitGroup
+			namePrefix := matches[1]
+			start, _ := strconv.Atoi(matches[2])
+			end, _ := strconv.Atoi(matches[3])
+			for i := start; i <= end; i++ {
+				name := namePrefix + strconv.Itoa(i)
+				core.InitGlobalConfig(name)
+				wg.Add(1)
+				go func() {
+					batchGoRun(name)
+					defer wg.Done()
+				}()
+				wg.Wait()
+			}
+		}
+	} else {
+		core.InitGlobalConfig(bookName)
+		batchGoRun(bookName)
+	}
 }

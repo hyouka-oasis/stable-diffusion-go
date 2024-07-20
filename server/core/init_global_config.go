@@ -6,8 +6,7 @@ import (
 	"path/filepath"
 )
 
-func InitGlobalConfig() {
-	bookName := global.Config.Book.Name
+func InitGlobalConfig(bookName string) {
 	wd, err := os.Getwd()
 	if err != nil {
 		panic(err)
