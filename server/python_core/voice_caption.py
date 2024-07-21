@@ -215,8 +215,8 @@ if __name__ == "__main__":
     # audi_srt_map_path = "D:\ComicTweetsGo\server"
     # asyncio.run(map3_to_srt(audio_srt_path))
 
-    # audio_srt_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/participle/原来我是修仙大佬.srt"
-    # participle_book_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/participle/原来我是修仙大佬.txt"
-    # audi_srt_map_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬/原来我是修仙大佬map.txt"
+    # audio_srt_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\participle\\神秘复苏8.srt"
+    # participle_book_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\participle\\神秘复苏8.txt"
+    # audi_srt_map_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\神秘复苏8map.txt"
     # asyncio.run(create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path))
     asyncio.run(create_voice_caption())

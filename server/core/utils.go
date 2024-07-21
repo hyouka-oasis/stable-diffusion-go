@@ -164,6 +164,11 @@ func ExecCommand(name string, args []string) error {
 		log.Fatalln("执行"+name+"wait失败:", err)
 		return err
 	}
+	body, err := cmd.CombinedOutput()
+	if string(body) != "" {
+		log.Fatalln("执行"+name+"combinedOutput失败:", string(body))
+		return err
+	}
 	return nil
 }
 

@@ -33,9 +33,12 @@ func StableDiffusion() (err error) {
 		log.Fatal("解析 JSON 数据失败:", err)
 		return err
 	}
-
+	stableDiffusionJsonPath := "stable_diffusion.json"
+	if global.Config.StableDiffusionConfig.ArgsJson != "" {
+		stableDiffusionJsonPath = global.Config.StableDiffusionConfig.ArgsJson
+	}
 	// 读取 Stable Diffusion 配置文件
-	stableDiffusionConfig, err := os.ReadFile("stable_diffusion.json")
+	stableDiffusionConfig, err := os.ReadFile(stableDiffusionJsonPath)
 	if err != nil {
 		log.Fatal("读取 Stable Diffusion 配置文件失败:", err)
 		return err

@@ -1,0 +1,12 @@
+{
+  "seed": -1,
+  "batch_size": 1,
+  "steps": 20,
+  "cfg_scale": 7,
+  "override_settings": {
+    "sd_model_checkpoint": "PUS细节控图_1.0.safetensors",
+    "sd_vae": "vae-ft-mse-840000-ema-pruned.safetensors"
+  },
+  "enable_hr": true,
+  "hr_second_pass_steps": 20
+}

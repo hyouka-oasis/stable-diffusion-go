@@ -1,11 +1,11 @@
 # 书配置 记得要加一个空格！！！！！！！！
 book:
   # 小说书名 要和文件同目录 不要带.txt
-  name: 神秘复苏6-10
+  name: 神秘复苏8
   # 小说使用的语言 默认 zh | en 为英语 具体请查看阿里云翻译的文档
   language: zh
   # 是否批量处理
-  batch: true
+  batch: false
 
 translate_config:
   type: ollama
@@ -53,6 +53,9 @@ stable_diffusion:
   width: 540
   # lora <lora:lora name:weight> 多个用英文,隔开
   lora: ""
+  # 额外采用的json文件
+#  args_json: "pus细节控图.json"
+  args_json: "stable_diffusion.json"
   # 使用什么模型
 #  override_settings: {
 #    "sd_model_checkpoint": "GhostMix_V2.0.safetensors"
