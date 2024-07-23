@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github/stable-diffusion-go/server/core"
 	"github/stable-diffusion-go/server/global"
+	"github/stable-diffusion-go/server/initialize"
+	"go.uber.org/zap"
 	"log"
 	"os"
 	"regexp"
@@ -19,9 +21,6 @@ func batchGoRun(bookName string) {
 		log.Fatal("文件不存在:", err)
 	}
 	defer file.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
 	// 2. 创建participle目录
 	err = core.EnsureDirectory(global.OutParticiplePath)
 	if err != nil {
@@ -37,27 +36,41 @@ func batchGoRun(bookName string) {
 	if err != nil {
 		log.Fatal("创建视频目录失败:", err)
 	}
-	// 3. 处理文本文件
+	//3. 处理文本文件
 	err = core.ProcessText()
 	if err != nil {
 		panic(err)
 	}
 	// 4. 翻译文本
-	err = core.Translate()
-	if err != nil {
-		panic(err)
-	}
-	// 5.翻译成功后进行字幕提取
-	core.TextToSrt()
+	//err = core.Translate()
+	//if err != nil {
+	//	panic(err)
+	//}
+	//5.翻译成功后进行字幕提取
+	//core.TextToSrt()
 	// 6.调用
-	core.StableDiffusion()
+	//core.StableDiffusion()
 	// 7.合成视频
-	core.VideoComposition()
+	//core.VideoComposition()
 }
 
 func main() {
-	core.InitViper()
+	global.Viper = core.InitViper()
+	global.Log = core.Zap() // 初始化zap日志库
+	zap.ReplaceGlobals(global.Log)
+	global.DB = initialize.Gorm() // gorm连接数据库
+	if global.DB != nil {
+		initialize.RegisterTables() // 初始化表
+		// 程序结束前关闭数据库链接
+		db, _ := global.DB.DB()
+		defer db.Close()
+	}
+	core.RunServer()
 	bookName := global.Config.Book.Name
+	if bookName == "123" {
+		fmt.Println("测试阶段")
+		return
+	}
 	if global.Config.Book.Batch {
 		// 使用正则表达式提取名称和数字
 		re := regexp.MustCompile(`(.*?)(\d+)-(\d+)`)
