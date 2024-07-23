@@ -9,3 +9,5 @@ tmp
 *.txt
 *.png
 *.mp4
+*.db
+log
