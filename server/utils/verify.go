@@ -3,6 +3,7 @@ package utils
 var (
 	IdVerify                    = Rules{"Id": {NotEmpty()}}
 	ProjectVerify               = Rules{"Name": {NotEmpty()}}
+	ProjectDetailVerify         = Rules{"ProjectId": {NotEmpty()}}
 	StableDiffusionVerify       = Rules{"Url": {NotEmpty()}}
 	SettingsVerify              = Rules{"TranslateType": {NotEmpty()}, "Id": {NotEmpty()}}
 	OllamaConfigVerify          = Rules{"ModelName": {NotEmpty()}, "Url": {NotEmpty()}}

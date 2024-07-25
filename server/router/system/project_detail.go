@@ -11,7 +11,7 @@ func (s *ProjectDetailRouter) InitProjectDetailRouter(Router *gin.RouterGroup) (
 	projectDetailRouter := Router.Group("projectDetail")
 	projectDetailRouterApi := api.ApiGroupApp.SystemApiGroup.ProjectDetailApi
 	{
-		//projectDetailRouter.GET("list", projectDetailRouterApi.GetProjectList)
+		projectDetailRouter.GET("get", projectDetailRouterApi.GetProjectDetail)
 	}
 	{
 		projectDetailRouter.POST("upload", projectDetailRouterApi.UpdateProjectDetailFile)
