@@ -12,4 +12,5 @@ type Config struct {
 	Zap                   Zap                   `mapstructure:"zap" json:"zap" yaml:"zap"`
 	System                System                `mapstructure:"system" json:"system" yaml:"system"`
 	JWT                   JWT                   `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
+	Local                 Local                 `mapstructure:"local" json:"local" yaml:"local"`
 }

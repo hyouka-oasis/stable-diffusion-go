@@ -1,37 +1,90 @@
-import { useEffect, useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
-import './App.css';
-import { getStableDiffusionList } from "./api/stableDiffusionApi.ts";
+import { Button, Layout, Menu, theme } from "antd";
+import { Suspense, useEffect, useState } from "react";
+import { MenuFoldOutlined, MenuUnfoldOutlined, SettingOutlined, UserOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import { Routes, useNavigate } from "react-router-dom";
+import routers from "./router";
+import { useLocation } from "react-router";
+
+const { Content, Header, Sider } = Layout;
+
 
 function App() {
-    const [ count, setCount ] = useState(0);
+    const [ collapsed, setCollapsed ] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const {
+        token: { colorBgContainer },
+    } = theme.useToken();
+
+    const [ menuSelectedKey, setMenuSelectedKey ] = useState<string[]>([]);
+
+
+    const onMenuClick = async (info: any) => {
+        const { key } = info;
+        navigate(key);
+        setMenuSelectedKey([ key ]);
+    };
+
+
     useEffect(() => {
-        getStableDiffusionList()
-    }, []);
+        setMenuSelectedKey([ location.pathname ]);
+        console.log(location);
+    }, [ location ]);
+
     return (
-        <>
-            <div>
-                <a href="https://vitejs.dev" target="_blank">
-                    <img src={viteLogo} className="logo" alt="Vite logo"/>
-                </a>
-                <a href="https://react.dev" target="_blank">
-                    <img src={reactLogo} className="logo react" alt="React logo"/>
-                </a>
-            </div>
-            <h1>Vite + React</h1>
-            <div className="card">
-                <button onClick={() => setCount((count) => count + 1)}>
-                    count is {count}
-                </button>
-                <p>
-                    Edit <code>src/App.tsx</code> and save to test HMR
-                </p>
-            </div>
-            <p className="read-the-docs">
-                Click on the Vite and React logos to learn more
-            </p>
-        </>
+        <Layout style={{ height: "100%" }}>
+            <Sider theme={"light"} trigger={null} collapsible collapsed={collapsed}>
+                <Menu
+                    selectedKeys={menuSelectedKey}
+                    mode="inline"
+                    defaultSelectedKeys={[ '/' ]}
+                    onClick={onMenuClick}
+                    items={[
+                        {
+                            key: '/',
+                            icon: <UserOutlined/>,
+                            label: '项目管理',
+                        },
+                        {
+                            key: '2',
+                            icon: <VideoCameraOutlined/>,
+                            label: 'nav 2',
+                        },
+                        {
+                            key: '/settings',
+                            icon: <SettingOutlined/>,
+                            label: '系统设置',
+                        },
+                    ]}
+                />
+            </Sider>
+            <Layout>
+                <Header style={{ padding: 0, backgroundColor: colorBgContainer }}>
+                    <Button
+                        type="text"
+                        icon={collapsed ? <MenuUnfoldOutlined/> : <MenuFoldOutlined/>}
+                        onClick={() => setCollapsed(!collapsed)}
+                        style={{
+                            fontSize: '16px',
+                            width: 64,
+                            height: 64,
+                        }}
+                    />
+                </Header>
+                <Content
+                    style={{
+                        padding: 24,
+                        minHeight: 280,
+                    }}
+                >
+                    <Suspense>
+                        <Routes>
+                            {routers}
+                        </Routes>
+                    </Suspense>
+                </Content>
+            </Layout>
+        </Layout>
     );
 }
 

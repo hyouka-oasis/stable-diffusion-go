@@ -47,6 +47,7 @@ async def participle(book_path: str, out_book_path: str):
     async with aiofiles.open(book_path, "r", encoding="utf-8") as file:
         content = await file.read()
     novel = content.replace("\n", "").replace("\r", "").replace("\r\n", "").replace("\u2003", "")
+    print(novel, "text_list")
     async with aiofiles.open(out_book_path, "w", encoding="utf-8") as file:
         # 先进行特殊字符进行校验
         text_list = await clause(novel)
@@ -58,9 +59,11 @@ async def participle(book_path: str, out_book_path: str):
 
 async def main():
     book_path = args.book_path
+    # book_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬.txt"
     if book_path is None:
         raise Exception("源文件路径不能为空")
     participle_book_path = args.participle_book_path
+    # participle_book_path = "/Users/hyouka/Desktop/代码/stable-diffusion-go/server/原来我是修仙大佬split.txt"
     if participle_book_path is None:
         raise Exception("输出路径不能为空")
     await participle(book_path, participle_book_path)
@@ -74,6 +77,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_words", help="最大长度")
     parser.add_argument("--min_words", help="最大长度")
     args = parser.parse_args()
+    # min_words = 30
     min_words = 30 if args.min_words is None else int(args.min_words)
     max_words = 30 if args.max_words is None else int(args.max_words)
+    # max_words = 30
     asyncio.run(main())

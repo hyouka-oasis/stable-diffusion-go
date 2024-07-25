@@ -56,6 +56,11 @@ func batchGoRun(bookName string) {
 
 func main() {
 	global.Viper = core.InitViper()
+	// 1. 创建文件目录
+	err := core.EnsureDirectory(global.Config.Local.Path)
+	if err != nil {
+		log.Fatal("创建目录失败:", err)
+	}
 	global.Log = core.Zap() // 初始化zap日志库
 	zap.ReplaceGlobals(global.Log)
 	global.DB = initialize.Gorm() // gorm连接数据库

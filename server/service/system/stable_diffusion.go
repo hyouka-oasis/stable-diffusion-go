@@ -8,8 +8,8 @@ import (
 
 type StableDiffusionService struct{}
 
-// GetStableDiffusionList 获取stable-diffusion列表
-func (s *StableDiffusionService) GetStableDiffusionList(info request.PageInfo) (list interface{}, total int64, err error) {
+// GetStableDiffusionConfigList 获取stable-diffusion列表
+func (s *StableDiffusionService) GetStableDiffusionConfigList(info request.PageInfo) (list interface{}, total int64, err error) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	db := global.DB.Model(&system.StableDiffusion{})

@@ -12,8 +12,8 @@ import (
 
 type StableDiffusionApi struct{}
 
-// GetStableDiffusionConfig 获取stable-diffusion配置列表
-func (s *StableDiffusionApi) GetStableDiffusionConfig(c *gin.Context) {
+// GetStableDiffusionConfigList 获取stable-diffusion配置列表
+func (s *StableDiffusionApi) GetStableDiffusionConfigList(c *gin.Context) {
 	var pageInfo systemRequest.StableDiffusionQueryParams
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
@@ -25,7 +25,7 @@ func (s *StableDiffusionApi) GetStableDiffusionConfig(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	list, total, err := stableDiffusionService.GetStableDiffusionList(pageInfo.PageInfo)
+	list, total, err := stableDiffusionService.GetStableDiffusionConfigList(pageInfo.PageInfo)
 	if err != nil {
 		global.Log.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败", c)

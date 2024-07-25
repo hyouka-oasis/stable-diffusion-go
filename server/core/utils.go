@@ -25,7 +25,7 @@ func EnsureDirectory(dirPath string) error {
 	// 如果文件夹不存在
 	if os.IsNotExist(err) {
 		// 创建文件夹
-		err = os.MkdirAll(dirPath, 0755)
+		err = os.MkdirAll(dirPath, os.ModePerm)
 		if err != nil {
 			return err
 		}

@@ -4,29 +4,37 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github/stable-diffusion-go/server/global"
 )
 
 type LoraIDsSlice []int
 
-func (l LoraIDsSlice) Value() (driver.Value, error) {
-	return json.Marshal(l)
+func (v *LoraIDsSlice) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New(fmt.Sprint("Failed to scan Array value:", value))
+	}
+	if len(bytes) > 0 {
+		return json.Unmarshal(bytes, v)
+	}
+	*v = make([]int, 0)
+	return nil
 }
 
-func (l *LoraIDsSlice) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
+func (v LoraIDsSlice) Value() (driver.Value, error) {
+	if v == nil {
+		return "[]", nil
 	}
-	return json.Unmarshal(b, l)
+	return json.Marshal(v)
 }
 
 type StableDiffusion struct {
 	global.Model
-	Url     string       `json:"url" gorm:"comment:stable_diffusion url"` // url
-	Width   int          `json:"width" gorm:"comment:图片宽度;default:512"`   // 图片宽度
-	Height  int          `json:"height" gorm:"comment:图片高度;default:512"`  // 图片高度
-	LoraIds LoraIDsSlice `json:"loraIds" gorm:"comment:lora的Id"`          // lora
+	Url     string       `json:"url" gorm:"comment:stable_diffusion url"`      // url
+	Width   int          `json:"width" gorm:"comment:图片宽度;default:512"`        // 图片宽度
+	Height  int          `json:"height" gorm:"comment:图片高度;default:512"`       // 图片高度
+	LoraIds LoraIDsSlice `json:"loraIds" gorm:"comment:lora的Id;type:longtext"` // lora
 }
 
 func (StableDiffusion) TableName() string {

@@ -1,8 +1,7 @@
-import http from "../utils/request"
+import { getApi } from "../utils/request";
 
 export const getStableDiffusionList = () => {
-    return http({
-        method: "get",
+    return getApi({
         url: "/stableDiffusion/getConfig"
-    })
-}
+    });
+};

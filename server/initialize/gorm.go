@@ -17,6 +17,14 @@ func RegisterTables() {
 	err := db.AutoMigrate(
 		system.StableDiffusion{},
 		system.StableDiffusionLoras{},
+		system.Project{},
+		system.ProjectDetail{},
+		system.ProjectFormDetail{},
+		system.ProjectDetailPotential{},
+		// 系统配置表
+		system.Settings{},
+		system.StableDiffusionConfig{},
+		system.OllamaConfig{},
 	)
 	if err != nil {
 		global.Log.Error("register table failed", zap.Error(err))

@@ -6,12 +6,12 @@ import (
 	"sync"
 )
 
-func ProcessText() (err error) {
+func ProcessText(path string) (err error) {
 	// 异步处理文本
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		err = startCmd()
+		err = startCmd(path)
 		if err != nil {
 			return
 		}
@@ -21,15 +21,14 @@ func ProcessText() (err error) {
 	return nil
 }
 
-func startCmd() error {
+func startCmd(path string) error {
 	participlePythonPath := global.ParticiplePythonPath
-	bookPath := global.BookPath
 	outParticipleBookPathBookPath := global.OutParticipleBookPath
 	maxWords := global.Config.Potential.MaxWords
 	minWords := global.Config.Potential.MinWords
 	args := []string{
 		participlePythonPath,
-		"--book_path", bookPath,
+		"--book_path", path,
 		"--participle_book_path", outParticipleBookPathBookPath,
 		"--max_word", maxWords,
 		"--min_word", minWords,

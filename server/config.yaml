@@ -130,3 +130,6 @@ zap:
 system:
   addr: 8889
 
+
+local:
+  path: uploads
