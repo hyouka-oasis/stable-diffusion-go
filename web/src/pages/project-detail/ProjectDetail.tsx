@@ -1,38 +1,83 @@
 import { useLocation } from "react-router";
 import styled from "styled-components";
-import { Button, Form, InputNumber, Modal, Upload } from "antd";
+import { Button, Dropdown, Form, MenuProps, UploadFile } from "antd";
+import { EllipsisOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { getProjectDetail, updateProjectDetail } from "../../api/projectApi.ts";
+import { ProjectDetailResponse } from "../../api/response/projectResponse.ts";
+import { ModalForm, ProColumns, ProForm, ProFormDigit, ProFormUploadButton, ProTable } from "@ant-design/pro-components";
 
 const ProjectDetailPageWrap = styled.div`
-    .action {
-        display: flex;
-    }
 `;
 
 const ProjectDetailPage = () => {
     const location = useLocation();
-    const [ uploadOpen, setUploadOpen ] = useState<boolean>(false);
     const [ form ] = Form.useForm();
-    const [ projectDetail, setProjectDetail ] = useState<any>();
+    const [ projectDetail, setProjectDetail ] = useState<ProjectDetailResponse>();
     const state = location.state;
 
-    const getProjectDetailConfig = async (id) => {
+    const getProjectDetailConfig = async (id: number) => {
         const detail = await getProjectDetail({
             projectId: id
         });
         setProjectDetail(detail);
     };
 
-    const onUploadOkHandler = async () => {
-        const uploadValues = await form.validateFields();
-        const { file, ...args } = uploadValues;
-        updateProjectDetail({
-            id: projectDetail.id,
-            file: file.file,
-            ...args
-        });
+    const onUploadOkHandler = async (values: Partial<ProjectDetailResponse & {
+        file: UploadFile[];
+    }>) => {
+        const { file, ...args } = values;
+        if (projectDetail) {
+            await updateProjectDetail({
+                id: projectDetail.id,
+                file: file?.[0]?.originFileObj,
+                ...args,
+            });
+        }
     };
+
+    const items: MenuProps['items'] = [
+        {
+            key: 'delete',
+            danger: true,
+            label: (
+                <span>
+                    删除
+                </span>
+            ),
+        },
+    ];
+
+    const columns: ProColumns<ProjectDetailFormList>[] = [
+        {
+            dataIndex: "index",
+            title: "序号",
+            align: "center",
+            width: 100,
+            render(_, _1, index) {
+                return (
+                    <span>{index + 1}</span>
+                );
+            }
+        },
+        {
+            dataIndex: "text",
+            title: "文本",
+        },
+        {
+            dataIndex: "action",
+            title: "操作",
+            align: "center",
+            width: 70,
+            render() {
+                return (
+                    <Dropdown menu={{ items }} trigger={[ "click" ]}>
+                        <EllipsisOutlined/>
+                    </Dropdown>
+                );
+            }
+        },
+    ];
 
     useEffect(() => {
         if (state.id) {
@@ -42,32 +87,65 @@ const ProjectDetailPage = () => {
 
     return (
         <ProjectDetailPageWrap>
-            <Modal open={uploadOpen} onOk={onUploadOkHandler} title={"导入文件"}>
-                <Form layout={"vertical"} form={form}>
-                    <Form.Item noStyle={true} label={"文本配置"}>
-                        <Form.Item name={"minWords"} label={"最小文字数量"} rules={[ { required: true, message: '请输入最小文字数量' } ]}>
-                            <InputNumber min={10}/>
-                        </Form.Item>
-                        <Form.Item name={"maxWords"} label={"最大文字数量"} rules={[ { required: true, message: '请输入最大文字数量' } ]}>
-                            <InputNumber min={10}/>
-                        </Form.Item>
-                    </Form.Item>
-                    <Form.Item name={"file"} label={"文件"} valuePropName={"filelist"} rules={[ { required: true, message: '请上传文件' } ]}>
-                        <Upload accept={".txt"} beforeUpload={() => {
-                            return false;
-                        }}>
-                            <Button>
-                                导入文本
+            <ProTable
+                rowKey={"id"}
+                dataSource={projectDetail?.participleList ?? []}
+                columns={columns}
+                virtual={true}
+                scroll={{ y: 650 }}
+                headerTitle={projectDetail?.fileName}
+                pagination={false}
+                search={false}
+                toolBarRender={() => [
+                    <ModalForm
+                        disabled={!projectDetail}
+                        title="导入文件"
+                        trigger={
+                            <Button type="primary">
+                                上传文本
                             </Button>
-                        </Upload>
-                    </Form.Item>
-                </Form>
-            </Modal>
-            <div className={'action'}>
-                <Button type="primary" onClick={() => setUploadOpen(true)}>
-                    开始处理
-                </Button>
-            </div>
+                        }
+                        form={form}
+                        onFinish={onUploadOkHandler}
+                    >
+                        <ProForm.Group>
+                            <ProFormDigit
+                                width="md"
+                                name="minWords"
+                                label="最小文字数量"
+                                placeholder="请输入最小文字数量"
+                                min={10}
+                                rules={[ { required: true, message: '请输入最小文字数量' } ]}
+                            />
+
+                            <ProFormDigit
+                                width="md"
+                                name="maxWords"
+                                label="最大文字数量"
+                                placeholder="请输入最大文字数量"
+                                min={10}
+                                rules={[ { required: true, message: '请输入最大文字数量' } ]}
+                            />
+                        </ProForm.Group>
+                        <ProForm.Group>
+                            <ProFormUploadButton
+                                width="md"
+                                fieldProps={{
+                                    name: 'file',
+                                    beforeUpload: () => false,
+                                    maxCount: 1,
+                                }}
+                                name="file"
+                                label="文件"
+                                placeholder="文件"
+                                rules={[ { required: true, message: '请上传文件' } ]}
+                                accept={".txt"}
+                            />
+                        </ProForm.Group>
+                    </ModalForm>,
+
+                ]}
+            />
         </ProjectDetailPageWrap>
     );
 };

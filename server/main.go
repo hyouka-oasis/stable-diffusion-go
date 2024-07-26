@@ -5,6 +5,7 @@ import (
 	"github/stable-diffusion-go/server/core"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/initialize"
+	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
 	"log"
 	"os"
@@ -22,22 +23,22 @@ func batchGoRun(bookName string) {
 	}
 	defer file.Close()
 	// 2. 创建participle目录
-	err = core.EnsureDirectory(global.OutParticiplePath)
+	err = utils.EnsureDirectory(global.OutParticiplePath)
 	if err != nil {
 		log.Fatal("创建目录失败:", err)
 	}
 	// 2. 创建images目录
-	err = core.EnsureDirectory(global.OutImagesPath)
+	err = utils.EnsureDirectory(global.OutImagesPath)
 	if err != nil {
 		log.Fatal("创建图片目录失败:", err)
 	}
 	// 2. 创建video目录
-	err = core.EnsureDirectory(global.OutVideoPath)
+	err = utils.EnsureDirectory(global.OutVideoPath)
 	if err != nil {
 		log.Fatal("创建视频目录失败:", err)
 	}
 	//3. 处理文本文件
-	//err = core.ProcessText()
+	//err = core.SplitText()
 	//if err != nil {
 	//	panic(err)
 	//}
@@ -56,8 +57,9 @@ func batchGoRun(bookName string) {
 
 func main() {
 	global.Viper = core.InitViper()
+	core.InitGlobalConfig("")
 	// 1. 创建文件目录
-	err := core.EnsureDirectory(global.Config.Local.Path)
+	err := utils.EnsureDirectory(global.Config.Local.Path)
 	if err != nil {
 		log.Fatal("创建目录失败:", err)
 	}

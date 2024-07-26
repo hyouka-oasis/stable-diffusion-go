@@ -19,8 +19,8 @@ func RegisterTables() {
 		system.StableDiffusionLoras{},
 		system.Project{},
 		system.ProjectDetail{},
-		system.ProjectFormDetail{},
-		system.ProjectDetailPotential{},
+		system.ProjectDetailParticiple{},
+		system.ProjectDetailParticipleList{},
 		// 系统配置表
 		system.Settings{},
 		system.StableDiffusionConfig{},

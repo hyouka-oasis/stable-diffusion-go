@@ -21,38 +21,18 @@ func (s *ProjectDetailApi) UpdateProjectDetailFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	projectDetail := system.ProjectDetail{
 		FileName: file.Filename,
-		Potential: system.ProjectDetailPotential{
+		Participle: system.ProjectDetailParticiple{
 			MinWords: minWords,
 			MaxWords: maxWords,
 		},
 	}
-	err = projectDetailService.UpdateProjectDetailFile(projectDetailId, projectDetail)
-	return
+	err = projectDetailService.UpdateProjectDetailFile(uint(projectDetailId), projectDetail, file)
 	if err != nil {
-		global.Log.Error("接收文件失败!", zap.Error(err))
-		response.FailWithMessage("接收文件失败", c)
+		global.Log.Error("更新失败!", zap.Error(err))
+		response.FailWithMessage("更新失败", c)
 		return
 	}
-	filePath := global.Config.Local.Path + "/" + file.Filename
-	// 保存文件到本地
-	err = c.SaveUploadedFile(file, filePath)
-	if err != nil {
-		global.Log.Error("保存文件失败!", zap.Error(err))
-		response.FailWithMessage("保存文件失败", c)
-		return
-	}
-	//3. 处理文本文件
-	//err = core.ProcessText()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//err = projectService.CreateProject(projectConfig)
-	//if err != nil {
-	//	global.Log.Error("新增失败!", zap.Error(err))
-	//	response.FailWithMessage("添加失败", c)
-	//	return
-	//}
-	//response.OkWithMessage("添加成功", c)
+	response.OkWithMessage("更新成功", c)
 }
 
 // GetProjectDetail 获取详情

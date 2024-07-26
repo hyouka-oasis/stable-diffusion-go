@@ -1,11 +1,15 @@
-package core
+package utils
 
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github/stable-diffusion-go/server/model/system"
+	"github/stable-diffusion-go/server/source"
+	"io"
 	"io/fs"
-	"log"
+	"mime/multipart"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -157,18 +161,15 @@ func ExecCommand(name string, args []string) error {
 	cmd := exec.Command(name, args...)
 	err := cmd.Start()
 	if err != nil {
-		log.Fatalln("执行"+name+"start失败:", err)
-		return err
+		return errors.New("执行" + name + "start失败:" + err.Error())
 	}
 	err = cmd.Wait()
 	if err != nil {
-		log.Fatalln("执行"+name+"wait失败:", err)
-		return err
+		return errors.New("执行" + name + "wait失败:" + err.Error())
 	}
 	body, err := cmd.CombinedOutput()
 	if string(body) != "" {
-		log.Fatalln("执行"+name+"combinedOutput失败:", string(body))
-		return err
+		return errors.New("执行" + name + "combinedOutput失败:" + err.Error())
 	}
 	return nil
 }
@@ -247,4 +248,26 @@ func GetInterfaceToInt(t1 interface{}) int {
 		break
 	}
 	return t2
+}
+
+func SplitTextUploadFileToLocal(file *multipart.FileHeader, filePath string, config system.ProjectDetail) error {
+	f, openError := file.Open() // 读取文件
+	if openError != nil {
+		return errors.New("打开文件时失败:" + openError.Error())
+	}
+	defer f.Close() // 创建文件 defer 关闭
+	out, createErr := os.Create(filePath)
+	if createErr != nil {
+		return errors.New("创建文件时失败:" + createErr.Error())
+	}
+	defer out.Close()             // 创建文件 defer 关闭
+	_, copyErr := io.Copy(out, f) // 传输（拷贝）文件
+	if createErr != nil {
+		return errors.New("拷贝文件时失败:" + copyErr.Error())
+	}
+	splitTextError := source.SplitText(config)
+	if splitTextError != nil {
+		return errors.New("进行分词失败:" + splitTextError.Error())
+	}
+	return nil
 }

@@ -1,7 +1,7 @@
 import { deleteApi, getApi, postApi, postFormApi } from "../utils/request";
 import { BasicPageInfoRequest } from "./request/basicPageInfoRequest.ts";
 import { BasicArrayResponses } from "./response/basicPageInfoResponse.ts";
-import { ProjectResponse } from "./response/projectResponse.ts";
+import { ProjectDetailResponse, ProjectResponse } from "./response/projectResponse.ts";
 
 interface ProjectApiProps {
     name: string;
@@ -35,7 +35,7 @@ export const updateProjectDetail = (data: any): Promise<ProjectResponse> => {
     });
 };
 
-export const getProjectDetail = (data: any): Promise<ProjectResponse> => {
+export const getProjectDetail = (data: any): Promise<ProjectDetailResponse> => {
     return getApi({
         url: "/projectDetail/get",
         data

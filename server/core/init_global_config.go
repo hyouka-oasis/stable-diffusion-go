@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"github/stable-diffusion-go/server/global"
+	"github/stable-diffusion-go/server/utils"
 	"os"
 	"path/filepath"
 )
@@ -25,10 +26,10 @@ func initStableDiffusionJsonWidthAndHeight() {
 		// 合并 Stable Diffusion 配置参数
 		for key, value := range jsonData {
 			if key == "width" && global.Config.StableDiffusionConfig.Width == 0 {
-				global.Config.StableDiffusionConfig.Width = GetInterfaceToInt(value)
+				global.Config.StableDiffusionConfig.Width = utils.GetInterfaceToInt(value)
 			}
 			if key == "height" && global.Config.StableDiffusionConfig.Height == 0 {
-				global.Config.StableDiffusionConfig.Height = GetInterfaceToInt(value)
+				global.Config.StableDiffusionConfig.Height = utils.GetInterfaceToInt(value)
 			}
 		}
 	}

@@ -24,11 +24,11 @@ func (s *ProjectService) CreateProject(config system.Project) (err error) {
 	if err != nil {
 		return err
 	}
-	projectDetailPotential := system.ProjectDetailPotential{
+	projectDetailParticiple := system.ProjectDetailParticiple{
 		ProjectDetailId: projectDetail.Id,
 	}
 	// 同时创建项目详情分词
-	err = global.DB.Create(&projectDetailPotential).Error
+	err = global.DB.Create(&projectDetailParticiple).Error
 	if err != nil {
 		return err
 	}

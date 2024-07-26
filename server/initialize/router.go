@@ -24,10 +24,11 @@ func Routers() *gin.Engine {
 		})
 	}
 	{
-		systemRouter.InitStableDiffusionRouter(PublicGroup) // stableDiffusion配置接口
-		systemRouter.InitProjectRouter(PublicGroup)         // 项目基础接口
-		systemRouter.InitProjectDetailRouter(PublicGroup)   // 项目详情基础接口
-		systemRouter.InitSettingsRouter(PublicGroup)        // 基础设置接口
+		systemRouter.InitStableDiffusionRouter(PublicGroup)             // stableDiffusion配置接口
+		systemRouter.InitProjectRouter(PublicGroup)                     // 项目基础接口
+		systemRouter.InitProjectDetailRouter(PublicGroup)               // 项目详情基础接口
+		systemRouter.InitProjectDetailParticipleListRouter(PublicGroup) // 项目详情基础接口
+		systemRouter.InitSettingsRouter(PublicGroup)                    // 基础设置接口
 	}
 	// 注册业务路由
 	global.Log.Info("路由注册成功")

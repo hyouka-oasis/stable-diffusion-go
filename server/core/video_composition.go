@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github/stable-diffusion-go/server/global"
+	"github/stable-diffusion-go/server/utils"
 	"log"
 	"math/rand"
 	"os"
@@ -75,15 +76,15 @@ func getAudioSrtMap() (audioSrtMap []string, err error) {
 // 获取图片列表
 func getImagesMap() (picturePathList []string, err error) {
 	imagesPath := global.OutImagesPath
-	picturePathList, err = GetPicturePaths(imagesPath, ".png")
+	picturePathList, err = utils.GetPicturePaths(imagesPath, ".png")
 	if err != nil {
 		log.Fatalln("获取文件目录失败")
 		return nil, err
 	}
 	// 对文件路径列表按照文件名中的数字大小进行排序
 	sort.Slice(picturePathList, func(i, j int) bool {
-		iNum, _ := ExtractNumber(picturePathList[i], ".png")
-		jNum, _ := ExtractNumber(picturePathList[j], ".png")
+		iNum, _ := utils.ExtractNumber(picturePathList[i], ".png")
+		jNum, _ := utils.ExtractNumber(picturePathList[j], ".png")
 		return iNum < jNum
 	})
 	return picturePathList, nil
@@ -151,7 +152,7 @@ func splicingVideo(catchVideoList []string) error {
 		"yuv420p",
 		videoPath,
 	}
-	err = ExecCommand("ffmpeg", args)
+	err = utils.ExecCommand("ffmpeg", args)
 	if err != nil {
 		return err
 	}
@@ -214,7 +215,7 @@ func createAnimatedSegment(imagePath string, srtDuration string, animation strin
 		"yuv420p",
 		catchVideoPath,
 	}
-	err = ExecCommand("ffmpeg", args)
+	err = utils.ExecCommand("ffmpeg", args)
 	if err != nil {
 		return err
 	}
@@ -256,7 +257,7 @@ func createSubtitleVideo() error {
 		"-y",
 		subtitleVideoName,
 	}
-	err = ExecCommand("ffmpeg", args)
+	err = utils.ExecCommand("ffmpeg", args)
 	if err != nil {
 		return err
 	}
@@ -267,7 +268,7 @@ func createSubtitleVideo() error {
 func disposableSynthesisVideo(picturePathList []string, timeSrtMap []string) {
 	var catchVideoList []string
 	fmt.Println("开始处理视频")
-	for index, tuple := range Zip(picturePathList, timeSrtMap) {
+	for index, tuple := range utils.Zip(picturePathList, timeSrtMap) {
 		// 随机选择一个动画效果
 		selectedAnimation := global.Animations[rand.Intn(len(global.Animations))]
 		imagePath, duration := tuple[0], tuple[1]

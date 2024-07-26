@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"github/stable-diffusion-go/server/global"
+	"github/stable-diffusion-go/server/utils"
 	"log"
 	"runtime"
 	"sync"
@@ -67,7 +68,7 @@ func createVoiceSrt(filepath string) error {
 		"--volume", windowCmdArgsConversion(volume), // 音量
 		"--pitch", pitch, // 分贝
 	}
-	err := ExecCommand("python", args)
+	err := utils.ExecCommand("python", args)
 	if err != nil {
 		return err
 	}
