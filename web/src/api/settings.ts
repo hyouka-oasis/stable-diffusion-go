@@ -5,9 +5,9 @@ interface SettingsApiProps {
     name: string;
 }
 
-export const createProject = (data: SettingsApiProps) => {
+export const createSettings = (data: SettingsApiProps) => {
     return postApi({
-        url: "/project/create",
+        url: "/settings/create",
         data
     });
 };

@@ -28,21 +28,21 @@ const errorMessageFun = (status: number, errorMessage: string) => {
         case 403:
             message.error({
                 content: '登录过期，请重新登录',
-                duration: 1000,
+                duration: 10,
             });
             break;
         // 404请求不存在
         case 404:
             message.error({
                 content: '网络请求不存在',
-                duration: 1500,
+                duration: 10,
             });
             break;
         // 其他错误，直接抛出错误提示
         default:
             message.error({
                 content: errorMessage,
-                duration: 1500,
+                duration: 10,
             });
     }
 };
@@ -81,12 +81,28 @@ instance.interceptors.response.use(
     }
 );
 
+const postFormApi = (postConfig: {
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+}): any => {
+    const formData = new FormData();
+    for (const key in postConfig.data) {
+        formData.append(key, postConfig.data[key]);
+    }
+    return instance.post(postConfig.url, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        },
+        ...postConfig.config,
+    });
+};
 
 const postApi = (postConfig: {
     url: string,
     data?: any,
     config?: AxiosRequestConfig
-}) => {
+}): any => {
     return instance.post(postConfig.url, postConfig.data, {
         headers: {
             "Content-Type": "application/json;charset=utf-8",
@@ -126,5 +142,6 @@ const getApi = (getConfig: {
 export {
     postApi,
     getApi,
-    deleteApi
+    deleteApi,
+    postFormApi
 };

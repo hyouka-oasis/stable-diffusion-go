@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getSettings, updateSettings } from "../../api/settings.ts";
-import { Button, Form, Input, Select } from "antd";
+import { createSettings, getSettings, updateSettings } from "../../api/settings.ts";
+import { Button, Form, Input, message, Select } from "antd";
 import styled from "styled-components";
 
 const translateConfigs = [
@@ -24,7 +24,7 @@ const SettingsPageWrap = styled.div`
 const SettingsPage = () => {
     const [ form ] = Form.useForm();
     const [ settingsId, setSettingsId ] = useState<number>();
-
+    const [ messageApi, messageContext ] = message.useMessage();
     const getSettingsConfig = async () => {
         const config = await getSettings();
         setSettingsId(config.id);
@@ -33,10 +33,19 @@ const SettingsPage = () => {
 
     const onSubmitHandler = async () => {
         const formValues = await form.validateFields();
-        await updateSettings({
-            ...formValues,
-            id: settingsId
-        });
+        if (settingsId) {
+            await updateSettings({
+                ...formValues,
+                id: settingsId
+            });
+        } else {
+            await createSettings({
+                ...formValues,
+            });
+        }
+        messageApi.success({
+            content:"创建成功"
+        })
     };
 
     useEffect(() => {
@@ -44,6 +53,7 @@ const SettingsPage = () => {
     }, []);
     return (
         <SettingsPageWrap>
+            {messageContext}
             <Form form={form} layout="vertical">
                 <Form.Item label={"stable-diffusion配置"}>
                     <Form.Item rules={[ { required: true, message: '请输入url' } ]} label={"url"} name={[ "stableDiffusionConfig", "url" ]}>
@@ -74,7 +84,7 @@ const SettingsPage = () => {
                 </Form.Item>
                 <Form.Item>
                     <Button type="primary" htmlType="submit" onClick={onSubmitHandler}>
-                        确认
+                        {settingsId ? "修改" : "创建"}
                     </Button>
                 </Form.Item>
             </Form>
