@@ -9,12 +9,12 @@ type StableDiffusionRouter struct{}
 
 func (s *StableDiffusionRouter) InitStableDiffusionRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	stableDiffusionRouter := Router.Group("stableDiffusion")
-	stableDiffusionRouterApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionApi
+	stableDiffusionApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionApi
 	{
-		stableDiffusionRouter.GET("getConfig", stableDiffusionRouterApi.GetStableDiffusionConfigList)
+		stableDiffusionRouter.GET("getConfig", stableDiffusionApi.GetStableDiffusionConfigList)
 	}
 	{
-		stableDiffusionRouter.POST("create", stableDiffusionRouterApi.CreateStableDiffusionConfig)
+		stableDiffusionRouter.POST("create", stableDiffusionApi.CreateStableDiffusionConfig)
 	}
 	return stableDiffusionRouter
 }

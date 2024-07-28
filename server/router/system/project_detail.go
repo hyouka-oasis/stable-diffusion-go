@@ -9,12 +9,12 @@ type ProjectDetailRouter struct{}
 
 func (s *ProjectDetailRouter) InitProjectDetailRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	projectDetailRouter := Router.Group("projectDetail")
-	projectDetailRouterApi := api.ApiGroupApp.SystemApiGroup.ProjectDetailApi
+	projectDetailApi := api.ApiGroupApp.SystemApiGroup.ProjectDetailApi
 	{
-		projectDetailRouter.GET("get", projectDetailRouterApi.GetProjectDetail)
+		projectDetailRouter.GET("get", projectDetailApi.GetProjectDetail)
 	}
 	{
-		projectDetailRouter.POST("upload", projectDetailRouterApi.UpdateProjectDetailFile)
+		projectDetailRouter.POST("upload", projectDetailApi.UpdateProjectDetailFile)
 	}
 	return projectDetailRouter
 }

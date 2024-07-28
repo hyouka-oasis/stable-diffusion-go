@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
+	"github/stable-diffusion-go/server/source"
 	"github/stable-diffusion-go/server/utils"
 	"gorm.io/gorm"
 	"mime/multipart"
@@ -20,6 +21,17 @@ func (s *ProjectDetailService) UpdateProjectDetailFile(id uint, config system.Pr
 		if err != nil {
 			return err
 		}
+		//var projectDetailParticiple system.ProjectDetailParticiple
+		// 先查找是否存在分词配置
+		//err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", id).First(projectDetailParticiple).Error
+		// 如果不存在则保存
+		//if err != nil {
+		//	err = tx.Create(&config.Participle).Error
+		//	if err != nil {
+		//		return errors.New("更新分词配置失败" + err.Error())
+		//	}
+		//}
+		// 如果存在则更新
 		err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", id).Updates(&config.Participle).Error
 		if err != nil {
 			return err
@@ -30,9 +42,13 @@ func (s *ProjectDetailService) UpdateProjectDetailFile(id uint, config system.Pr
 		}
 		filePath := global.Config.Local.Path + "/" + file.Filename
 		outParticipleBookPathBookPath := global.Config.Local.Path + "/" + "participleBook.txt"
-		err = utils.SplitTextUploadFileToLocal(file, filePath, config)
+		err = utils.UploadFileToLocal(file, filePath)
 		if err != nil {
 			return errors.New("处理文件失败:" + err.Error())
+		}
+		splitTextError := source.SplitText(config)
+		if splitTextError != nil {
+			return errors.New("进行分词失败:" + splitTextError.Error())
 		}
 		// 打开文件
 		var participleBook *os.File

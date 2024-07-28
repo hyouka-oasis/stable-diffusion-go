@@ -43,10 +43,10 @@ func (s *SettingsApi) UpdateSettings(c *gin.Context) {
 	}
 	if settings.TranslateType == "ollama" {
 		err = utils.Verify(settings, utils.OllamaConfigVerify)
-	}
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
+		if err != nil {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
 	}
 	err = utils.Verify(settings, utils.StableDiffusionConfigVerify)
 	if err != nil {

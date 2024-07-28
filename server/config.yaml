@@ -1,7 +1,7 @@
 # 书配置 记得要加一个空格！！！！！！！！
 book:
   # 小说书名 要和文件同目录 不要带.txt
-  name: 123
+  name: 神秘复苏1
   # 小说使用的语言 默认 zh | en 为英语 具体请查看阿里云翻译的文档
   language: zh
   # 是否批量处理
@@ -30,7 +30,7 @@ audio:
   bgm_db: -15
 
 # 分词
-potential:
+participle:
   # 角色名字最小长度
   minLength: 2
   # 角色名字最大长度
@@ -40,7 +40,7 @@ potential:
   # 每张图片的最小文字数量
   minWords: 30
   #  每张图片的最大文字数量
-  maxWords: 40
+  maxWords: 30
 
 # 这里只放常规参数，更多参数请修改stable diffusion.json
 stable_diffusion:
@@ -129,7 +129,10 @@ zap:
 #基础配置
 system:
   addr: 8889
+  oss-type: local # 控制oss选择走本地还是 七牛等其他仓 自行增加其他oss仓可以在 server/utils/upload/upload.go 中 NewOss函数配置
+
 
 
 local:
-  path: uploads
+  path: uploads/file
+  store-path: uploads/file

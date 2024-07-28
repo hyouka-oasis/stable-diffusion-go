@@ -6,7 +6,26 @@ import (
 	"github/stable-diffusion-go/server/middleware"
 	"github/stable-diffusion-go/server/router"
 	"net/http"
+	"os"
 )
+
+type justFilesFilesystem struct {
+	fs http.FileSystem
+}
+
+func (fs justFilesFilesystem) Open(name string) (http.File, error) {
+	f, err := fs.fs.Open(name)
+	if err != nil {
+		return nil, err
+	}
+
+	stat, err := f.Stat()
+	if stat.IsDir() {
+		return nil, os.ErrPermission
+	}
+
+	return f, nil
+}
 
 func Routers() *gin.Engine {
 	Router := gin.New()
@@ -15,6 +34,10 @@ func Routers() *gin.Engine {
 		Router.Use(gin.Logger())
 	}
 	systemRouter := router.RouterGroupApp.System
+	exampleRouter := router.RouterGroupApp.Example
+
+	Router.StaticFS(global.Config.Local.StorePath, justFilesFilesystem{http.Dir(global.Config.Local.StorePath)}) // Router.Use(middleware.LoadTls())  // 如果需要使用https 请打开此中间件 然后前往 core/server.go 将启动模式 更变为 Router.RunTLS("端口","你的cre/pem文件","你的key文件")
+
 	Router.Use(middleware.Cors()) // 直接放行全部跨域请求
 	PublicGroup := Router.Group("")
 	{
@@ -24,11 +47,15 @@ func Routers() *gin.Engine {
 		})
 	}
 	{
-		systemRouter.InitStableDiffusionRouter(PublicGroup)             // stableDiffusion配置接口
 		systemRouter.InitProjectRouter(PublicGroup)                     // 项目基础接口
 		systemRouter.InitProjectDetailRouter(PublicGroup)               // 项目详情基础接口
 		systemRouter.InitProjectDetailParticipleListRouter(PublicGroup) // 项目详情基础接口
 		systemRouter.InitSettingsRouter(PublicGroup)                    // 基础设置接口
+		systemRouter.InitStableDiffusionRouter(PublicGroup)             // stableDiffusion配置接口
+		systemRouter.InitStableDiffusionLorasRouter(PublicGroup)        // stableDiffusionLoras接口
+	}
+	{
+		exampleRouter.InitFileUploadAndDownloadRouter(PublicGroup)
 	}
 	// 注册业务路由
 	global.Log.Info("路由注册成功")

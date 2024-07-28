@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"github/stable-diffusion-go/server/global"
+	"github/stable-diffusion-go/server/model/example"
 	"github/stable-diffusion-go/server/model/system"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -25,6 +26,10 @@ func RegisterTables() {
 		system.Settings{},
 		system.StableDiffusionConfig{},
 		system.OllamaConfig{},
+
+		example.ExaFile{},
+		example.ExaFileChunk{},
+		example.ExaFileUploadAndDownload{},
 	)
 	if err != nil {
 		global.Log.Error("register table failed", zap.Error(err))

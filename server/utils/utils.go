@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github/stable-diffusion-go/server/model/system"
-	"github/stable-diffusion-go/server/source"
+	"github/stable-diffusion-go/server/global"
 	"io"
 	"io/fs"
 	"mime/multipart"
@@ -250,8 +249,9 @@ func GetInterfaceToInt(t1 interface{}) int {
 	return t2
 }
 
-func SplitTextUploadFileToLocal(file *multipart.FileHeader, filePath string, config system.ProjectDetail) error {
+func UploadFileToLocal(file *multipart.FileHeader, filePath string) error {
 	f, openError := file.Open() // 读取文件
+	fmt.Println(f)
 	if openError != nil {
 		return errors.New("打开文件时失败:" + openError.Error())
 	}
@@ -265,9 +265,21 @@ func SplitTextUploadFileToLocal(file *multipart.FileHeader, filePath string, con
 	if createErr != nil {
 		return errors.New("拷贝文件时失败:" + copyErr.Error())
 	}
-	splitTextError := source.SplitText(config)
-	if splitTextError != nil {
-		return errors.New("进行分词失败:" + splitTextError.Error())
-	}
 	return nil
+}
+
+// CutPos 进行角色提取
+func CutPos(text string) string {
+	// "西雅图地标建筑, Seattle Space Needle, 西雅图太空针. Sky tree."
+	po := global.Seg.Pos(text, true)
+	global.PosSeg.WithGse(global.Seg)
+	po = global.PosSeg.Cut(text, true)
+	po = global.PosSeg.TrimWithPos(po, "zg")
+	character := ""
+	for _, value := range po {
+		if value.Pos == "nr" {
+			character += value.Text + ","
+		}
+	}
+	return character
 }

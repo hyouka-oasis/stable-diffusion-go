@@ -5,17 +5,19 @@ import (
 )
 
 type ApiGroup struct {
-	StableDiffusionApi
 	ProjectApi
 	ProjectDetailApi
 	ProjectDetailParticipleListApi
 	SettingsApi
+	StableDiffusionApi
+	StableDiffusionLorasApi
 }
 
 var (
-	stableDiffusionService             = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
 	projectService                     = service.ServiceGroupApp.SystemServiceGroup.ProjectService
 	projectDetailService               = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailService
 	projectDetailParticipleListService = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailParticipleListService
 	settingsService                    = service.ServiceGroupApp.SystemServiceGroup.SettingsService
+	stableDiffusionService             = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
+	stableDiffusionLorasService        = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
 )

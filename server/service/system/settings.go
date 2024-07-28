@@ -43,6 +43,5 @@ func (s *SettingsService) UpdateSettings(config system.Settings) (err error) {
 func (s *SettingsService) GetSettings() (settings system.Settings, err error) {
 	var config system.Settings
 	err = global.DB.Preload("StableDiffusionConfig").Preload("OllamaConfig").First(&config).Error
-	fmt.Println(config)
 	return config, err
 }

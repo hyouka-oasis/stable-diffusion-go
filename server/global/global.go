@@ -1,6 +1,8 @@
 package global
 
 import (
+	"github.com/go-ego/gse"
+	"github.com/go-ego/gse/hmm/pos"
 	"github.com/songzhibin97/gkit/cache/local_cache"
 	"github.com/spf13/viper"
 	"github/stable-diffusion-go/server/config"
@@ -15,11 +17,16 @@ var (
 	Config                config.Config           // yaml配置文件
 	BookPath              string                  // 源文件路径
 	OutParticiplePath     string                  // 分词的路径
-	OutImagesPath         string                  // 输出图片的路径
-	OutBookJsonPath       string                  // 输出的prompt路径
 	OutParticipleBookPath string                  // 通过分割后的文本路径
 	CatchMergeConfig      config.CatchMergeConfig // 缓存下来并且需要删除的文件配置
 	BlackCache            local_cache.Cache
+	Seg                   gse.Segmenter
+	PosSeg                pos.Segmenter
+	new, _                = gse.New("zh,testdata/test_en_dict3.txt", "alpha")
+
+	OutPath         string // 输出的目录
+	OutImagesPath   string // 输出图片的路径
+	OutBookJsonPath string // 输出的prompt路径
 )
 
 // 音频字幕类型

@@ -6,10 +6,10 @@ import (
 
 type StableDiffusionLoras struct {
 	global.Model
-	Name              string `json:"name" gorm:"comment:lora标签"`            // lora
-	Alias             string `json:"alias" gorm:"comment:lora名字"`           // lora
-	Image             string `json:"image" gorm:"comment:图片"`               // lora
-	StableDiffusionId uint   `json:"stableDiffusionId" gorm:"comment:父级id"` // lora
+	Name    string `json:"name" gorm:"comment:lora标签"` // lora
+	Roles   string `json:"roles"`                      //对应的角色名称
+	ImageId uint   `json:"imageId"`                    // 图片Id
+	Url     string `json:"url"`
 }
 
 func (StableDiffusionLoras) TableName() string {

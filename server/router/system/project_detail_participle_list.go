@@ -13,6 +13,8 @@ func (s *ProjectDetailParticipleListRouter) InitProjectDetailParticipleListRoute
 	{
 	}
 	{
+		projectDetailParticipleListRouter.POST("extractCharacter", projectDetailParticipleListApi.ExtractTheCharacterProjectDetailParticipleList)
+		projectDetailParticipleListRouter.POST("translate", projectDetailParticipleListApi.TranslateProjectDetailParticipleList)
 		projectDetailParticipleListRouter.DELETE("delete", projectDetailParticipleListApi.DeleteProjectDetailParticipleListItem)
 	}
 	return projectDetailParticipleListRouter

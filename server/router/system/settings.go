@@ -9,13 +9,13 @@ type SettingsRouter struct{}
 
 func (s *SettingsRouter) InitSettingsRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	settingsRouter := Router.Group("settings")
-	settingsRouterApi := api.ApiGroupApp.SystemApiGroup.SettingsApi
+	settingsApi := api.ApiGroupApp.SystemApiGroup.SettingsApi
 	{
-		settingsRouter.GET("get", settingsRouterApi.GetSettings)
+		settingsRouter.GET("get", settingsApi.GetSettings)
 	}
 	{
-		settingsRouter.POST("create", settingsRouterApi.CreateSettings)
-		settingsRouter.POST("update", settingsRouterApi.UpdateSettings)
+		settingsRouter.POST("create", settingsApi.CreateSettings)
+		settingsRouter.POST("update", settingsApi.UpdateSettings)
 		//settingsRouter.DELETE("delete", settingsRouterApi.DeleteProject)
 	}
 	return settingsRouter

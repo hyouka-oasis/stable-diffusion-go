@@ -7,6 +7,7 @@ var (
 	StableDiffusionVerify       = Rules{"Url": {NotEmpty()}}
 	SettingsVerify              = Rules{"TranslateType": {NotEmpty()}, "Id": {NotEmpty()}}
 	OllamaConfigVerify          = Rules{"ModelName": {NotEmpty()}, "Url": {NotEmpty()}}
+	StableDiffusionLorasVerify  = Rules{"Name": {NotEmpty()}}
 	StableDiffusionConfigVerify = Rules{"Url": {NotEmpty()}}
 	ApiVerify                   = Rules{"Path": {NotEmpty()}, "Description": {NotEmpty()}, "ApiGroup": {NotEmpty()}, "Method": {NotEmpty()}}
 	MenuVerify                  = Rules{"Path": {NotEmpty()}, "Name": {NotEmpty()}, "Component": {NotEmpty()}, "Sort": {Ge("0")}}

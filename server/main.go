@@ -5,6 +5,8 @@ import (
 	"github/stable-diffusion-go/server/core"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/initialize"
+	"github/stable-diffusion-go/server/model/system"
+	"github/stable-diffusion-go/server/source"
 	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
 	"log"
@@ -38,31 +40,27 @@ func batchGoRun(bookName string) {
 		log.Fatal("创建视频目录失败:", err)
 	}
 	//3. 处理文本文件
-	//err = core.SplitText()
-	//if err != nil {
-	//	panic(err)
-	//}
+	err = source.SplitText(system.ProjectDetail{})
+	if err != nil {
+		panic(err)
+	}
 	// 4. 翻译文本
-	//err = core.Translate()
-	//if err != nil {
-	//	panic(err)
-	//}
+	err = core.Translate()
+	if err != nil {
+		panic(err)
+	}
 	//5.翻译成功后进行字幕提取
-	//core.TextToSrt()
+	core.TextToSrt()
 	// 6.调用
-	//core.StableDiffusion()
+	core.StableDiffusion()
 	// 7.合成视频
-	//core.VideoComposition()
+	core.VideoComposition()
 }
 
-func main() {
-	global.Viper = core.InitViper()
+func startGinServer() {
+	// 加载默认词典
+	global.Seg.LoadDict()
 	core.InitGlobalConfig("")
-	// 1. 创建文件目录
-	err := utils.EnsureDirectory(global.Config.Local.Path)
-	if err != nil {
-		log.Fatal("创建目录失败:", err)
-	}
 	global.Log = core.Zap() // 初始化zap日志库
 	zap.ReplaceGlobals(global.Log)
 	global.DB = initialize.Gorm() // gorm连接数据库
@@ -73,11 +71,16 @@ func main() {
 		defer db.Close()
 	}
 	core.RunServer()
-	bookName := global.Config.Book.Name
-	if bookName == "123" {
-		fmt.Println("测试阶段")
-		return
+}
+
+func main() {
+	global.Viper = core.InitViper()
+	// 1. 创建文件目录
+	err := utils.EnsureDirectory(global.Config.Local.Path)
+	if err != nil {
+		log.Fatal("创建目录失败:", err)
 	}
+	bookName := global.Config.Book.Name
 	if global.Config.Book.Batch {
 		// 使用正则表达式提取名称和数字
 		re := regexp.MustCompile(`(.*?)(\d+)-(\d+)`)

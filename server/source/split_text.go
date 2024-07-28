@@ -5,7 +5,6 @@ import (
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
 	"github/stable-diffusion-go/server/utils"
-	"strconv"
 	"sync"
 )
 
@@ -14,7 +13,7 @@ func SplitText(projectDetail system.ProjectDetail) (err error) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		err = startCmd(projectDetail)
+		err = startCmd()
 		if err != nil {
 			return
 		}
@@ -24,18 +23,25 @@ func SplitText(projectDetail system.ProjectDetail) (err error) {
 	return nil
 }
 
-func startCmd(projectDetail system.ProjectDetail) error {
+func startCmd() error {
+	//participlePythonPath := global.ParticiplePythonPath
+	//bookPath := global.Config.Local.Path + "/" + projectDetail.FileName
+	//outParticipleBookPathBookPath := global.Config.Local.Path + "/" + "participleBook.txt"
+	//maxWords := projectDetail.Participle.MaxWords
+	//minWords := projectDetail.Participle.MinWords
 	participlePythonPath := global.ParticiplePythonPath
-	bookPath := global.Config.Local.Path + "/" + projectDetail.FileName
-	outParticipleBookPathBookPath := global.Config.Local.Path + "/" + "participleBook.txt"
-	maxWords := projectDetail.Participle.MaxWords
-	minWords := projectDetail.Participle.MinWords
+	bookPath := global.BookPath
+	outParticipleBookPathBookPath := global.OutParticipleBookPath
+	maxWords := global.Config.Participle.MaxWords
+	minWords := global.Config.Participle.MinWords
 	args := []string{
 		participlePythonPath,
 		"--book_path", bookPath,
 		"--participle_book_path", outParticipleBookPathBookPath,
-		"--max_word", strconv.Itoa(maxWords),
-		"--min_word", strconv.Itoa(minWords),
+		//"--max_word", strconv.Itoa(maxWords),
+		"--max_word", maxWords,
+		//"--min_word", strconv.Itoa(minWords),
+		"--min_word", minWords,
 	}
 	fmt.Println(args)
 	err := utils.ExecCommand("python", args)

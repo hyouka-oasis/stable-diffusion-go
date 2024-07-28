@@ -81,6 +81,7 @@ func InitGlobalConfig(bookName string) {
 		panic(err)
 	}
 	global.BookPath = filepath.Join(pwd, bookName+".txt") // 源文件地址
+
 	// 初始化输出路径
 	initOutPath(bookName, pwd)
 	// 初始化最后需要删除的目录

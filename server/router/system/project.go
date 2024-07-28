@@ -9,13 +9,13 @@ type ProjectRouter struct{}
 
 func (s *ProjectRouter) InitProjectRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	projectRouter := Router.Group("project")
-	projectRouterApi := api.ApiGroupApp.SystemApiGroup.ProjectApi
+	projectApi := api.ApiGroupApp.SystemApiGroup.ProjectApi
 	{
-		projectRouter.GET("list", projectRouterApi.GetProjectList)
+		projectRouter.GET("list", projectApi.GetProjectList)
 	}
 	{
-		projectRouter.POST("create", projectRouterApi.CreateProject)
-		projectRouter.DELETE("delete", projectRouterApi.DeleteProject)
+		projectRouter.POST("create", projectApi.CreateProject)
+		projectRouter.DELETE("delete", projectApi.DeleteProject)
 	}
 	return projectRouter
 }
