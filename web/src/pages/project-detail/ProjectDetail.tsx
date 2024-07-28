@@ -3,8 +3,8 @@ import styled from "styled-components";
 import { Button, Dropdown, Form, MenuProps, UploadFile } from "antd";
 import { EllipsisOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import { getProjectDetail, updateProjectDetail } from "../../api/projectApi.ts";
-import { ProjectDetailResponse } from "../../api/response/projectResponse.ts";
+import { extractTheCharacterProjectDetailParticipleList, getProjectDetail, TranslateProjectDetailParticipleList, updateProjectDetail } from "../../api/projectApi.ts";
+import { ProjectDetailParticipleList, ProjectDetailResponse } from "../../api/response/projectResponse.ts";
 import { ModalForm, ProColumns, ProForm, ProFormDigit, ProFormUploadButton, ProTable } from "@ant-design/pro-components";
 
 const ProjectDetailPageWrap = styled.div`
@@ -33,7 +33,25 @@ const ProjectDetailPage = () => {
                 file: file?.[0]?.originFileObj,
                 ...args,
             });
+            await getProjectDetailConfig(state.id);
         }
+    };
+
+
+    const extractTheCharacter = async () => {
+        if (!projectDetail) return;
+        await extractTheCharacterProjectDetailParticipleList({
+            id: projectDetail?.id
+        });
+        await getProjectDetailConfig(state.id);
+    };
+
+    const translatePrompt = async () => {
+        if (!projectDetail) return;
+        await TranslateProjectDetailParticipleList({
+            id: projectDetail?.id
+        });
+        await getProjectDetailConfig(state.id);
     };
 
     const items: MenuProps['items'] = [
@@ -48,7 +66,7 @@ const ProjectDetailPage = () => {
         },
     ];
 
-    const columns: ProColumns<ProjectDetailFormList>[] = [
+    const columns: ProColumns<ProjectDetailParticipleList>[] = [
         {
             dataIndex: "index",
             title: "序号",
@@ -63,6 +81,15 @@ const ProjectDetailPage = () => {
         {
             dataIndex: "text",
             title: "文本",
+            ellipsis: true,
+        },
+        {
+            dataIndex: "prompt",
+            title: "正向提示词",
+        },
+        {
+            dataIndex: "character",
+            title: "人物",
         },
         {
             dataIndex: "action",
@@ -143,7 +170,12 @@ const ProjectDetailPage = () => {
                             />
                         </ProForm.Group>
                     </ModalForm>,
-
+                    <Button onClick={extractTheCharacter}>
+                        角色提取
+                    </Button>,
+                    <Button onClick={translatePrompt}>
+                        prompt转换
+                    </Button>
                 ]}
             />
         </ProjectDetailPageWrap>

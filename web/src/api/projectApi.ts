@@ -1,6 +1,6 @@
 import { deleteApi, getApi, postApi, postFormApi } from "../utils/request";
 import { BasicPageInfoRequest } from "./request/basicPageInfoRequest.ts";
-import { BasicArrayResponses } from "./response/basicPageInfoResponse.ts";
+import { BasicArrayResponses, BasicResponse } from "./response/basicPageInfoResponse.ts";
 import { ProjectDetailResponse, ProjectResponse } from "./response/projectResponse.ts";
 
 interface ProjectApiProps {
@@ -38,6 +38,26 @@ export const updateProjectDetail = (data: any): Promise<ProjectResponse> => {
 export const getProjectDetail = (data: any): Promise<ProjectDetailResponse> => {
     return getApi({
         url: "/projectDetail/get",
+        data
+    });
+};
+/**
+ * 进行角色提取
+ * @param data
+ */
+export const extractTheCharacterProjectDetailParticipleList = (data: Pick<BasicResponse, "id">): Promise<ProjectDetailResponse> => {
+    return postApi({
+        url: "/projectDetailParticipleList/extractCharacter",
+        data
+    });
+};
+/**
+ * 转换
+ * @param data
+ */
+export const TranslateProjectDetailParticipleList = (data: Pick<BasicResponse, "id">): Promise<ProjectDetailResponse> => {
+    return postApi({
+        url: "/projectDetailParticipleList/translate",
         data
     });
 };

@@ -46,9 +46,14 @@ function App() {
                             label: '项目管理',
                         },
                         {
-                            key: '2',
+                            key: '/loras',
                             icon: <VideoCameraOutlined/>,
-                            label: 'nav 2',
+                            label: 'loras管理',
+                        },
+                        {
+                            key: '/files',
+                            icon: <VideoCameraOutlined/>,
+                            label: '附件管理',
                         },
                         {
                             key: '/settings',

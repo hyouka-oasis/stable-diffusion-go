@@ -2,7 +2,9 @@ import { cloneElement, lazy, ReactElement } from "react";
 import { Route } from "react-router-dom";
 
 const Project = lazy(() => import("../pages/project/Project.tsx"));
+const LorasPage = lazy(() => import("../pages/loras/Loras.tsx"));
 const ProjectDetail = lazy(() => import("../pages/project-detail/ProjectDetail.tsx"));
+const FilesPage = lazy(() => import("../pages/file/File.tsx"));
 const Settings = lazy(() => import("../pages/settings/Settings.tsx"));
 
 
@@ -32,9 +34,17 @@ const routers = [
         element: <ProjectDetail/>,
     },
     {
+        path: "/loras",
+        element: <LorasPage/>,
+    },
+    {
+        path: "/files",
+        element: <FilesPage/>,
+    },
+    {
         path: "/settings",
         element: <Settings/>,
-    }
+    },
 ];
 
 export default routeRender(routers);

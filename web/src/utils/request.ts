@@ -1,10 +1,12 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { message } from "antd";
 
+const baseURL = 'http://127.0.0.1:8889';
+
 // 1. 创建axios实例
 const instance = axios.create({
-    baseURL: 'http://127.0.0.1:8889',
-    timeout: 5000,// 请求超时时间
+    baseURL: baseURL,
+    // timeout: 5000,// 请求超时时间
     headers: { //设置请求头
         "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
     },
@@ -143,5 +145,6 @@ export {
     postApi,
     getApi,
     deleteApi,
-    postFormApi
+    postFormApi,
+    baseURL
 };

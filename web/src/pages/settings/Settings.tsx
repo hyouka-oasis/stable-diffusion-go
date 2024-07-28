@@ -5,8 +5,12 @@ import styled from "styled-components";
 
 const translateConfigs = [
     {
-        label: "ollama",
+        label: "ollama(本地需要运行ollama服务)",
         value: "ollama",
+    },
+    {
+        label: "sd-prompt-translator(需要安装改名称插件,本地直译中文prompt)",
+        value: "sd-prompt-translator",
     },
     {
         label: "aliyun",
@@ -44,8 +48,8 @@ const SettingsPage = () => {
             });
         }
         messageApi.success({
-            content:"创建成功"
-        })
+            content: "创建成功"
+        });
     };
 
     useEffect(() => {
