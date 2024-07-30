@@ -9,11 +9,11 @@ type PageInfo struct {
 
 // GetById Find by id structure
 type GetById struct {
-	ID int `json:"id" form:"id"` // 主键ID
+	Id int `json:"id" form:"id"` // 主键ID
 }
 
 func (r *GetById) Uint() uint {
-	return uint(r.ID)
+	return uint(r.Id)
 }
 
 type IdsReq struct {
