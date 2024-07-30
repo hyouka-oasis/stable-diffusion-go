@@ -1,7 +1,7 @@
 import { deleteApi, getApi, postApi, postFormApi } from "../utils/request";
 import { BasicPageInfoRequest } from "./request/basicPageInfoRequest.ts";
 import { BasicArrayResponses, BasicResponse } from "./response/basicPageInfoResponse.ts";
-import { ProjectDetailResponse, ProjectResponse } from "./response/projectResponse.ts";
+import { ProjectDetailInfo, ProjectDetailResponse, ProjectResponse } from "./response/projectResponse.ts";
 
 interface ProjectApiProps {
     name: string;
@@ -28,7 +28,7 @@ export const deleteProject = (data: { id: number }) => {
     });
 };
 
-export const updateProjectDetail = (data: any): Promise<ProjectResponse> => {
+export const uploadProjectDetail = (data: any): Promise<ProjectResponse> => {
     return postFormApi({
         url: "/projectDetail/upload",
         data
@@ -42,12 +42,22 @@ export const getProjectDetail = (data: any): Promise<ProjectDetailResponse> => {
     });
 };
 /**
+ * 更新数据
+ * @param data
+ */
+export const updateProjectDetail = (data: Partial<ProjectDetailResponse>): Promise<ProjectDetailResponse> => {
+    return postApi({
+        url: "/projectDetail/update",
+        data
+    });
+};
+/**
  * 进行角色提取
  * @param data
  */
 export const extractTheCharacterProjectDetailParticipleList = (data: Pick<BasicResponse, "id">): Promise<ProjectDetailResponse> => {
     return postApi({
-        url: "/projectDetailParticipleList/extractCharacter",
+        url: "/projectDetailInfo/extractCharacter",
         data
     });
 };
@@ -55,9 +65,32 @@ export const extractTheCharacterProjectDetailParticipleList = (data: Pick<BasicR
  * 转换
  * @param data
  */
-export const TranslateProjectDetailParticipleList = (data: Pick<BasicResponse, "id">): Promise<ProjectDetailResponse> => {
+export const translateProjectDetailParticipleList = (data: Pick<Partial<BasicResponse>, "id"> & Pick<ProjectDetailInfo, "projectDetailId">): Promise<ProjectDetailResponse> => {
     return postApi({
-        url: "/projectDetailParticipleList/translate",
+        url: "/projectDetailInfo/translate",
+        data
+    });
+};
+/**
+ * 更新数据
+ * @param data
+ */
+export const updateProjectDetailParticipleList = (data: any): Promise<void> => {
+    return postApi({
+        url: "/projectDetailInfo/update",
+        data
+    });
+};
+
+/**
+ * 获取数据
+ * @param data
+ */
+export const getProjectDetailInfo = (data: {
+    id: number;
+}): Promise<ProjectDetailInfo> => {
+    return getApi({
+        url: "/projectDetailInfo/get",
         data
     });
 };

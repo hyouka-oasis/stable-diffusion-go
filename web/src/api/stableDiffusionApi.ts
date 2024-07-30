@@ -24,3 +24,13 @@ export const createStableDiffusionLoras = (data: any) => {
         data
     });
 };
+
+export const stableDiffusionText2Image = (data: {
+    ids: number[];
+    projectDetailId: number;
+}) => {
+    return postApi({
+        url: "/stableDiffusion/text2image",
+        data
+    });
+};

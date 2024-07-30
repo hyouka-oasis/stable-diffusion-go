@@ -11,13 +11,18 @@ export interface ProjectDetailParticiple {
     maxWords: string;
 }
 
-export interface ProjectDetailParticipleList extends BasicResponse {
+export interface ProjectDetailInfo extends BasicResponse {
     text: string;
+    prompt: string;
+    negativePrompt: string;
+    role: string;
+    projectDetailId?: number;
 }
 
 export interface ProjectDetailResponse extends BasicResponse {
     projectId: number;
     fileName: string;
-    participle: ProjectDetailParticiple;
-    participleList: ProjectDetailParticipleList[];
+    participleConfig: ProjectDetailParticiple;
+    projectDetailInfoList: ProjectDetailInfo[];
+    stableDiffusionConfig?: string;
 }

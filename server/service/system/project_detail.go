@@ -14,9 +14,9 @@ import (
 
 type ProjectDetailService struct{}
 
-// UpdateProjectDetailFile 上传文件并且处理分词
-func (s *ProjectDetailService) UpdateProjectDetailFile(id uint, config system.ProjectDetail, file *multipart.FileHeader) (err error) {
-	err = global.DB.Transaction(func(tx *gorm.DB) error {
+// UploadProjectDetailFile 上传文件并且处理分词
+func (s *ProjectDetailService) UploadProjectDetailFile(id uint, config system.ProjectDetail, file *multipart.FileHeader) (err error) {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
 		err = tx.Model(&system.ProjectDetail{}).Where("id = ?", id).Updates(&config).Error
 		if err != nil {
 			return err
@@ -26,17 +26,17 @@ func (s *ProjectDetailService) UpdateProjectDetailFile(id uint, config system.Pr
 		//err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", id).First(projectDetailParticiple).Error
 		// 如果不存在则保存
 		//if err != nil {
-		//	err = tx.Create(&config.Participle).Error
+		//	err = tx.Create(&config.ParticipleConfig).Error
 		//	if err != nil {
 		//		return errors.New("更新分词配置失败" + err.Error())
 		//	}
 		//}
 		// 如果存在则更新
-		err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", id).Updates(&config.Participle).Error
+		err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", id).Updates(&config.ParticipleConfig).Error
 		if err != nil {
 			return err
 		}
-		err = tx.Delete(&system.ProjectDetailParticipleList{}, "project_detail_id = ?", id).Error
+		err = tx.Delete(&system.ProjectDetailInfo{}, "project_detail_id = ?", id).Error
 		if err != nil {
 			return errors.New("删除原有项目失败:" + err.Error())
 		}
@@ -59,25 +59,42 @@ func (s *ProjectDetailService) UpdateProjectDetailFile(id uint, config system.Pr
 		defer participleBook.Close() // 确保文件在函数退出时被关闭
 		// 创建扫描器
 		scanner := bufio.NewScanner(participleBook)
-		var projectFormDetail []system.ProjectDetailParticipleList
+		var projectFormDetail []system.ProjectDetailInfo
 		// 逐行读取并输出
 		for scanner.Scan() {
-			projectFormDetail = append(projectFormDetail, system.ProjectDetailParticipleList{
+			projectFormDetail = append(projectFormDetail, system.ProjectDetailInfo{
 				ProjectDetailId: id,
 				Text:            scanner.Text(),
 			})
 		}
-		err = tx.Model(&system.ProjectDetailParticipleList{}).Create(&projectFormDetail).Error
+		err = tx.Model(&system.ProjectDetailInfo{}).Create(&projectFormDetail).Error
 		if err != nil {
 			return errors.New("写入列表失败:" + err.Error())
 		}
 		return nil
 	})
-	return err
 }
 
 // GetProjectDetail 获取项目详情
 func (s *ProjectDetailService) GetProjectDetail(config system.ProjectDetail) (detail system.ProjectDetail, err error) {
-	err = global.DB.Preload("Participle").Preload("ParticipleList").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
+	err = global.DB.Preload("ParticipleConfig").Preload("ProjectDetailInfoList").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
 	return
+}
+
+// UpdateProjectDetail 更新项目详情
+func (s *ProjectDetailService) UpdateProjectDetail(config system.ProjectDetail) (err error) {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
+		err = tx.Model(&system.ProjectDetail{}).Where("id = ?", config.Id).Updates(&config).Error
+		if err != nil {
+			return err
+		}
+		// 更新分词
+		if config.ParticipleConfig != (system.ProjectDetailParticiple{}) {
+			err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", config.Id).Updates(&config.ParticipleConfig).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

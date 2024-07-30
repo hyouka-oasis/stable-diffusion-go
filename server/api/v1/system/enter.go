@@ -7,17 +7,17 @@ import (
 type ApiGroup struct {
 	ProjectApi
 	ProjectDetailApi
-	ProjectDetailParticipleListApi
+	ProjectDetailInfoApi
 	SettingsApi
-	StableDiffusionApi
 	StableDiffusionLorasApi
+	StableDiffusionApi
 }
 
 var (
 	projectService                     = service.ServiceGroupApp.SystemServiceGroup.ProjectService
 	projectDetailService               = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailService
-	projectDetailParticipleListService = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailParticipleListService
+	projectDetailParticipleListService = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailParticipleInfoService
 	settingsService                    = service.ServiceGroupApp.SystemServiceGroup.SettingsService
-	stableDiffusionService             = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
 	stableDiffusionLorasService        = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
+	stableDiffusionService             = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
 )

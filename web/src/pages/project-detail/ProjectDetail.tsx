@@ -1,11 +1,14 @@
 import { useLocation } from "react-router";
 import styled from "styled-components";
-import { Button, Dropdown, Form, MenuProps, UploadFile } from "antd";
-import { EllipsisOutlined } from "@ant-design/icons";
+import { Button, Form, message, Tooltip, UploadFile, UploadProps } from "antd";
 import { useEffect, useState } from "react";
-import { extractTheCharacterProjectDetailParticipleList, getProjectDetail, TranslateProjectDetailParticipleList, updateProjectDetail } from "../../api/projectApi.ts";
-import { ProjectDetailParticipleList, ProjectDetailResponse } from "../../api/response/projectResponse.ts";
-import { ModalForm, ProColumns, ProForm, ProFormDigit, ProFormUploadButton, ProTable } from "@ant-design/pro-components";
+import { extractTheCharacterProjectDetailParticipleList, getProjectDetail, getProjectDetailInfo, translateProjectDetailParticipleList, updateProjectDetail, updateProjectDetailParticipleList, uploadProjectDetail } from "../../api/projectApi.ts";
+import { ProjectDetailInfo, ProjectDetailResponse } from "../../api/response/projectResponse.ts";
+import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormUploadButton } from "@ant-design/pro-components";
+import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
+import ThemeVanillaJsonModal from "../../components/json-edit/ThemeVanillaJsonModal.tsx";
+import { SettingOutlined } from "@ant-design/icons";
+import { stableDiffusionText2Image } from "../../api/stableDiffusionApi.ts";
 
 const ProjectDetailPageWrap = styled.div`
 `;
@@ -14,6 +17,12 @@ const ProjectDetailPage = () => {
     const location = useLocation();
     const [ form ] = Form.useForm();
     const [ projectDetail, setProjectDetail ] = useState<ProjectDetailResponse>();
+    const [ openStableDiffusionConfig, setOpenStableDiffusionConfig ] = useState<boolean>(false);
+    const [ content, setContent ] = useState<Content>({
+        json: JSON.stringify({}),
+        text: undefined
+    });
+    const [ editThemeFormatRight, setEditThemeFormatRight ] = useState<boolean>(true);
     const state = location.state;
 
     const getProjectDetailConfig = async (id: number) => {
@@ -21,6 +30,7 @@ const ProjectDetailPage = () => {
             projectId: id
         });
         setProjectDetail(detail);
+        form.setFieldsValue({ ...detail.participleConfig });
     };
 
     const onUploadOkHandler = async (values: Partial<ProjectDetailResponse & {
@@ -28,7 +38,7 @@ const ProjectDetailPage = () => {
     }>) => {
         const { file, ...args } = values;
         if (projectDetail) {
-            await updateProjectDetail({
+            await uploadProjectDetail({
                 id: projectDetail.id,
                 file: file?.[0]?.originFileObj,
                 ...args,
@@ -46,65 +56,142 @@ const ProjectDetailPage = () => {
         await getProjectDetailConfig(state.id);
     };
 
-    const translatePrompt = async () => {
+    const translatePrompt = async (data: {
+        id?: number;
+        projectDetailId?: number;
+    }) => {
         if (!projectDetail) return;
-        await TranslateProjectDetailParticipleList({
-            id: projectDetail?.id
-        });
+        await translateProjectDetailParticipleList(data);
+        message.success("翻译成功");
         await getProjectDetailConfig(state.id);
     };
 
-    const items: MenuProps['items'] = [
-        {
-            key: 'delete',
-            danger: true,
-            label: (
-                <span>
-                    删除
-                </span>
-            ),
-        },
-    ];
+    const setStableDiffusionJson = () => {
+        setContent({ json: JSON.parse(projectDetail?.stableDiffusionConfig ?? "{}") });
+    };
 
-    const columns: ProColumns<ProjectDetailParticipleList>[] = [
-        {
-            dataIndex: "index",
-            title: "序号",
-            align: "center",
-            width: 100,
-            render(_, _1, index) {
-                return (
-                    <span>{index + 1}</span>
-                );
+    const handleChange: OnChange = (newContent, _, status) => {
+        setContent(newContent as { text: string });
+        if (status?.contentErrors && Object.keys(status.contentErrors).length > 0) {
+            setEditThemeFormatRight(false);
+        } else {
+            setEditThemeFormatRight(true);
+        }
+    };
+
+    const onJsonOkHandler = async () => {
+        if (!editThemeFormatRight) {
+            message.error("json错误!");
+            return;
+        }
+        const data = (content as TextContent).text;
+        await updateProjectDetail({
+            id: projectDetail?.id,
+            stableDiffusionConfig: data
+        });
+        message.success("更新成功");
+        setOpenStableDiffusionConfig(false);
+        await getProjectDetailConfig(state.id);
+    };
+
+    const handleUpload: UploadProps["onChange"] = async ({ fileList }) => {
+        const [ file ] = fileList;
+        const json = await file.originFileObj?.text();
+        setContent({ json: JSON.parse(json!) });
+    };
+
+
+    const handleDownload = () => {
+        const file = new File([ `${JSON.stringify((content as any)?.json)}` ], "stable-diffusion-api.json", {
+            type: "text/json; charset=utf-8;",
+        });
+        const tmpLink = document.createElement("a");
+        const objectUrl = URL.createObjectURL(file);
+
+        tmpLink.href = objectUrl;
+        tmpLink.download = file.name;
+        document.body.appendChild(tmpLink);
+        tmpLink.click();
+
+        document.body.removeChild(tmpLink);
+        URL.revokeObjectURL(objectUrl);
+    };
+
+    const text2imageHandler = async () => {
+        const ids = projectDetail?.projectDetailInfoList?.map(i => i.id) ?? [];
+        const projectDetailStableDiffusionConfig = projectDetail?.stableDiffusionConfig ?? "{}";
+        for (const id of ids) {
+            const data = await getProjectDetailInfo({ id });
+            const stableDiffusionParams: {
+                [key: string]: any
+            } = {};
+            stableDiffusionParams["prompt"] = data.prompt;
+            stableDiffusionParams["negativePrompt"] = data.negativePrompt;
+            const jsonConfig = JSON.parse(projectDetailStableDiffusionConfig);
+            for (const key in jsonConfig) {
+                stableDiffusionParams[key] = jsonConfig[key];
             }
-        },
+            const stableDiffusionData = await stableDiffusionText2Image(stableDiffusionParams);
+            console.log(stableDiffusionData);
+        }
+        // await stableDiffusionText2Image({ ids, projectDetailId: projectDetail?.id ?? 0 });
+    };
+
+    const columns: ProColumns<ProjectDetailInfo>[] = [
         {
             dataIndex: "text",
             title: "文本",
-            ellipsis: true,
+            valueType: "textarea",
+            width: 300,
+            fixed: "left",
         },
         {
             dataIndex: "prompt",
             title: "正向提示词",
+            valueType: "textarea",
+            width: 300
         },
         {
-            dataIndex: "character",
+            dataIndex: "negativePrompt",
+            title: "反向提示词",
+            valueType: "textarea",
+            width: 300
+        },
+        {
+            dataIndex: "role",
             title: "人物",
+            valueType: "textarea",
+            width: 100,
+            tooltip: '多个人物名称通过","拼接',
         },
         {
-            dataIndex: "action",
             title: "操作",
             align: "center",
-            width: 70,
-            render() {
+            width: 170,
+            valueType: 'option',
+            fixed: "right",
+            render(text, record, _, action) {
                 return (
-                    <Dropdown menu={{ items }} trigger={[ "click" ]}>
-                        <EllipsisOutlined/>
-                    </Dropdown>
+                    <>
+                        <Button type={"link"} onClick={() => {
+                            action?.startEditable?.(record.id);
+                        }}>
+                            编辑
+                        </Button>
+                        <Button type={"link"} onClick={() => translatePrompt({ id: record?.id })}>
+                            翻译
+                        </Button>
+                    </>
                 );
             }
         },
     ];
+
+    useEffect(() => {
+        if (openStableDiffusionConfig) {
+            setStableDiffusionJson();
+        }
+    }, [ openStableDiffusionConfig ]);
 
     useEffect(() => {
         if (state.id) {
@@ -114,12 +201,32 @@ const ProjectDetailPage = () => {
 
     return (
         <ProjectDetailPageWrap>
-            <ProTable
+            <ThemeVanillaJsonModal
+                title={"stable-diffusion配置"}
+                open={openStableDiffusionConfig}
+                onCancel={() => setOpenStableDiffusionConfig(false)}
+                onOk={onJsonOkHandler}
+                content={content}
+                onChange={handleChange}
+                onImportHandler={handleUpload}
+                onExportHandler={handleDownload}
+            />
+            <EditableProTable
                 rowKey={"id"}
-                dataSource={projectDetail?.participleList ?? []}
+                editable={{
+                    onSave: async (_, data) => {
+                        await updateProjectDetailParticipleList({
+                            ...data
+                        });
+                        message.success("保存成功");
+                        await getProjectDetailConfig(state.id);
+                    },
+                }}
+                recordCreatorProps={false}
+                value={projectDetail?.projectDetailInfoList ?? []}
                 columns={columns}
                 virtual={true}
-                scroll={{ y: 650 }}
+                scroll={{ y: 650, x: 800 }}
                 headerTitle={projectDetail?.fileName}
                 pagination={false}
                 search={false}
@@ -173,9 +280,15 @@ const ProjectDetailPage = () => {
                     <Button onClick={extractTheCharacter}>
                         角色提取
                     </Button>,
-                    <Button onClick={translatePrompt}>
-                        prompt转换
-                    </Button>
+                    <Button onClick={() => translatePrompt({ projectDetailId: projectDetail?.id })}>
+                        翻译
+                    </Button>,
+                    <Button onClick={text2imageHandler}>
+                        生成图片
+                    </Button>,
+                    <Tooltip title={"配置stable-diffusion请求参数"}>
+                        <SettingOutlined onClick={() => setOpenStableDiffusionConfig(true)}/>
+                    </Tooltip>,
                 ]}
             />
         </ProjectDetailPageWrap>

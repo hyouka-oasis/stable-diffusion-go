@@ -3,8 +3,8 @@ package system
 type ServiceGroup struct {
 	ProjectService
 	ProjectDetailService
-	ProjectDetailParticipleListService
+	ProjectDetailParticipleInfoService
 	SettingsService
-	StableDiffusionService
 	StableDiffusionLorasService
+	StableDiffusionService
 }

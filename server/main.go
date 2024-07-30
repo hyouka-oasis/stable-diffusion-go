@@ -73,8 +73,7 @@ func startGinServer() {
 	core.RunServer()
 }
 
-func main() {
-	global.Viper = core.InitViper()
+func localStartMain() {
 	// 1. 创建文件目录
 	err := utils.EnsureDirectory(global.Config.Local.Path)
 	if err != nil {
@@ -105,4 +104,9 @@ func main() {
 		core.InitGlobalConfig(bookName)
 		batchGoRun(bookName)
 	}
+}
+
+func main() {
+	global.Viper = core.InitViper()
+	startGinServer()
 }

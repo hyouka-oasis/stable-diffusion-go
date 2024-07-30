@@ -8,7 +8,7 @@ import (
 	"github/stable-diffusion-go/server/model/system"
 )
 
-func ChatgptOllama(text string, ollamaConfig system.OllamaConfig) (prompt string, err error) {
+func ChatgptOllama(text string, ollamaConfig system.SettingsOllamaConfig) (prompt string, err error) {
 	// 使用OpenAI API调用chatGPT进行翻译
 	config := openai.DefaultConfig("ollama")
 	//config.BaseURL = ollamaConfig.Url

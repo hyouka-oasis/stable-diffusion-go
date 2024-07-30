@@ -1,7 +1,6 @@
 package system
 
 import (
-	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/common/request"
 	"github/stable-diffusion-go/server/model/example"
@@ -23,7 +22,6 @@ func (s *StableDiffusionLorasService) GetStableDiffusionLorasList(info request.P
 	db = db.Limit(limit).Offset(offset)
 	OrderStr := "id desc"
 	err = db.Order(OrderStr).Find(&stableDiffusionList).Error
-	fmt.Println(stableDiffusionList, "stableDiffusionList")
 	for _, stableDiffusion := range stableDiffusionList {
 		if stableDiffusion.ImageId != 0 {
 			var file example.ExaFileUploadAndDownload

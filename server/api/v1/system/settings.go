@@ -55,11 +55,11 @@ func (s *SettingsApi) UpdateSettings(c *gin.Context) {
 	}
 	err = settingsService.UpdateSettings(settings)
 	if err != nil {
-		global.Log.Error("删除失败!", zap.Error(err))
-		response.FailWithMessage("删除失败", c)
+		global.Log.Error("更新失败!", zap.Error(err))
+		response.FailWithMessage("更新失败", c)
 		return
 	}
-	response.OkWithMessage("删除成功", c)
+	response.OkWithMessage("更新成功", c)
 }
 
 // GetSettings 获取配置

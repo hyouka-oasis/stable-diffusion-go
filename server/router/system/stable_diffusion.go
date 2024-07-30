@@ -11,10 +11,9 @@ func (s *StableDiffusionRouter) InitStableDiffusionRouter(Router *gin.RouterGrou
 	stableDiffusionRouter := Router.Group("stableDiffusion")
 	stableDiffusionApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionApi
 	{
-		stableDiffusionRouter.GET("getConfig", stableDiffusionApi.GetStableDiffusionConfigList)
+		stableDiffusionRouter.POST("text2image", stableDiffusionApi.StableDiffusionTextToImage)
 	}
 	{
-		stableDiffusionRouter.POST("create", stableDiffusionApi.CreateStableDiffusionConfig)
 	}
 	return stableDiffusionRouter
 }

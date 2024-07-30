@@ -16,16 +16,15 @@ func Gorm() *gorm.DB {
 func RegisterTables() {
 	db := global.DB
 	err := db.AutoMigrate(
-		system.StableDiffusion{},
 		system.StableDiffusionLoras{},
 		system.Project{},
 		system.ProjectDetail{},
 		system.ProjectDetailParticiple{},
-		system.ProjectDetailParticipleList{},
+		system.ProjectDetailInfo{},
 		// 系统配置表
 		system.Settings{},
-		system.StableDiffusionConfig{},
-		system.OllamaConfig{},
+		system.SettingsStableDiffusionConfig{},
+		system.SettingsOllamaConfig{},
 
 		example.ExaFile{},
 		example.ExaFileChunk{},

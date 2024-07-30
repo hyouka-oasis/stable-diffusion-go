@@ -49,7 +49,7 @@ func translateOllama(inputFilePath string, outputFilePath string) (err error) {
 
 	for i := 1; scanner.Scan(); i++ {
 		line := scanner.Text()
-		translation, err := source.ChatgptOllama(line, system.OllamaConfig{})
+		translation, err := source.ChatgptOllama(line, system.SettingsOllamaConfig{})
 		fmt.Print("开始通过ollama进行转换prompt，当前正在转换第", i, "段\n")
 		if err != nil {
 			log.Fatal("转换失败:", err)

@@ -5,6 +5,6 @@ type RouterGroup struct {
 	ProjectDetailRouter
 	ProjectDetailParticipleListRouter
 	SettingsRouter
-	StableDiffusionRouter
 	StableDiffusionLorasRouter
+	StableDiffusionRouter
 }

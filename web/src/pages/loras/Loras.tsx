@@ -127,7 +127,7 @@ const LorasPage = () => {
 
                             <ProFormText
                                 width="md"
-                                name="role"
+                                name="roles"
                                 label="角色名称"
                                 placeholder="请输入角色名称"
                             />

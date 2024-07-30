@@ -68,6 +68,7 @@ instance.interceptors.response.use(
         if (response.status === 200) {
             if (response.data.code !== 200) {
                 errorMessageFun(response.data.code, response.data.message);
+                return Promise.reject(response.data.message);
             }
             return Promise.resolve(response.data.data);
         } else {
