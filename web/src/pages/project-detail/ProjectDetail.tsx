@@ -120,6 +120,7 @@ const ProjectDetailPage = () => {
     const text2imageHandler = async () => {
         const ids = projectDetail?.projectDetailInfoList?.map(i => i.id) ?? [];
         const projectDetailStableDiffusionConfig = projectDetail?.stableDiffusionConfig ?? "{}";
+        console.log(!!projectDetailStableDiffusionConfig);
         for (const id of ids) {
             const data = await getProjectDetailInfo({ id });
             const stableDiffusionParams: {
@@ -127,11 +128,14 @@ const ProjectDetailPage = () => {
             } = {};
             stableDiffusionParams["prompt"] = data.prompt;
             stableDiffusionParams["negativePrompt"] = data.negativePrompt;
-            const jsonConfig = JSON.parse(projectDetailStableDiffusionConfig);
+            const jsonConfig = JSON.parse(!projectDetailStableDiffusionConfig ? "{}" : projectDetailStableDiffusionConfig);
             for (const key in jsonConfig) {
                 stableDiffusionParams[key] = jsonConfig[key];
             }
-            const stableDiffusionData = await stableDiffusionText2Image(stableDiffusionParams);
+            const stableDiffusionData = await stableDiffusionText2Image({
+                id,
+                projectDetailId: projectDetail?.id,
+            });
             console.log(stableDiffusionData);
         }
         // await stableDiffusionText2Image({ ids, projectDetailId: projectDetail?.id ?? 0 });
