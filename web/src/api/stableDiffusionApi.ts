@@ -26,8 +26,8 @@ export const createStableDiffusionLoras = (data: any) => {
 };
 
 export const stableDiffusionText2Image = (data: {
-    ids: number[];
-    projectDetailId: number;
+    id: number;
+    projectDetailId?: number;
 }) => {
     return postApi({
         url: "/stableDiffusion/text2image",

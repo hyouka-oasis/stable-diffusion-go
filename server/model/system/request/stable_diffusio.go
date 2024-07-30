@@ -5,7 +5,6 @@ import (
 )
 
 type StableDiffusionParams struct {
-	request.IdsReq
-	ProjectDetailId       uint   `json:"projectDetailId"`
-	StableDiffusionConfig string `json:"stableDiffusionConfig"`
+	request.GetById
+	ProjectDetailId uint `json:"projectDetailId"`
 }

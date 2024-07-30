@@ -9,7 +9,7 @@ var (
 	OllamaConfigVerify          = Rules{"ModelName": {NotEmpty()}, "Url": {NotEmpty()}}
 	StableDiffusionLorasVerify  = Rules{"Name": {NotEmpty()}}
 	StableDiffusionConfigVerify = Rules{"Url": {NotEmpty()}}
-	StableDiffusionParamsVerify = Rules{"ProjectDetailId": {NotEmpty()}}
+	StableDiffusionParamsVerify = Rules{"ProjectDetailId": {NotEmpty()}, "Id": {NotEmpty()}}
 	ApiVerify                   = Rules{"Path": {NotEmpty()}, "Description": {NotEmpty()}, "ApiGroup": {NotEmpty()}, "Method": {NotEmpty()}}
 	MenuVerify                  = Rules{"Path": {NotEmpty()}, "Name": {NotEmpty()}, "Component": {NotEmpty()}, "Sort": {Ge("0")}}
 	MenuMetaVerify              = Rules{"Title": {NotEmpty()}}

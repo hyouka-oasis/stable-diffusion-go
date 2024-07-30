@@ -1,7 +1,6 @@
 package system
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/common/response"
@@ -39,7 +38,6 @@ func (s *ProjectDetailApi) UploadProjectDetailFile(c *gin.Context) {
 func (s *ProjectDetailApi) UpdateProjectDetail(c *gin.Context) {
 	var config system.ProjectDetail
 	err := c.ShouldBindJSON(&config)
-	fmt.Println(&config)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
 		return
