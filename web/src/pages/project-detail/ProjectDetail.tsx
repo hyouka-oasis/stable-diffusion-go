@@ -9,6 +9,7 @@ import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
 import ThemeVanillaJsonModal from "../../components/json-edit/ThemeVanillaJsonModal.tsx";
 import { SettingOutlined } from "@ant-design/icons";
 import { stableDiffusionText2Image } from "../../api/stableDiffusionApi.ts";
+import { blobToFile, dataURLtoBlob } from "../../utils/utils.ts";
 
 const ProjectDetailPageWrap = styled.div`
 `;
@@ -132,11 +133,18 @@ const ProjectDetailPage = () => {
             for (const key in jsonConfig) {
                 stableDiffusionParams[key] = jsonConfig[key];
             }
-            const stableDiffusionData = await stableDiffusionText2Image({
+            const stableDiffusionImages = await stableDiffusionText2Image({
                 id,
                 projectDetailId: projectDetail?.id,
             });
-            console.log(stableDiffusionData);
+            if (stableDiffusionImages.length) {
+                for (let i = 0; i < stableDiffusionImages.length; i++) {
+                    const image = stableDiffusionImages[i];
+                    const blob = dataURLtoBlob(`image/png;base64,${image}`);
+                    const file = blobToFile(blob, `${id}-${i}`);
+                    console.log(file);
+                }
+            }
         }
         // await stableDiffusionText2Image({ ids, projectDetailId: projectDetail?.id ?? 0 });
     };
