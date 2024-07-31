@@ -5,8 +5,6 @@ import (
 	"github/stable-diffusion-go/server/core"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/initialize"
-	"github/stable-diffusion-go/server/model/system"
-	"github/stable-diffusion-go/server/source"
 	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
 	"log"
@@ -40,7 +38,7 @@ func batchGoRun(bookName string) {
 		log.Fatal("创建视频目录失败:", err)
 	}
 	//3. 处理文本文件
-	err = source.SplitText(system.ProjectDetail{})
+	err = core.SplitText()
 	if err != nil {
 		panic(err)
 	}
@@ -108,5 +106,6 @@ func localStartMain() {
 
 func main() {
 	global.Viper = core.InitViper()
+	//localStartMain()
 	startGinServer()
 }

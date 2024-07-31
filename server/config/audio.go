@@ -5,4 +5,5 @@ type Audio struct {
 	Rate   string `yaml:"rate"`   // 语速
 	Volume string `yaml:"volume"` // 音量
 	Pitch  string `yaml:"pitch"`  // 分贝
+	Limit  int    `yaml:"limit"`  // 限制
 }

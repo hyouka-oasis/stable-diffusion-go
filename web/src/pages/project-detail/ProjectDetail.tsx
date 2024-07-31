@@ -145,6 +145,7 @@ const ProjectDetailPage = () => {
         const projectDetailStableDiffusionConfig = projectDetail?.stableDiffusionConfig ?? "{}";
         console.log(!!projectDetailStableDiffusionConfig);
         for (const id of ids) {
+            let selectedId: null | number = null;
             const stableDiffusionImages: ProjectDetailInfo["stableDiffusionImages"] = [];
             const data = await getProjectDetailInfo({ id });
             const stableDiffusionParams: {
@@ -169,6 +170,7 @@ const ProjectDetailPage = () => {
                         file,
                         fileType: "stable-diffusion"
                     });
+                    selectedId = i == 0 ? upload.id : null;
                     stableDiffusionImages.push({
                         projectDetailInfoId: id,
                         name: upload.name,
@@ -177,10 +179,12 @@ const ProjectDetailPage = () => {
                         tag: upload.tag,
                     });
                 }
-                await updateProjectDetailInfo({
+                await updateProjectDetailInfo(Object.assign({
                     id: id,
                     stableDiffusionImages,
-                });
+                }, selectedId ? {
+                    stableDiffusionImageId: selectedId
+                } : {}));
             }
             await getProjectDetailConfig(state.id);
         }

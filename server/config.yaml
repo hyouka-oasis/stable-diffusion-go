@@ -1,7 +1,7 @@
 # 书配置 记得要加一个空格！！！！！！！！
 book:
   # 小说书名 要和文件同目录 不要带.txt
-  name: 神秘复苏1
+  name: 神秘复苏16
   # 小说使用的语言 默认 zh | en 为英语 具体请查看阿里云翻译的文档
   language: zh
   # 是否批量处理
@@ -13,7 +13,7 @@ translate_config:
 # 音频
 audio:
   # 每行的字数限制
-  limit: 18
+  limit: 10
   # 角色 终端输入 edge-tts --list-voices 可以查看所有声音
   # 推荐 zh-CN-YunxiNeural 男  zh-CN-XiaoyiNeural  一般  女  zh-CN-XiaoxiaoNeural 最好  女
 #  voice: ja-JP-KeitaNeural

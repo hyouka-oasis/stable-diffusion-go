@@ -6,6 +6,7 @@ import (
 	"github/stable-diffusion-go/server/utils"
 	"log"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -53,6 +54,8 @@ func createVoiceSrt(filepath string) error {
 	rate := global.Config.Audio.Rate
 	volume := global.Config.Audio.Volume
 	pitch := global.Config.Audio.Pitch
+	limit := global.Config.Audio.Limit
+	language := global.Config.Book.Language
 	audioPath := global.OutAudioPath
 	audioSrtPath := global.OutAudioSrtPath
 	voiceCaptionPythonPath := global.VoiceCaptionPath
@@ -67,7 +70,11 @@ func createVoiceSrt(filepath string) error {
 		"--rate", windowCmdArgsConversion(rate), // 语速
 		"--volume", windowCmdArgsConversion(volume), // 音量
 		"--pitch", pitch, // 分贝
+		"--pitch", pitch, // 分贝
+		"--limit", strconv.Itoa(limit), // 分贝
+		"--language", language, // 语言
 	}
+	fmt.Println(args)
 	err := utils.ExecCommand("python", args)
 	if err != nil {
 		return err

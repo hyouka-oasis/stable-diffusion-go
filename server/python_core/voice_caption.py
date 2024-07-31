@@ -8,8 +8,117 @@ import re
 import os
 from datetime import datetime
 
+async def spilt_str2(s, t, k):
+    """
+    :param s: 切片文本
+    :param t: 切分前时间
+    :param k: 切分最大字数
+    :return:  新的切片信息
 
-async def time_difference(time1, time2, time_format=r"%H:%M:%S.%f"):
+    @ samples
+        s = "并且觉醒天赋 得到力量 对抗凶兽 觉醒天赋 便是人人在十八岁时能以血脉沟通沟通 觉醒天赋"
+        t = "00:00:35,184 --> 00:00:42,384"
+        k = 15
+    """
+
+    async def time2second(ti):
+        """
+        :param ti: 输入时间， 格式示例：00:02:56,512
+        :return: float
+        """
+        a, b, _c = ti.split(":")
+        c, d = _c.split(",")
+
+        a, b, c, d = int(a), int(b), int(c), int(d)
+
+        second = a * 3600 + b * 60 + c + d / 1000
+
+        return second
+
+    async def second2time(si):
+        hours = int(si // 3600)
+        minutes = int((si % 3600) // 60)
+        seconds = int(si % 60)
+        milliseconds = round((si % 1) * 1000)
+
+        v = "00"
+        u = "000"
+        a = v[: 2 - len(str(hours))] + str(hours)
+        b = v[: 2 - len(str(minutes))] + str(minutes)
+        c = v[: 2 - len(str(seconds))] + str(seconds)
+        d = u[: 3 - len(str(milliseconds))] + str(milliseconds)
+
+        return f"{a}:{b}:{c},{d}"
+
+    ss = s.split(" ")
+    ss_valid = []
+
+    # todo 将所有片段设置成不超过15
+    for _ss in ss:
+        if len(_ss) > k:
+
+            # 暴力截断几段
+            e = len(_ss) // k + 1
+            n_e = len(_ss) // e + 1
+
+            for _i in range(e):
+                if _i == e - 1:
+                    ss_valid.append(_ss[n_e * _i :])
+                else:
+                    ss_valid.append(_ss[n_e * _i : n_e * (_i + 1)])
+        else:
+            ss_valid.append(_ss)
+
+    # todo 片段合并
+    tmp = ""
+    new_ss = []
+    for i in range(len(ss_valid)):
+        tmp += ss_valid[i]
+
+        if i < len(ss_valid) - 1:
+            if len(tmp + ss_valid[i + 1]) > k:
+                new_ss.append(tmp)
+                tmp = ""
+            else:
+                continue
+        else:
+            new_ss.append(tmp)
+            tmp = ""
+
+    # 分配时间戳
+    t1, t2 = t.split("-->")
+    ft1 = await time2second(t1)
+    ft2 = await time2second(t2)
+    ftd = ft2 - ft1
+
+    # 转换成秒数
+    all_str = " ".join(new_ss)
+
+    tt_s = 0
+    line_srt = []
+    for z in new_ss:
+        tt_e = len(z) + tt_s
+
+        # 文章最后一句异常处理
+        if len(all_str) * ftd == 0:
+            continue
+
+        t_start = tt_s / len(all_str) * ftd
+        t_end = tt_e / len(all_str) * ftd
+        t_start = round(t_start, 3)
+        t_end = round(t_end, 3)
+
+        rec_s = await second2time(ft1 + t_start)
+        rec_e = await second2time(ft1 + t_end)
+
+        cc = (f"{rec_s} --> {rec_e}", z)
+        line_srt.append(cc)
+
+        tt_s = tt_e + 1
+
+    return line_srt
+
+async def time_difference(time1, time2, time_format=r"%H:%M:%S,%f"):
     time1 = datetime.strptime(time1, time_format)
     time2 = datetime.strptime(time2, time_format)
     # 计算时间差
@@ -17,6 +126,65 @@ async def time_difference(time1, time2, time_format=r"%H:%M:%S.%f"):
     time_diff = str(delta).replace(".", ",")[:11]
     return time_diff
 
+async def load_srt_new(filename, flag=True):
+    time_format = r"(\d{2}:\d{2}:\d{2}),\d{3} --> (\d{2}:\d{2}:\d{2}),\d{3}"
+
+    n = 0  # srt 文件总行数
+    index = 0  # strs 文字串移动下标
+    line_tmp = ""  # 每个时间区间后的字数累计
+    count_tmp = 0  # 每个时间区间后的字数行计数
+    new_srt = []
+
+    async with aiofiles.open(filename, mode="r", encoding="utf-8") as f3:
+        f_lines = await f3.readlines()
+        for line in f_lines:
+            line = line.strip("\n")
+            n += 1
+
+            # 写入新的数据
+            #   1)当出现在文本末写入一次
+            if n == len(f_lines):
+                new_srt_line = await spilt_str2(line_tmp, t_line_cur, limit)
+                new_srt.append(new_srt_line)
+
+            #   2）当新的一行是数字时，srt语句段写入
+            # case1: 判断新的一行是不是数字
+            if line.isdigit():
+                if flag:
+                    print(line)
+                if n > 1:
+                    new_srt_line = await spilt_str2(line_tmp, t_line_cur, limit)
+                    new_srt.append(new_srt_line)
+                continue
+
+            # case2: 判断新的一行是不是时间段
+            if re.match(time_format, line):
+                t_line_cur = line
+                # reset line_tmp
+                line_tmp = ""
+                count_tmp = 0
+                continue
+
+            # case3: 判断新的一行是空格时
+            if len(line) == 0:
+                continue
+
+            # case4: 新的一行不属于上面其中之一
+            line_std = line.replace(" ", "")
+            if flag:
+                print(f"{line}\n{line_std}")
+
+            if count_tmp:
+                line_tmp += " " + line_std
+            else:
+                line_tmp += line_std
+            count_tmp += 1
+
+    srt = []
+    for _line in new_srt:
+        for _l in _line:
+            srt.append(_l)
+    return srt
 
 async def srt_to_list(filename):
     subtitles = []  # 存储最终结果的列表
@@ -110,7 +278,6 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
         pitch="+0Hz" if edge_tts_args[3] is None else edge_tts_args[3],
     )
     sub_marker = SubMarker()
-    vtt_path = srt_path.replace(".srt", ".vtt")
     # 写入音频文件
     async with aiofiles.open(mp3_path, "wb") as file:
         async for chunk in communicate.stream():
@@ -118,105 +285,119 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
                 await file.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
                 sub_marker.create_sub((chunk["offset"], chunk["duration"]), chunk["text"])
-    # 写入字幕文件
-    async with aiofiles.open(vtt_path, "w", encoding="utf-8") as file:
-        content_to_write = await sub_marker.generate_cn_subs(content)
-        await file.write(content_to_write)
-    # vtt -》 srt
-    idx = 1  # 字幕序号
-    with open(srt_path, "w", encoding="utf-8") as f_out:
-        for line in open(vtt_path, encoding="utf-8"):
-            if "-->" in line:
-                f_out.write("%d\n" % idx)
-                idx += 1
-                line = line.replace(".", ",")  # 这行不是必须的，srt也能识别'.'
-            if idx > 1:  # 跳过header部分
-                if "-->" not in line:
-                    if len(line.strip()) > 10:
-                        mid = len(line) // 2
-                        print(line, mid)
-                        txt1 = line[:mid]
-                        txt2 = line[mid:]
-                        f_out.write(txt1+"\n"+txt2)
-                    else:
+    if language == "zh":
+        # 写入字幕文件
+        async with aiofiles.open(vtt_path, "w", encoding="utf-8") as file:
+            content_to_write = await sub_marker.generate_cn_subs(content)
+            await file.write(content_to_write)
+        # vtt -》 srt
+        idx = 1  # 字幕序号
+        with open(srt_path, "w", encoding="utf-8") as f_out:
+            for line in open(vtt_path, encoding="utf-8"):
+                if "-->" in line:
+                    f_out.write("%d\n" % idx)
+                    idx += 1
+                    line = line.replace(".", ",")  # 这行不是必须的，srt也能识别'.'
+                if idx > 1:  # 跳过header部分
                         f_out.write(line)
-                else:
-                    f_out.write(line)
 
 
 # 生成字幕时间列表
-async def create_processing_time(srt_path, text_path, txt_time_path):
-    vtt_path = srt_path.replace(".srt", ".vtt")
-    subtitles = await srt_to_list(vtt_path)
-    with open(text_path, "r", encoding="utf-8") as f:
-        section_list = f.readlines()
-    section_time_list = []
-    index_ = 0
-    time = "00:00:00.000"
-    for si, section in enumerate(section_list):
-        if len(section_list) == si + 1:
-            # 最后这段不处理 默认使用剩余所有time
-            next_start_time = subtitles[-1][0].split(" --> ")[1]
-            diff = await time_difference(time, next_start_time)
-            diff = diff.replace(",", ".")
-            section_time_list.append(diff)
-            break
-        content_ = await SubMarker().remove_non_chinese_chars(section)
-        for i, v in enumerate(subtitles):
-            if i <= index_:
-                continue
-            if v[1] not in content_:
-                next_start_time = v[0].split(" --> ")[0]
+async def create_processing_time(text_path, txt_time_path):
+    print(txt_time_path, "txt_time_path")
+    subtitles = await srt_to_list(audio_srt_path)
+    if language == "zh":
+        with open(text_path, "r", encoding="utf-8") as f:
+            section_list = f.readlines()
+        section_time_list = []
+        index_ = 0
+        time = "00:00:00,000"
+        for si, section in enumerate(section_list):
+            if len(section_list) == si + 1:
+                # 最后这段不处理 默认使用剩余所有time
+                next_start_time = subtitles[-1][0].split(" --> ")[1]
                 diff = await time_difference(time, next_start_time)
                 diff = diff.replace(",", ".")
                 section_time_list.append(diff)
-                index_ = i
-                time = next_start_time
                 break
-    with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
-        f3.write(str(section_time_list))
+            content_ = await SubMarker().remove_non_chinese_chars(section)
+            for i, v in enumerate(subtitles):
+                if i <= index_:
+                    continue
+                if v[1] not in content_:
+                    next_start_time = v[0].split(" --> ")[0]
+                    diff = await time_difference(time, next_start_time)
+                    diff = diff.replace(",", ".")
+                    section_time_list.append(diff)
+                    index_ = i
+                    time = next_start_time
+                    break
+        with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
+            f3.write(str(section_time_list))
 
+async def save_srt(filename, srt_list):
+    async with aiofiles.open(filename, mode="w", encoding="utf-8") as f:
+        for _li, _l in enumerate(srt_list):
+            if _li == len(srt_list) - 1:
+                info = "{}\n{}\n{}".format(_li + 1, _l[0], _l[1])
+            else:
+                info = "{}\n{}\n{}\n\n".format(_li + 1, _l[0], _l[1])
+            await f.write(info)
+
+async def srt_regen_new(srt_tmp_path, srt_path, flag):
+    srt_list = await load_srt_new(srt_tmp_path, flag)
+    await save_srt(srt_path, srt_list)
 
 # 初始化edge_tts
 async def create_voice_caption():
-    parser = argparse.ArgumentParser()
-    # 从go那边获取过来的文本路径
-    parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
-    parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
-    parser.add_argument("--audio_path", help="输出的音频路径地址")
-    parser.add_argument("--audio_srt_path", help="输出的字幕路径地址")
-    parser.add_argument("--voice", help="角色")
-    parser.add_argument("--rate", help="语速")
-    parser.add_argument("--volume", help="音量")
-    parser.add_argument("--pitch", help="分贝")
-    args = parser.parse_args()
-    participle_book_path = args.participle_book_path
-    if participle_book_path is None:
-        raise Exception("输出路径不能为空")
-    audi_srt_map_path = args.audi_srt_map_path
-    if audi_srt_map_path is None:
-        raise Exception("字幕切片文本路径不能为空")
-    audio_path = args.audio_path
-    if audio_path is None:
-        raise Exception("音频输出路径不能为空")
-    audio_srt_path = args.audio_srt_path
-    if audio_srt_path is None:
-        raise Exception("字幕输出路径不能为空")
-    voice, rate, volume, pitch = args.voice, args.rate, args.volume, args.pitch
     # 通过edge-tts生成音频和字幕
-    await edge_tts_create_srt(participle_book_path, audio_path, audio_srt_path, voice, rate, volume, pitch)
+    await edge_tts_create_srt(participle_book_path, audio_path, srt_tmp_path, voice, rate, volume, pitch)
+    if language == "zh":
+        await srt_regen_new(srt_tmp_path, audio_srt_path, False)
+    else:
+        os.replace(srt_tmp_path, audio_srt_path)
     # 通过字幕生成时间表
-    await create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path)
+    await create_processing_time(participle_book_path, audi_srt_map_path)
 
 
 if __name__ == "__main__":
     # audio_srt_path = "D:\\ComicTweetsGo\\server\\神秘复苏2-10\\participle\\test.wav"
-    # participle_book_path = "D:\ComicTweetsGo\server\神秘复苏2-10\participle\神秘复苏2-10.txt"
-    # audi_srt_map_path = "D:\ComicTweetsGo\server"
+    participle_book_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.txt"
+    audi_srt_map_path = " F:\\stable-diffusion-go\\server\\神秘复苏16\\神秘复苏16map.txt"
     # asyncio.run(map3_to_srt(audio_srt_path))
 
-    # audio_srt_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\participle\\神秘复苏8.srt"
+    audio_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.mp3"
+    audio_srt_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.srt"
     # participle_book_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\participle\\神秘复苏8.txt"
     # audi_srt_map_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\神秘复苏8map.txt"
+    voice, rate, volume, pitch, language, limit = "zh-CN-YunxiNeural", "+10%", "+100%", "+0Hz", "zh", 10
     # asyncio.run(create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path))
+    # parser = argparse.ArgumentParser()
+    # 从go那边获取过来的文本路径
+    # parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
+    # parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
+    # parser.add_argument("--audio_path", help="输出的音频路径地址")
+    # parser.add_argument("--audio_srt_path", help="输出的字幕路径地址")
+    # parser.add_argument("--voice", help="角色")
+    # parser.add_argument("--rate", help="语速")
+    # parser.add_argument("--volume", help="音量")
+    # parser.add_argument("--pitch", help="分贝")
+    # parser.add_argument("--language", help="语言")
+    # parser.add_argument("--limit", help="每一行限制最大数")
+    # args = parser.parse_args()
+    # participle_book_path = args.participle_book_path
+    # if participle_book_path is None:
+    #     raise Exception("输出路径不能为空")
+    # audi_srt_map_path = args.audi_srt_map_path
+    # if audi_srt_map_path is None:
+    #     raise Exception("字幕切片文本路径不能为空")
+    # audio_path = args.audio_path
+    # if audio_path is None:
+    #     raise Exception("音频输出路径不能为空")
+    # audio_srt_path = args.audio_srt_path
+    # if audio_srt_path is None:
+    #     raise Exception("字幕输出路径不能为空")
+    # voice, rate, volume, pitch, language, limit = args.voice, args.rate, args.volume, args.pitch, "zh" if args.language is None else args.language, 10 if args.limit is None else args.limit
+    vtt_path = audio_srt_path.replace(".srt", ".vtt")
+    srt_tmp_path = audio_srt_path.replace(".srt", ".tmp.srt")
     asyncio.run(create_voice_caption())
