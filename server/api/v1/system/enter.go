@@ -11,13 +11,15 @@ type ApiGroup struct {
 	SettingsApi
 	StableDiffusionLorasApi
 	StableDiffusionApi
+	StableDiffusionNegativePromptApi
 }
 
 var (
-	projectService                     = service.ServiceGroupApp.SystemServiceGroup.ProjectService
-	projectDetailService               = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailService
-	projectDetailParticipleListService = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailParticipleInfoService
-	settingsService                    = service.ServiceGroupApp.SystemServiceGroup.SettingsService
-	stableDiffusionLorasService        = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
-	stableDiffusionService             = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
+	projectService                       = service.ServiceGroupApp.SystemServiceGroup.ProjectService
+	projectDetailService                 = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailService
+	projectDetailParticipleListService   = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailParticipleInfoService
+	settingsService                      = service.ServiceGroupApp.SystemServiceGroup.SettingsService
+	stableDiffusionLorasService          = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
+	stableDiffusionService               = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
+	stableDiffusionNegativePromptService = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionNegativePromptService
 )

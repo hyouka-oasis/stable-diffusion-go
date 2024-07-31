@@ -68,7 +68,7 @@ func (e *FileUploadAndDownloadService) GetFileRecordInfoList(info request.PageIn
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	keyword := info.Keyword
-	db := global.DB.Model(&example.ExaFileUploadAndDownload{})
+	db := global.DB.Model(&example.ExaFileUploadAndDownload{}).Where("file_type = ?", "basic")
 	var fileLists []example.ExaFileUploadAndDownload
 	if len(keyword) > 0 {
 		db = db.Where("name LIKE ?", "%"+keyword+"%")
@@ -87,7 +87,7 @@ func (e *FileUploadAndDownloadService) GetFileRecordInfoList(info request.PageIn
 //@param: header *multipart.FileHeader, noSave string
 //@return: file model.ExaFileUploadAndDownload, err error
 
-func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, noSave string) (file example.ExaFileUploadAndDownload, err error) {
+func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, noSave string, fileType string) (file example.ExaFileUploadAndDownload, err error) {
 	oss := upload.NewOss()
 	filePath, key, uploadErr := oss.UploadFile(header)
 	if uploadErr != nil {
@@ -95,10 +95,11 @@ func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, 
 	}
 	s := strings.Split(header.Filename, ".")
 	f := example.ExaFileUploadAndDownload{
-		Url:  filePath,
-		Name: header.Filename,
-		Tag:  s[len(s)-1],
-		Key:  key,
+		Url:      filePath,
+		Name:     header.Filename,
+		Tag:      s[len(s)-1],
+		Key:      key,
+		FileType: fileType,
 	}
 	// 返回ID
 	if noSave == "0" {

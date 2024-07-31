@@ -7,4 +7,5 @@ type ServiceGroup struct {
 	SettingsService
 	StableDiffusionLorasService
 	StableDiffusionService
+	StableDiffusionNegativePromptService
 }

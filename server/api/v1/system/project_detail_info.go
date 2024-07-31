@@ -34,23 +34,23 @@ func (s *ProjectDetailInfoApi) DeleteProjectDetailInfo(c *gin.Context) {
 	response.OkWithMessage("删除成功", c)
 }
 
-// UpdateProjectDetailInfo 删除单条记录
+// UpdateProjectDetailInfo 更新单条记录
 func (s *ProjectDetailInfoApi) UpdateProjectDetailInfo(c *gin.Context) {
-	var formListItem system.ProjectDetailInfo
-	err := c.ShouldBindJSON(&formListItem)
+	var info system.ProjectDetailInfo
+	err := c.ShouldBindJSON(&info)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
 		return
 	}
-	err = utils.Verify(formListItem, utils.IdVerify)
+	err = utils.Verify(info, utils.IdVerify)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.UpdateProjectDetailInfo(formListItem)
+	err = projectDetailParticipleListService.UpdateProjectDetailInfo(info)
 	if err != nil {
 		global.Log.Error("更新失败!", zap.Error(err))
-		response.FailWithMessage("更新失败", c)
+		response.FailWithMessage("更新失败"+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("更新成功", c)
@@ -79,8 +79,8 @@ func (s *ProjectDetailInfoApi) GetProjectDetailInfo(c *gin.Context) {
 	response.OkWithDetailed(&res, "获取成功", c)
 }
 
-// ExtractTheCharacterProjectDetailInfoList 提取角色
-func (s *ProjectDetailInfoApi) ExtractTheCharacterProjectDetailInfoList(c *gin.Context) {
+// ExtractTheRoleProjectDetailInfoList 提取角色
+func (s *ProjectDetailInfoApi) ExtractTheRoleProjectDetailInfoList(c *gin.Context) {
 	var projectDetail system.ProjectDetail
 	err := c.ShouldBindJSON(&projectDetail)
 	if err != nil {
@@ -92,7 +92,7 @@ func (s *ProjectDetailInfoApi) ExtractTheCharacterProjectDetailInfoList(c *gin.C
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.ExtractTheCharacterProjectDetailInfoList(projectDetail.Id)
+	err = projectDetailParticipleListService.ExtractTheRoleProjectDetailInfoList(projectDetail.Id)
 	if err != nil {
 		global.Log.Error("角色提取失败!", zap.Error(err))
 		response.FailWithMessage("角色提取失败", c)

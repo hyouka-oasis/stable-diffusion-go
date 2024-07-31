@@ -17,6 +17,8 @@ func RegisterTables() {
 	db := global.DB
 	err := db.AutoMigrate(
 		system.StableDiffusionLoras{},
+		system.StableDiffusionImages{},
+		system.StableDiffusionNegativePrompt{},
 		system.Project{},
 		system.ProjectDetail{},
 		system.ProjectDetailParticiple{},

@@ -2,7 +2,7 @@ import { FC, useEffect, useRef } from "react";
 import { JSONEditor, JSONEditorPropsOptional, Mode } from "vanilla-jsoneditor";
 import { ReactSmoothScrollbar } from "../smooth-scroll/SmoothScroll.tsx";
 
-const ThemeVanillaJson: FC<JSONEditorPropsOptional> = (props) => {
+const VanillaJson: FC<JSONEditorPropsOptional> = (props) => {
     const refContainer = useRef<HTMLDivElement | null>(null);
     const editorRef = useRef<JSONEditor | null>(null);
     useEffect(() => {
@@ -29,4 +29,4 @@ const ThemeVanillaJson: FC<JSONEditorPropsOptional> = (props) => {
     );
 };
 
-export default ThemeVanillaJson;
+export default VanillaJson;

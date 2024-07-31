@@ -47,12 +47,13 @@ func Routers() *gin.Engine {
 		})
 	}
 	{
-		systemRouter.InitProjectRouter(PublicGroup)                     // 项目基础接口
-		systemRouter.InitProjectDetailRouter(PublicGroup)               // 项目详情基础接口
-		systemRouter.InitProjectDetailParticipleListRouter(PublicGroup) // 项目详情基础接口
-		systemRouter.InitSettingsRouter(PublicGroup)                    // 基础设置接口
-		systemRouter.InitStableDiffusionLorasRouter(PublicGroup)        // stableDiffusionLoras接口
-		systemRouter.InitStableDiffusionRouter(PublicGroup)             // stableDiffusionLoras接口
+		systemRouter.InitProjectRouter(PublicGroup)                       // 项目基础接口
+		systemRouter.InitProjectDetailRouter(PublicGroup)                 // 项目详情基础接口
+		systemRouter.InitProjectDetailParticipleListRouter(PublicGroup)   // 项目详情基础接口
+		systemRouter.InitSettingsRouter(PublicGroup)                      // 基础设置接口
+		systemRouter.InitStableDiffusionLorasRouter(PublicGroup)          // stableDiffusionLoras接口
+		systemRouter.InitStableDiffusionRouter(PublicGroup)               // stableDiffusionLoras接口
+		systemRouter.InitStableDiffusionNegativePromptRouter(PublicGroup) // 通用反向提示词接口
 	}
 	{
 		exampleRouter.InitFileUploadAndDownloadRouter(PublicGroup)

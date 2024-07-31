@@ -1,4 +1,5 @@
 import { BasicResponse } from "./basicPageInfoResponse.ts";
+import { FileResponse } from "./fileResponse.ts";
 
 export interface ProjectResponse extends BasicResponse {
     name: string;
@@ -17,6 +18,11 @@ export interface ProjectDetailInfo extends BasicResponse {
     negativePrompt: string;
     role: string;
     projectDetailId?: number;
+    stableDiffusionImages?: Array<Partial<FileResponse> & {
+        projectId?: number;
+        projectDetailId?: number;
+        projectDetailInfoId?: number;
+    }>;
 }
 
 export interface ProjectDetailResponse extends BasicResponse {

@@ -7,4 +7,5 @@ type RouterGroup struct {
 	SettingsRouter
 	StableDiffusionLorasRouter
 	StableDiffusionRouter
+	StableDiffusionNegativePromptRouter
 }

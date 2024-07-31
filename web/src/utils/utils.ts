@@ -2,6 +2,7 @@
 
 const dataURLtoBlob = (dataurl: string): Blob => {
     const arr = dataurl.split(',');
+    console.log(arr, "arr");
     const mime = arr?.[0]?.match(/:(.*?);/)?.[1];
     const bstr = atob(arr[1]);
     let n = bstr.length;

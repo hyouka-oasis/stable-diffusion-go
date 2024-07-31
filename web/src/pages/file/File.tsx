@@ -72,6 +72,8 @@ const FilePage = () => {
                 dataSource={fileList ?? []}
                 columns={columns}
                 search={false}
+                scroll={{ y: 650, x: 800 }}
+                pagination={false}
             />
         </FilePageWrap>
     );

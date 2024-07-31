@@ -57,7 +57,7 @@ export const updateProjectDetail = (data: Partial<ProjectDetailResponse>): Promi
  */
 export const extractTheCharacterProjectDetailParticipleList = (data: Pick<BasicResponse, "id">): Promise<ProjectDetailResponse> => {
     return postApi({
-        url: "/projectDetailInfo/extractCharacter",
+        url: "/projectDetailInfo/extractRole",
         data
     });
 };
@@ -75,7 +75,7 @@ export const translateProjectDetailParticipleList = (data: Pick<Partial<BasicRes
  * 更新数据
  * @param data
  */
-export const updateProjectDetailParticipleList = (data: any): Promise<void> => {
+export const updateProjectDetailInfo = (data: any): Promise<void> => {
     return postApi({
         url: "/projectDetailInfo/update",
         data

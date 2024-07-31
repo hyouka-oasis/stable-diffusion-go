@@ -69,11 +69,11 @@ func (s *ProjectDetailApi) GetProjectDetail(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	config, err = projectDetailService.GetProjectDetail(config)
+	detail, err := projectDetailService.GetProjectDetail(config)
 	if err != nil {
 		global.Log.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败", c)
 		return
 	}
-	response.OkWithDetailed(&config, "获取成功", c)
+	response.OkWithDetailed(detail, "获取成功", c)
 }

@@ -21,7 +21,7 @@ func (s *ProjectDetailParticipleInfoService) DeleteProjectDetailInfo(id uint) er
 
 // UpdateProjectDetailInfo 更新单条记录
 func (s *ProjectDetailParticipleInfoService) UpdateProjectDetailInfo(updateData system.ProjectDetailInfo) error {
-	err := global.DB.Updates(&updateData).Error
+	err := global.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&updateData).Error
 	return err
 }
 
@@ -31,8 +31,8 @@ func (s *ProjectDetailParticipleInfoService) GetProjectDetailInfo(id uint) (info
 	return
 }
 
-// ExtractTheCharacterProjectDetailInfoList 进行人物提取
-func (s *ProjectDetailParticipleInfoService) ExtractTheCharacterProjectDetailInfoList(id uint) error {
+// ExtractTheRoleProjectDetailInfoList 进行人物提取
+func (s *ProjectDetailParticipleInfoService) ExtractTheRoleProjectDetailInfoList(id uint) error {
 	var currentProjectDetailParticipleList []system.ProjectDetailInfo
 	//var currentSettings system.Settings
 	//err := global.DB.Model(&system.Settings{}).First(&currentSettings).Error

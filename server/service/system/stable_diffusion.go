@@ -44,7 +44,9 @@ func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest
 		// 查到单个的列表
 		err = tx.Model(&system.ProjectDetailInfo{}).Where("id = ?", params.Id).Find(&projectDetailInfo).Error
 		request["prompt"] = projectDetailInfo.Prompt
-		request["negative_prompt"] = projectDetailInfo.NegativePrompt
+		if projectDetailInfo.NegativePrompt != "" {
+			request["negative_prompt"] = projectDetailInfo.NegativePrompt
+		}
 		apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/txt2img"
 		stableDiffusionImages, generateError := source.StableDiffusionGenerateImage(apiUrl, request)
 		if generateError != nil {

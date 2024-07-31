@@ -77,7 +77,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, config system.Pr
 
 // GetProjectDetail 获取项目详情
 func (s *ProjectDetailService) GetProjectDetail(config system.ProjectDetail) (detail system.ProjectDetail, err error) {
-	err = global.DB.Preload("ParticipleConfig").Preload("ProjectDetailInfoList").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
+	err = global.DB.Preload("ParticipleConfig").Preload("ProjectDetailInfoList").Preload("ProjectDetailInfoList.StableDiffusionImages").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
 	return
 }
 

@@ -15,6 +15,7 @@ export const getFileList = (data: BasicPageInfoRequest): Promise<BasicArrayRespo
 
 export const uploadFile = (data: {
     file: File | RcFile;
+    fileType?: string;
 }): Promise<FileResponse> => {
     return postFormApi({
         url: "/file/upload",

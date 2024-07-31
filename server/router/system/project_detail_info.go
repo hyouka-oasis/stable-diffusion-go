@@ -15,7 +15,7 @@ func (s *ProjectDetailParticipleListRouter) InitProjectDetailParticipleListRoute
 	}
 	{
 		projectDetailInfoRouter.POST("update", projectDetailInfoApi.UpdateProjectDetailInfo)
-		projectDetailInfoRouter.POST("extractCharacter", projectDetailInfoApi.ExtractTheCharacterProjectDetailInfoList)
+		projectDetailInfoRouter.POST("extractRole", projectDetailInfoApi.ExtractTheRoleProjectDetailInfoList)
 		projectDetailInfoRouter.POST("translate", projectDetailInfoApi.TranslateProjectDetailInfoList)
 		projectDetailInfoRouter.DELETE("delete", projectDetailInfoApi.DeleteProjectDetailInfo)
 	}
