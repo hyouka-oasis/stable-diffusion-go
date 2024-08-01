@@ -8,4 +8,5 @@ type RouterGroup struct {
 	StableDiffusionLorasRouter
 	StableDiffusionRouter
 	StableDiffusionNegativePromptRouter
+	AudioSrtRouter
 }

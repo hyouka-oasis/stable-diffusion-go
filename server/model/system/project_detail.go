@@ -11,7 +11,7 @@ type ProjectDetail struct {
 	ParticipleConfig      ParticipleConfig `json:"participleConfig" form:"participleConfig"`
 	InfoList              []Info           `json:"infoList"`
 	StableDiffusionConfig string           `json:"stableDiffusionConfig" gorm:"type:json"` // api调用参数
-	Language              string           `json:"language"`                               //语言
+	Language              string           `json:"language" gorm:"default:zh"`             //语言
 	AudioConfig           AudioConfig      `json:"audioConfig"`
 }
 

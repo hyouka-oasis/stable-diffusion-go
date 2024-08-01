@@ -54,6 +54,7 @@ func Routers() *gin.Engine {
 		systemRouter.InitStableDiffusionLorasRouter(PublicGroup)          // stableDiffusionLoras接口
 		systemRouter.InitStableDiffusionRouter(PublicGroup)               // stableDiffusionLoras接口
 		systemRouter.InitStableDiffusionNegativePromptRouter(PublicGroup) // 通用反向提示词接口
+		systemRouter.InitAudioSrtRouter(PublicGroup)                      // 音频字幕生成接口
 	}
 	{
 		exampleRouter.InitFileUploadAndDownloadRouter(PublicGroup)

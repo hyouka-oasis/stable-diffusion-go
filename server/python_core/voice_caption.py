@@ -375,10 +375,10 @@ if __name__ == "__main__":
     # audi_srt_map_path = "../测试/participle/神秘复苏time.txt"
     # asyncio.run(map3_to_srt(audio_srt_path))
 
-    # audio_path = "../测试/participle/神秘复苏.mp3"
-    # audio_srt_path = "../测试/participle/神秘复苏.srt"
-    # participle_book_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\participle\\神秘复苏8.txt"
-    # audi_srt_map_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\神秘复苏8map.txt"
+    # audio_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.mp3"
+    # participle_book_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.txt"
+    # audi_srt_map_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\神秘复苏16map.txt"
+    # audio_srt_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.srt"
     # voice, rate, volume, pitch, language, limit = "zh-CN-YunxiNeural", "+10%", "+100%", "+0Hz", "zh", 10
     # asyncio.run(create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path))
     parser = argparse.ArgumentParser()
@@ -406,7 +406,7 @@ if __name__ == "__main__":
     audio_srt_path = args.audio_srt_path
     if audio_srt_path is None:
         raise Exception("字幕输出路径不能为空")
-    voice, rate, volume, pitch, language, limit = args.voice, args.rate, args.volume, args.pitch, "zh" if args.language is None else args.language, 10 if args.limit is None else args.limit
+    voice, rate, volume, pitch, language, limit = args.voice, args.rate, args.volume, args.pitch, args.language, int(args.limit)
     vtt_path = audio_srt_path.replace(".srt", ".vtt")
     srt_tmp_path = audio_srt_path.replace(".srt", ".tmp.srt")
     asyncio.run(create_voice_caption())

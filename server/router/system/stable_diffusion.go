@@ -13,7 +13,5 @@ func (s *StableDiffusionRouter) InitStableDiffusionRouter(Router *gin.RouterGrou
 	{
 		stableDiffusionRouter.POST("text2image", stableDiffusionApi.StableDiffusionTextToImage)
 	}
-	{
-	}
 	return stableDiffusionRouter
 }

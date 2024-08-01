@@ -12,7 +12,7 @@ type ApiGroup struct {
 	StableDiffusionLorasApi
 	StableDiffusionApi
 	StableDiffusionNegativePromptApi
-	AudioApi
+	AudioSrtApi
 }
 
 var (
@@ -23,5 +23,5 @@ var (
 	stableDiffusionLorasService          = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
 	stableDiffusionService               = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
 	stableDiffusionNegativePromptService = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionNegativePromptService
-	audioService                         = service.ServiceGroupApp.SystemServiceGroup.AudioService
+	audioSrtService                      = service.ServiceGroupApp.SystemServiceGroup.AudioSrtService
 )

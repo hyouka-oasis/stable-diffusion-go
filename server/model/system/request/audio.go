@@ -5,7 +5,7 @@ import (
 	"github/stable-diffusion-go/server/model/system"
 )
 
-type AudioRequestParams struct {
+type AudioSrtRequestParams struct {
 	global.Model
 	system.AudioConfig
 }

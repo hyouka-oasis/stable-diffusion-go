@@ -8,5 +8,5 @@ type ServiceGroup struct {
 	StableDiffusionLorasService
 	StableDiffusionService
 	StableDiffusionNegativePromptService
-	AudioService
+	AudioSrtService
 }

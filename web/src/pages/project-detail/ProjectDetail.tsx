@@ -15,6 +15,7 @@ import { baseURL } from "../../utils/request.ts";
 import VanillaUploadJson from "../../components/json-edit/VanillaUploadJson.tsx";
 import { RcFile } from "antd/lib/upload";
 import { audioList } from "../../utils/audio-list.ts";
+import { createAudioSrt } from "../../api/audioSrt.ts";
 
 const ProjectDetailPageWrap = styled.div`
 `;
@@ -239,6 +240,15 @@ const ProjectDetailPage = () => {
         }));
         await getProjectDetailConfig(state.id);
     };
+    /**
+     * 生成音频和字幕
+     */
+    const createAudioAndSrtHandler = async () => {
+        if (projectDetail)
+            await createAudioSrt({
+                id: projectDetail?.id
+            });
+    };
 
     const columns: ProColumns<Info>[] = [
         {
@@ -367,6 +377,9 @@ const ProjectDetailPage = () => {
                     </Button>,
                     <Button onClick={() => translatePrompt({ projectDetailId: projectDetail?.id })}>
                         翻译
+                    </Button>,
+                    <Button onClick={createAudioAndSrtHandler}>
+                        生成音频和字幕
                     </Button>,
                     <Button onClick={text2imageHandler}>
                         生成图片

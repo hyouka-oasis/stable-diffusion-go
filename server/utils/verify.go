@@ -10,7 +10,7 @@ var (
 	StableDiffusionLorasVerify          = Rules{"Name": {NotEmpty()}}
 	StableDiffusionConfigVerify         = Rules{"Url": {NotEmpty()}}
 	StableDiffusionParamsVerify         = Rules{"ProjectDetailId": {NotEmpty()}, "Id": {NotEmpty()}}
-	AudioRequestParamsVerify            = Rules{"Id": {NotEmpty()}}
+	AudioSrtRequestParamsVerify         = Rules{"Id": {NotEmpty()}}
 	StableDiffusionNegativePromptVerify = Rules{"Text": {NotEmpty()}}
 	ApiVerify                           = Rules{"Path": {NotEmpty()}, "Description": {NotEmpty()}, "ApiGroup": {NotEmpty()}, "Method": {NotEmpty()}}
 	MenuVerify                          = Rules{"Path": {NotEmpty()}, "Name": {NotEmpty()}, "Component": {NotEmpty()}, "Sort": {Ge("0")}}
