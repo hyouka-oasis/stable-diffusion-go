@@ -4,7 +4,7 @@ import (
 	"github/stable-diffusion-go/server/global"
 )
 
-type ProjectDetailInfo struct {
+type Info struct {
 	global.Model
 	ProjectDetailId        uint                    `json:"projectDetailId"`        // 项目详情Id
 	Text                   string                  `json:"text"`                   // 文本
@@ -15,6 +15,6 @@ type ProjectDetailInfo struct {
 	StableDiffusionImageId uint                    `json:"stableDiffusionImageId"` // 选定的图片 默认第一张
 }
 
-func (ProjectDetailInfo) TableName() string {
-	return "project_detail_info"
+func (Info) TableName() string {
+	return "info"
 }

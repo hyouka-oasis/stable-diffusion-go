@@ -21,9 +21,9 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, config system.Pr
 		if err != nil {
 			return err
 		}
-		//var projectDetailParticiple system.ProjectDetailParticiple
+		//var projectDetailParticiple system.ParticipleConfig
 		// 先查找是否存在分词配置
-		//err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", id).First(projectDetailParticiple).Error
+		//err = tx.Model(&system.ParticipleConfig{}).Where("project_detail_id = ?", id).First(projectDetailParticiple).Error
 		// 如果不存在则保存
 		//if err != nil {
 		//	err = tx.Create(&config.ParticipleConfig).Error
@@ -32,11 +32,11 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, config system.Pr
 		//	}
 		//}
 		// 如果存在则更新
-		err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", id).Updates(&config.ParticipleConfig).Error
+		err = tx.Model(&system.ParticipleConfig{}).Where("project_detail_id = ?", id).Updates(&config.ParticipleConfig).Error
 		if err != nil {
 			return err
 		}
-		err = tx.Delete(&system.ProjectDetailInfo{}, "project_detail_id = ?", id).Error
+		err = tx.Delete(&system.Info{}, "project_detail_id = ?", id).Error
 		if err != nil {
 			return errors.New("删除原有项目失败:" + err.Error())
 		}
@@ -59,15 +59,15 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, config system.Pr
 		defer participleBook.Close() // 确保文件在函数退出时被关闭
 		// 创建扫描器
 		scanner := bufio.NewScanner(participleBook)
-		var projectFormDetail []system.ProjectDetailInfo
+		var projectFormDetail []system.Info
 		// 逐行读取并输出
 		for scanner.Scan() {
-			projectFormDetail = append(projectFormDetail, system.ProjectDetailInfo{
+			projectFormDetail = append(projectFormDetail, system.Info{
 				ProjectDetailId: id,
 				Text:            scanner.Text(),
 			})
 		}
-		err = tx.Model(&system.ProjectDetailInfo{}).Create(&projectFormDetail).Error
+		err = tx.Model(&system.Info{}).Create(&projectFormDetail).Error
 		if err != nil {
 			return errors.New("写入列表失败:" + err.Error())
 		}
@@ -77,7 +77,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, config system.Pr
 
 // GetProjectDetail 获取项目详情
 func (s *ProjectDetailService) GetProjectDetail(config system.ProjectDetail) (detail system.ProjectDetail, err error) {
-	err = global.DB.Preload("ParticipleConfig").Preload("ProjectDetailInfoList").Preload("ProjectDetailInfoList.StableDiffusionImages").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
+	err = global.DB.Preload("ParticipleConfig").Preload("InfoList").Preload("AudioConfig").Preload("InfoList.StableDiffusionImages").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
 	return
 }
 
@@ -89,8 +89,15 @@ func (s *ProjectDetailService) UpdateProjectDetail(config system.ProjectDetail) 
 			return err
 		}
 		// 更新分词
-		if config.ParticipleConfig != (system.ProjectDetailParticiple{}) {
-			err = tx.Model(&system.ProjectDetailParticiple{}).Where("project_detail_id = ?", config.Id).Updates(&config.ParticipleConfig).Error
+		if config.ParticipleConfig != (system.ParticipleConfig{}) {
+			err = tx.Model(&system.ParticipleConfig{}).Where("project_detail_id = ?", config.Id).Updates(&config.ParticipleConfig).Error
+			if err != nil {
+				return err
+			}
+		}
+		// 更新分词
+		if config.AudioConfig != (system.AudioConfig{}) {
+			err = tx.Model(&system.AudioConfig{}).Where("project_detail_id = ?", config.Id).Updates(&config.AudioConfig).Error
 			if err != nil {
 				return err
 			}

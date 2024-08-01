@@ -58,7 +58,7 @@ func (s *ProjectApi) DeleteProject(c *gin.Context) {
 
 // GetProjectList 获取项目列表
 func (s *ProjectApi) GetProjectList(c *gin.Context) {
-	var pageInfo systemRequest.ProjectQueryParams
+	var pageInfo systemRequest.ProjectRequestParams
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)

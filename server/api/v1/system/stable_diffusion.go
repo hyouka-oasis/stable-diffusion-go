@@ -13,7 +13,7 @@ type StableDiffusionApi struct{}
 
 // StableDiffusionTextToImage 批量文件转图片
 func (s *StableDiffusionApi) StableDiffusionTextToImage(c *gin.Context) {
-	var params systemRequest.StableDiffusionParams
+	var params systemRequest.StableDiffusionRequestParams
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)

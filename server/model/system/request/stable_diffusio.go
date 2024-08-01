@@ -4,7 +4,7 @@ import (
 	"github/stable-diffusion-go/server/model/common/request"
 )
 
-type StableDiffusionParams struct {
+type StableDiffusionRequestParams struct {
 	request.GetById
 	ProjectDetailId uint `json:"projectDetailId"`
 }

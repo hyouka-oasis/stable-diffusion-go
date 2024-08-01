@@ -59,6 +59,9 @@ const SettingsPage = () => {
         <SettingsPageWrap>
             {messageContext}
             <Form form={form} layout="vertical">
+                <Form.Item rules={[ { required: true, message: '请输入项目保存路径' } ]} label={"项目保存路径"} name={"savePath"}>
+                    <Input/>
+                </Form.Item>
                 <Form.Item label={"stable-diffusion配置"}>
                     <Form.Item rules={[ { required: true, message: '请输入url' } ]} label={"url"} name={[ "stableDiffusionConfig", "url" ]}>
                         <Input/>

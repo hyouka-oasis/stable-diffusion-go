@@ -8,6 +8,7 @@ import re
 import os
 from datetime import datetime
 
+
 async def spilt_str2(s, t, k):
     """
     :param s: 切片文本
@@ -63,9 +64,9 @@ async def spilt_str2(s, t, k):
 
             for _i in range(e):
                 if _i == e - 1:
-                    ss_valid.append(_ss[n_e * _i :])
+                    ss_valid.append(_ss[n_e * _i:])
                 else:
-                    ss_valid.append(_ss[n_e * _i : n_e * (_i + 1)])
+                    ss_valid.append(_ss[n_e * _i: n_e * (_i + 1)])
         else:
             ss_valid.append(_ss)
 
@@ -118,6 +119,7 @@ async def spilt_str2(s, t, k):
 
     return line_srt
 
+
 async def time_difference(time1, time2, time_format=r"%H:%M:%S,%f"):
     time1 = datetime.strptime(time1, time_format)
     time2 = datetime.strptime(time2, time_format)
@@ -125,6 +127,7 @@ async def time_difference(time1, time2, time_format=r"%H:%M:%S,%f"):
     delta = time2 - time1
     time_diff = str(delta).replace(".", ",")[:11]
     return time_diff
+
 
 async def load_srt_new(filename, flag=True):
     time_format = r"(\d{2}:\d{2}:\d{2}),\d{3} --> (\d{2}:\d{2}:\d{2}),\d{3}"
@@ -185,6 +188,7 @@ async def load_srt_new(filename, flag=True):
         for _l in _line:
             srt.append(_l)
     return srt
+
 
 async def srt_to_list(filename):
     subtitles = []  # 存储最终结果的列表
@@ -299,7 +303,7 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
                     idx += 1
                     line = line.replace(".", ",")  # 这行不是必须的，srt也能识别'.'
                 if idx > 1:  # 跳过header部分
-                        f_out.write(line)
+                    f_out.write(line)
 
 
 # 生成字幕时间列表
@@ -335,6 +339,8 @@ async def create_processing_time(text_path, txt_time_path):
         with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
             f3.write(str(section_time_list))
 
+
+# 保存字幕
 async def save_srt(filename, srt_list):
     async with aiofiles.open(filename, mode="w", encoding="utf-8") as f:
         for _li, _l in enumerate(srt_list):
@@ -344,9 +350,12 @@ async def save_srt(filename, srt_list):
                 info = "{}\n{}\n{}\n\n".format(_li + 1, _l[0], _l[1])
             await f.write(info)
 
+
+# 生成新字幕
 async def srt_regen_new(srt_tmp_path, srt_path, flag):
     srt_list = await load_srt_new(srt_tmp_path, flag)
     await save_srt(srt_path, srt_list)
+
 
 # 初始化edge_tts
 async def create_voice_caption():
@@ -362,42 +371,42 @@ async def create_voice_caption():
 
 if __name__ == "__main__":
     # audio_srt_path = "D:\\ComicTweetsGo\\server\\神秘复苏2-10\\participle\\test.wav"
-    participle_book_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.txt"
-    audi_srt_map_path = " F:\\stable-diffusion-go\\server\\神秘复苏16\\神秘复苏16map.txt"
+    # participle_book_path = "../测试/participle/神秘复苏.txt"
+    # audi_srt_map_path = "../测试/participle/神秘复苏time.txt"
     # asyncio.run(map3_to_srt(audio_srt_path))
 
-    audio_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.mp3"
-    audio_srt_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.srt"
+    # audio_path = "../测试/participle/神秘复苏.mp3"
+    # audio_srt_path = "../测试/participle/神秘复苏.srt"
     # participle_book_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\participle\\神秘复苏8.txt"
     # audi_srt_map_path = "D:\\ComicTweetsGo\\server\\神秘复苏8\\神秘复苏8map.txt"
-    voice, rate, volume, pitch, language, limit = "zh-CN-YunxiNeural", "+10%", "+100%", "+0Hz", "zh", 10
+    # voice, rate, volume, pitch, language, limit = "zh-CN-YunxiNeural", "+10%", "+100%", "+0Hz", "zh", 10
     # asyncio.run(create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path))
-    # parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     # 从go那边获取过来的文本路径
-    # parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
-    # parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
-    # parser.add_argument("--audio_path", help="输出的音频路径地址")
-    # parser.add_argument("--audio_srt_path", help="输出的字幕路径地址")
-    # parser.add_argument("--voice", help="角色")
-    # parser.add_argument("--rate", help="语速")
-    # parser.add_argument("--volume", help="音量")
-    # parser.add_argument("--pitch", help="分贝")
-    # parser.add_argument("--language", help="语言")
-    # parser.add_argument("--limit", help="每一行限制最大数")
-    # args = parser.parse_args()
-    # participle_book_path = args.participle_book_path
-    # if participle_book_path is None:
-    #     raise Exception("输出路径不能为空")
-    # audi_srt_map_path = args.audi_srt_map_path
-    # if audi_srt_map_path is None:
-    #     raise Exception("字幕切片文本路径不能为空")
-    # audio_path = args.audio_path
-    # if audio_path is None:
-    #     raise Exception("音频输出路径不能为空")
-    # audio_srt_path = args.audio_srt_path
-    # if audio_srt_path is None:
-    #     raise Exception("字幕输出路径不能为空")
-    # voice, rate, volume, pitch, language, limit = args.voice, args.rate, args.volume, args.pitch, "zh" if args.language is None else args.language, 10 if args.limit is None else args.limit
+    parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
+    parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
+    parser.add_argument("--audio_path", help="输出的音频路径地址")
+    parser.add_argument("--audio_srt_path", help="输出的字幕路径地址")
+    parser.add_argument("--voice", help="角色")
+    parser.add_argument("--rate", help="语速")
+    parser.add_argument("--volume", help="音量")
+    parser.add_argument("--pitch", help="分贝")
+    parser.add_argument("--language", help="语言")
+    parser.add_argument("--limit", help="每一行限制最大数")
+    args = parser.parse_args()
+    participle_book_path = args.participle_book_path
+    if participle_book_path is None:
+        raise Exception("输出路径不能为空")
+    audi_srt_map_path = args.audi_srt_map_path
+    if audi_srt_map_path is None:
+        raise Exception("字幕切片文本路径不能为空")
+    audio_path = args.audio_path
+    if audio_path is None:
+        raise Exception("音频输出路径不能为空")
+    audio_srt_path = args.audio_srt_path
+    if audio_srt_path is None:
+        raise Exception("字幕输出路径不能为空")
+    voice, rate, volume, pitch, language, limit = args.voice, args.rate, args.volume, args.pitch, "zh" if args.language is None else args.language, 10 if args.limit is None else args.limit
     vtt_path = audio_srt_path.replace(".srt", ".vtt")
     srt_tmp_path = audio_srt_path.replace(".srt", ".tmp.srt")
     asyncio.run(create_voice_caption())

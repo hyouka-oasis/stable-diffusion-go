@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	systemResponse "github/stable-diffusion-go/server/model/system/response"
 	"io"
 	"net/http"
@@ -11,13 +12,17 @@ import (
 
 // StableDiffusionGenerateImage 生成图片函数
 func StableDiffusionGenerateImage(url string, request map[string]interface{}) (images []string, err error) {
+	fmt.Println(request, "request")
 	// 发送请求并获取图片数据
 	jsonData, err := json.Marshal(request)
 	if err != nil {
 		return images, errors.New("转换请求参数失败")
 	}
+	client := &http.Client{
+		Timeout: 0, // 设置超时时间为60秒
+	}
 	// 发送POST请求
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return images, errors.New("请检查当前stable-diffusion是否正确开启")
 	}

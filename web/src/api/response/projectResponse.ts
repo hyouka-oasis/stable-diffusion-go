@@ -12,23 +12,29 @@ export interface ProjectDetailParticiple {
     maxWords: string;
 }
 
-export interface ProjectDetailInfo extends BasicResponse {
+export interface Info extends BasicResponse {
     text: string;
     prompt: string;
     negativePrompt: string;
     role: string;
     projectDetailId?: number;
     stableDiffusionImages?: Array<Partial<FileResponse> & {
-        projectId?: number;
-        projectDetailId?: number;
-        projectDetailInfoId?: number;
+        InfoId?: number;
     }>;
+    stableDiffusionImageId: number;
 }
 
 export interface ProjectDetailResponse extends BasicResponse {
     projectId: number;
     fileName: string;
     participleConfig: ProjectDetailParticiple;
-    projectDetailInfoList: ProjectDetailInfo[];
+    infoList: Info[];
     stableDiffusionConfig?: string;
+    audioConfig?: {
+        srtLimit: string;
+        voice: string;
+        rate: string;
+        volume: string;
+        pitch: string;
+    };
 }

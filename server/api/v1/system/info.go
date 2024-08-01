@@ -14,7 +14,7 @@ type ProjectDetailInfoApi struct{}
 
 // DeleteProjectDetailInfo 删除单条记录
 func (s *ProjectDetailInfoApi) DeleteProjectDetailInfo(c *gin.Context) {
-	var formList system.ProjectDetailInfo
+	var formList system.Info
 	err := c.ShouldBindJSON(&formList)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
@@ -36,7 +36,7 @@ func (s *ProjectDetailInfoApi) DeleteProjectDetailInfo(c *gin.Context) {
 
 // UpdateProjectDetailInfo 更新单条记录
 func (s *ProjectDetailInfoApi) UpdateProjectDetailInfo(c *gin.Context) {
-	var info system.ProjectDetailInfo
+	var info system.Info
 	err := c.ShouldBindJSON(&info)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
@@ -58,7 +58,7 @@ func (s *ProjectDetailInfoApi) UpdateProjectDetailInfo(c *gin.Context) {
 
 // GetProjectDetailInfo 获取单条记录
 func (s *ProjectDetailInfoApi) GetProjectDetailInfo(c *gin.Context) {
-	var info system.ProjectDetailInfo
+	var info system.Info
 	err := c.ShouldBindQuery(&info)
 	fmt.Println(info)
 	if err != nil {
@@ -103,7 +103,7 @@ func (s *ProjectDetailInfoApi) ExtractTheRoleProjectDetailInfoList(c *gin.Contex
 
 // TranslateProjectDetailInfoList 进行翻译
 func (s *ProjectDetailInfoApi) TranslateProjectDetailInfoList(c *gin.Context) {
-	var projectDetailParticipleParams system.ProjectDetailInfo
+	var projectDetailParticipleParams system.Info
 	err := c.ShouldBindJSON(&projectDetailParticipleParams)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
@@ -117,7 +117,7 @@ func (s *ProjectDetailInfoApi) TranslateProjectDetailInfoList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.TranslateProjectDetailInfoList(system.ProjectDetailInfo{
+	err = projectDetailParticipleListService.TranslateProjectDetailInfoList(system.Info{
 		ProjectDetailId: projectDetailParticipleParams.ProjectDetailId,
 		Model: global.Model{
 			Id: projectDetailParticipleParams.Id,

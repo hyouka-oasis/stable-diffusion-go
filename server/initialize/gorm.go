@@ -21,8 +21,9 @@ func RegisterTables() {
 		system.StableDiffusionNegativePrompt{},
 		system.Project{},
 		system.ProjectDetail{},
-		system.ProjectDetailParticiple{},
-		system.ProjectDetailInfo{},
+		system.ParticipleConfig{},
+		system.Info{},
+		system.AudioConfig{},
 		// 系统配置表
 		system.Settings{},
 		system.SettingsStableDiffusionConfig{},

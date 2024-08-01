@@ -3,7 +3,6 @@ package system
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
 	systemRequest "github/stable-diffusion-go/server/model/system/request"
@@ -14,7 +13,7 @@ import (
 type StableDiffusionService struct{}
 
 // StableDiffusionTextToImage 批量文字转图片
-func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest.StableDiffusionParams) (images []string, err error) {
+func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest.StableDiffusionRequestParams) (images []string, err error) {
 	var settings system.Settings
 	err = global.DB.Model(&system.Settings{}).Preload("StableDiffusionConfig").First(&settings).Error
 	if err != nil {
@@ -39,11 +38,14 @@ func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest
 			}
 		}
 		// 异步处理翻译
-		fmt.Println("开始")
-		var projectDetailInfo system.ProjectDetailInfo
+		var projectDetailInfo system.Info
 		// 查到单个的列表
-		err = tx.Model(&system.ProjectDetailInfo{}).Where("id = ?", params.Id).Find(&projectDetailInfo).Error
-		request["prompt"] = projectDetailInfo.Prompt
+		err = tx.Model(&system.Info{}).Where("id = ?", params.Id).Find(&projectDetailInfo).Error
+		if projectDetailInfo.Prompt == "" {
+			request["prompt"] = projectDetailInfo.Text
+		} else {
+			request["prompt"] = projectDetailInfo.Prompt
+		}
 		if projectDetailInfo.NegativePrompt != "" {
 			request["negative_prompt"] = projectDetailInfo.NegativePrompt
 		}

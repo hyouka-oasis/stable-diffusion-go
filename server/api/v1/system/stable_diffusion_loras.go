@@ -14,7 +14,7 @@ type StableDiffusionLorasApi struct{}
 
 // GetStableDiffusionLorasList 获取stable-diffusion-loras配置列表
 func (s *StableDiffusionLorasApi) GetStableDiffusionLorasList(c *gin.Context) {
-	var pageInfo systemRequest.StableDiffusionLorasQueryParams
+	var pageInfo systemRequest.StableDiffusionLorasRequestParams
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)

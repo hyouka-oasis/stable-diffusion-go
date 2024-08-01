@@ -20,7 +20,7 @@ func (s *ProjectDetailApi) UploadProjectDetailFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	projectDetail := system.ProjectDetail{
 		FileName: file.Filename,
-		ParticipleConfig: system.ProjectDetailParticiple{
+		ParticipleConfig: system.ParticipleConfig{
 			MinWords: minWords,
 			MaxWords: maxWords,
 		},

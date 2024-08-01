@@ -24,11 +24,19 @@ func (s *ProjectService) CreateProject(config system.Project) (err error) {
 	if err != nil {
 		return err
 	}
-	projectDetailParticiple := system.ProjectDetailParticiple{
+	participleConfig := system.ParticipleConfig{
+		ProjectDetailId: projectDetail.Id,
+	}
+	// 同时创建项目音频设置
+	err = global.DB.Create(&participleConfig).Error
+	if err != nil {
+		return err
+	}
+	audioConfig := system.AudioConfig{
 		ProjectDetailId: projectDetail.Id,
 	}
 	// 同时创建项目详情分词
-	err = global.DB.Create(&projectDetailParticiple).Error
+	err = global.DB.Create(&audioConfig).Error
 	if err != nil {
 		return err
 	}

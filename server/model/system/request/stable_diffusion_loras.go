@@ -4,6 +4,6 @@ import (
 	"github/stable-diffusion-go/server/model/common/request"
 )
 
-type StableDiffusionLorasQueryParams struct {
+type StableDiffusionLorasRequestParams struct {
 	request.PageInfo
 }

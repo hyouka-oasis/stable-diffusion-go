@@ -1,12 +1,12 @@
 import { useLocation } from "react-router";
 import styled from "styled-components";
-import { Button, Divider, Form, message, Tooltip, Upload, UploadProps } from "antd";
-import { useEffect, useState } from "react";
+import { Button, Divider, Form, message, Radio, Space, Tooltip, Upload, UploadProps } from "antd";
+import { useEffect, useRef, useState } from "react";
 import { extractTheCharacterProjectDetailParticipleList, getProjectDetail, getProjectDetailInfo, translateProjectDetailParticipleList, updateProjectDetail, updateProjectDetailInfo, uploadProjectDetail } from "../../api/projectApi.ts";
-import { ProjectDetailInfo, ProjectDetailResponse } from "../../api/response/projectResponse.ts";
-import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit } from "@ant-design/pro-components";
+import { Info, ProjectDetailResponse } from "../../api/response/projectResponse.ts";
+import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect } from "@ant-design/pro-components";
 import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
-import { SettingOutlined } from "@ant-design/icons";
+import { CloseOutlined, NotificationOutlined, SettingOutlined } from "@ant-design/icons";
 import { stableDiffusionText2Image } from "../../api/stableDiffusionApi.ts";
 import { blobToFile, dataURLtoBlob } from "../../utils/utils.ts";
 import { uploadFile } from "../../api/fileApi.ts";
@@ -14,8 +14,32 @@ import { FileResponse } from "../../api/response/fileResponse.ts";
 import { baseURL } from "../../utils/request.ts";
 import VanillaUploadJson from "../../components/json-edit/VanillaUploadJson.tsx";
 import { RcFile } from "antd/lib/upload";
+import { audioList } from "../../utils/audio-list.ts";
 
 const ProjectDetailPageWrap = styled.div`
+`;
+
+const ImagesActionWrap = styled.div`
+    .ant-radio-wrapper {
+        position: relative;
+
+        &:hover {
+            .action-delete {
+                display: block;
+            }
+        }
+
+        .action-delete {
+            position: absolute;
+            right: 10px;
+            top: 0;
+            color: red;
+            cursor: pointer;
+            display: none;
+        }
+    }
+
+
 `;
 
 const ProjectDetailPage = () => {
@@ -28,6 +52,7 @@ const ProjectDetailPage = () => {
     });
     const [ editThemeFormatRight, setEditThemeFormatRight ] = useState<boolean>(true);
     const state = location.state;
+    const mp3Ref = useRef<HTMLAudioElement | null>(null);
     /**
      * 获取项目
      * @param id
@@ -37,7 +62,15 @@ const ProjectDetailPage = () => {
             projectId: id
         });
         setProjectDetail(detail);
-        form.setFieldsValue({ ...detail });
+        form.setFieldsValue({
+            ...detail,
+            audioConfig: {
+                ...detail.audioConfig,
+                rate: detail?.audioConfig?.rate?.replace("%", ""),
+                volume: detail?.audioConfig?.volume?.replace("%", ""),
+                pitch: detail?.audioConfig?.pitch?.replace("Hz", ""),
+            }
+        });
     };
     /**
      * 项目详情配置
@@ -53,6 +86,12 @@ const ProjectDetailPage = () => {
             await updateProjectDetail({
                 id: projectDetail.id,
                 ...values,
+                audioConfig: {
+                    ...values.audioConfig,
+                    rate: values?.audioConfig?.rate + "%",
+                    volume: values?.audioConfig?.volume + "%",
+                    pitch: values?.audioConfig?.pitch + "Hz",
+                },
                 stableDiffusionConfig: data
             });
             message.success("更新配置成功");
@@ -141,12 +180,12 @@ const ProjectDetailPage = () => {
      * 进行文本转图片
      */
     const text2imageHandler = async () => {
-        const ids = projectDetail?.projectDetailInfoList?.map(i => i.id) ?? [];
+        const ids = projectDetail?.infoList?.map(i => i.id) ?? [];
         const projectDetailStableDiffusionConfig = projectDetail?.stableDiffusionConfig ?? "{}";
         console.log(!!projectDetailStableDiffusionConfig);
         for (const id of ids) {
             let selectedId: null | number = null;
-            const stableDiffusionImages: ProjectDetailInfo["stableDiffusionImages"] = [];
+            const stableDiffusionImages: Info["stableDiffusionImages"] = [];
             const data = await getProjectDetailInfo({ id });
             const stableDiffusionParams: {
                 [key: string]: any
@@ -170,9 +209,11 @@ const ProjectDetailPage = () => {
                         file,
                         fileType: "stable-diffusion"
                     });
-                    selectedId = i == 0 ? upload.id : null;
+                    if (i === 0) {
+                        selectedId = upload.id;
+                    }
                     stableDiffusionImages.push({
-                        projectDetailInfoId: id,
+                        InfoId: id,
                         name: upload.name,
                         key: upload.key,
                         url: upload.url,
@@ -191,7 +232,15 @@ const ProjectDetailPage = () => {
         // await stableDiffusionText2Image({ ids, projectDetailId: projectDetail?.id ?? 0 });
     };
 
-    const columns: ProColumns<ProjectDetailInfo>[] = [
+    const onStableDiffusionImagesOnChange = async (selectedId: number, infoId: number) => {
+        await updateProjectDetailInfo(Object.assign({
+            id: infoId,
+            stableDiffusionImageId: selectedId
+        }));
+        await getProjectDetailConfig(state.id);
+    };
+
+    const columns: ProColumns<Info>[] = [
         {
             dataIndex: "text",
             title: "文本",
@@ -222,13 +271,30 @@ const ProjectDetailPage = () => {
             dataIndex: "stableDiffusionImages",
             title: "图片列表",
             editable: false,
-            width: 100,
-            render(values: FileResponse[]) {
-                console.log(values);
+            width: 200,
+            render(values: FileResponse[], record) {
                 return (
-                    <div style={{ width: "100%" }}>
-                        <img width={100} src={`${baseURL}/${values?.[0]?.url}`} alt=""/>
-                    </div>
+                    <ImagesActionWrap>
+                        <Radio.Group onChange={(e) => onStableDiffusionImagesOnChange(e.target.value, record.id)} value={record.stableDiffusionImageId}>
+                            <Space direction="vertical">
+                                {
+                                    values.map(file => {
+                                        return (
+                                            <Radio key={file.id} value={file.id}>
+                                                <span className={"action-delete"} onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                }}>
+                                                    <CloseOutlined/>
+                                                </span>
+                                                <img width={150} src={`${baseURL}/${file?.url}`} alt=""/>
+                                            </Radio>
+                                        );
+                                    })
+                                }
+                            </Space>
+                        </Radio.Group>
+                    </ImagesActionWrap>
                 );
             }
         },
@@ -265,6 +331,7 @@ const ProjectDetailPage = () => {
 
     return (
         <ProjectDetailPageWrap>
+            <audio ref={mp3Ref} style={{ display: "none" }}/>
             <EditableProTable
                 rowKey={"id"}
                 editable={{
@@ -277,7 +344,7 @@ const ProjectDetailPage = () => {
                     },
                 }}
                 recordCreatorProps={false}
-                value={projectDetail?.projectDetailInfoList ?? []}
+                value={projectDetail?.infoList ?? []}
                 columns={columns}
                 virtual={true}
                 scroll={{ y: 650, x: 800 }}
@@ -314,7 +381,7 @@ const ProjectDetailPage = () => {
                         form={form}
                         onFinish={onSettingsOkHandler}
                     >
-                        <ProForm.Group>
+                        <ProForm.Group title={"分词配置"}>
                             <ProFormDigit
                                 width="md"
                                 name={[ "participleConfig", "minWords" ]}
@@ -331,6 +398,61 @@ const ProjectDetailPage = () => {
                                 placeholder="请输入最大文字数量"
                                 min={10}
                                 rules={[ { required: true, message: '请输入最大文字数量' } ]}
+                            />
+                        </ProForm.Group>
+                        <ProForm.Group title={"音频设置"}>
+                            <ProFormDigit
+                                width="md"
+                                name={[ "audioConfig", "srtLimit" ]}
+                                label="字幕最大长度"
+                                placeholder="请输入最大文字数量"
+                                min={10}
+                            />
+                            <ProFormDigit
+                                width="md"
+                                name={[ "audioConfig", "rate" ]}
+                                label="音频语速"
+                                placeholder="请输入音频语速"
+                                min={false}
+                            />
+                            <ProFormDigit
+                                width="md"
+                                name={[ "audioConfig", "volume" ]}
+                                label="音量"
+                                placeholder="请输入音量"
+                                min={0}
+                            />
+                            <ProFormDigit
+                                width="md"
+                                name={[ "audioConfig", "pitch" ]}
+                                label="分贝"
+                                placeholder="请输入分贝"
+                                min={0}
+                            />
+                            <ProFormSelect
+                                width="md"
+                                name={[ "audioConfig", "voice" ]}
+                                label="音频角色"
+                                placeholder="请选择音频角色"
+                                options={audioList}
+                                fieldProps={{
+                                    optionRender(option) {
+                                        return (
+                                            <Space>
+                                                <div style={{ width: '265px', overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                    {option.data.name + "-" + option.data.value}
+                                                </div>
+                                                {option.data.mp3 && <NotificationOutlined onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (mp3Ref.current) {
+                                                        mp3Ref.current.src = option.data.mp3;
+                                                        mp3Ref.current.play();
+                                                    }
+                                                }}/>}
+                                            </Space>
+                                        );
+                                    }
+                                }}
                             />
                         </ProForm.Group>
                         <Divider orientation="left">stable-diffusion配置</Divider>

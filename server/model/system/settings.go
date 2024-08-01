@@ -20,6 +20,7 @@ type Settings struct {
 	TranslateType         string                        `json:"translateType" gorm:"comment:翻译设置;default:ollama"` // 项目名称
 	StableDiffusionConfig SettingsStableDiffusionConfig `json:"stableDiffusionConfig" gorm:"comment:stable-diffusion配置"`
 	OllamaConfig          SettingsOllamaConfig          `json:"ollamaConfig" gorm:"comment:ollama配置"`
+	SavePath              string                        `json:"savePath"` //保存路径
 }
 
 func (Settings) TableName() string {

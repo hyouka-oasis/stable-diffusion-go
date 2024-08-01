@@ -15,32 +15,32 @@ type ProjectDetailParticipleInfoService struct{}
 
 // DeleteProjectDetailInfo 删除单条记录
 func (s *ProjectDetailParticipleInfoService) DeleteProjectDetailInfo(id uint) error {
-	err := global.DB.Delete(&system.ProjectDetailInfo{}, "id = ?", id).Error
+	err := global.DB.Delete(&system.Info{}, "id = ?", id).Error
 	return err
 }
 
 // UpdateProjectDetailInfo 更新单条记录
-func (s *ProjectDetailParticipleInfoService) UpdateProjectDetailInfo(updateData system.ProjectDetailInfo) error {
+func (s *ProjectDetailParticipleInfoService) UpdateProjectDetailInfo(updateData system.Info) error {
 	err := global.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&updateData).Error
 	return err
 }
 
 // GetProjectDetailInfo 获取单条记录
-func (s *ProjectDetailParticipleInfoService) GetProjectDetailInfo(id uint) (info system.ProjectDetailInfo, err error) {
-	err = global.DB.Model(&system.ProjectDetailInfo{}).Where("id = ?", id).First(&info).Error
+func (s *ProjectDetailParticipleInfoService) GetProjectDetailInfo(id uint) (info system.Info, err error) {
+	err = global.DB.Model(&system.Info{}).Where("id = ?", id).First(&info).Error
 	return
 }
 
 // ExtractTheRoleProjectDetailInfoList 进行人物提取
 func (s *ProjectDetailParticipleInfoService) ExtractTheRoleProjectDetailInfoList(id uint) error {
-	var currentProjectDetailParticipleList []system.ProjectDetailInfo
+	var currentProjectDetailParticipleList []system.Info
 	//var currentSettings system.Settings
 	//err := global.DB.Model(&system.Settings{}).First(&currentSettings).Error
 	//if err != nil {
 	//	return errors.New("请先初始化配置")
 	//}
 	return global.DB.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&system.ProjectDetailInfo{}).Find(&currentProjectDetailParticipleList, "project_detail_id = ?", id).Error
+		err := tx.Model(&system.Info{}).Find(&currentProjectDetailParticipleList, "project_detail_id = ?", id).Error
 		for _, projectDetailParticiple := range currentProjectDetailParticipleList {
 			projectDetailParticiple.Role = utils.CutPos(projectDetailParticiple.Text)
 			err = tx.Model(&projectDetailParticiple).Select("role").Updates(&projectDetailParticiple).Error
@@ -51,8 +51,8 @@ func (s *ProjectDetailParticipleInfoService) ExtractTheRoleProjectDetailInfoList
 }
 
 // TranslateProjectDetailInfoList 进行prompt转换
-func (s *ProjectDetailParticipleInfoService) TranslateProjectDetailInfoList(projectDetailParticipleParams system.ProjectDetailInfo) error {
-	var projectDetailParticipleList []system.ProjectDetailInfo
+func (s *ProjectDetailParticipleInfoService) TranslateProjectDetailInfoList(projectDetailParticipleParams system.Info) error {
+	var projectDetailParticipleList []system.Info
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		var currentSettings system.Settings
 		err := tx.Model(&system.Settings{}).Preload("OllamaConfig").First(&currentSettings).Error
@@ -60,10 +60,10 @@ func (s *ProjectDetailParticipleInfoService) TranslateProjectDetailInfoList(proj
 			return errors.New("请先初始化配置")
 		}
 		if projectDetailParticipleParams.ProjectDetailId != 0 {
-			err = tx.Model(&system.ProjectDetailInfo{}).Find(&projectDetailParticipleList, "project_detail_id = ?", projectDetailParticipleParams.ProjectDetailId).Error
+			err = tx.Model(&system.Info{}).Find(&projectDetailParticipleList, "project_detail_id = ?", projectDetailParticipleParams.ProjectDetailId).Error
 		}
 		if projectDetailParticipleParams.Id != 0 {
-			err = tx.Model(&system.ProjectDetailInfo{}).Find(&projectDetailParticipleList, "id = ?", projectDetailParticipleParams.Id).Error
+			err = tx.Model(&system.Info{}).Find(&projectDetailParticipleList, "id = ?", projectDetailParticipleParams.Id).Error
 		}
 		if currentSettings.TranslateType == "sd-prompt-translator" {
 			return errors.New("当前配置不需要进行prompt转换")

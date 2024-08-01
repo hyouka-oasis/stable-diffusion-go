@@ -1,7 +1,7 @@
 import { deleteApi, getApi, postApi, postFormApi } from "../utils/request";
 import { BasicPageInfoRequest } from "./request/basicPageInfoRequest.ts";
 import { BasicArrayResponses, BasicResponse } from "./response/basicPageInfoResponse.ts";
-import { ProjectDetailInfo, ProjectDetailResponse, ProjectResponse } from "./response/projectResponse.ts";
+import { Info, ProjectDetailResponse, ProjectResponse } from "./response/projectResponse.ts";
 
 interface ProjectApiProps {
     name: string;
@@ -65,7 +65,7 @@ export const extractTheCharacterProjectDetailParticipleList = (data: Pick<BasicR
  * 转换
  * @param data
  */
-export const translateProjectDetailParticipleList = (data: Pick<Partial<BasicResponse>, "id"> & Pick<ProjectDetailInfo, "projectDetailId">): Promise<ProjectDetailResponse> => {
+export const translateProjectDetailParticipleList = (data: Pick<Partial<BasicResponse>, "id"> & Pick<Info, "projectDetailId">): Promise<ProjectDetailResponse> => {
     return postApi({
         url: "/projectDetailInfo/translate",
         data
@@ -88,7 +88,7 @@ export const updateProjectDetailInfo = (data: any): Promise<void> => {
  */
 export const getProjectDetailInfo = (data: {
     id: number;
-}): Promise<ProjectDetailInfo> => {
+}): Promise<Info> => {
     return getApi({
         url: "/projectDetailInfo/get",
         data

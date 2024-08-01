@@ -251,7 +251,6 @@ func GetInterfaceToInt(t1 interface{}) int {
 
 func UploadFileToLocal(file *multipart.FileHeader, filePath string) error {
 	f, openError := file.Open() // 读取文件
-	fmt.Println(f)
 	if openError != nil {
 		return errors.New("打开文件时失败:" + openError.Error())
 	}

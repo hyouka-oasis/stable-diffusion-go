@@ -5,7 +5,7 @@ import (
 	"github/stable-diffusion-go/server/model/system"
 )
 
-type ProjectQueryParams struct {
+type ProjectRequestParams struct {
 	request.PageInfo
 	system.Project
 }
