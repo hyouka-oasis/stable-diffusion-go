@@ -12,42 +12,43 @@ type ProjectService struct{}
 
 // CreateProject 新增项目
 func (s *ProjectService) CreateProject(config system.Project) (err error) {
-	err = global.DB.Create(&config).Error
-	if err != nil {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
+		err = tx.Create(&config).Error
+		if err != nil {
+			return err
+		}
+		projectDetail := system.ProjectDetail{
+			ProjectId: config.Id,
+		}
+		// 同时创建项目详情
+		err = tx.Create(&projectDetail).Error
+		if err != nil {
+			return err
+		}
+		participleConfig := system.ParticipleConfig{
+			ProjectDetailId: projectDetail.Id,
+		}
+		// 同时创建项目音频设置
+		err = tx.Create(&participleConfig).Error
+		if err != nil {
+			return err
+		}
+		audioConfig := system.AudioConfig{
+			ProjectDetailId: projectDetail.Id,
+		}
+		// 同时创建项目详情分词
+		err = tx.Create(&audioConfig).Error
+		if err != nil {
+			return err
+		}
 		return err
-	}
-	projectDetail := system.ProjectDetail{
-		ProjectId: config.Id,
-	}
-	// 同时创建项目详情
-	err = global.DB.Create(&projectDetail).Error
-	if err != nil {
-		return err
-	}
-	participleConfig := system.ParticipleConfig{
-		ProjectDetailId: projectDetail.Id,
-	}
-	// 同时创建项目音频设置
-	err = global.DB.Create(&participleConfig).Error
-	if err != nil {
-		return err
-	}
-	audioConfig := system.AudioConfig{
-		ProjectDetailId: projectDetail.Id,
-	}
-	// 同时创建项目详情分词
-	err = global.DB.Create(&audioConfig).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	})
 }
 
 // DeleteProject 删除项目
 func (s *ProjectService) DeleteProject(config system.Project) (err error) {
 	var entity system.Project
 	err = global.DB.Transaction(func(tx *gorm.DB) error {
-		// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
 		err = tx.First(&entity, "id = ?", config.Id).Error // 根据id查询api记录
 		if errors.Is(err, gorm.ErrRecordNotFound) {        // 记录不存在
 			return err

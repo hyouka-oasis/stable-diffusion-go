@@ -6,26 +6,27 @@ import (
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/common/response"
 	"github/stable-diffusion-go/server/model/system"
+	"github/stable-diffusion-go/server/model/system/request"
 	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
 )
 
 type ProjectDetailInfoApi struct{}
 
-// DeleteProjectDetailInfo 删除单条记录
-func (s *ProjectDetailInfoApi) DeleteProjectDetailInfo(c *gin.Context) {
-	var formList system.Info
-	err := c.ShouldBindJSON(&formList)
+// DeleteInfo 删除单条记录
+func (s *ProjectDetailInfoApi) DeleteInfo(c *gin.Context) {
+	var params request.ProjectDetailRequestParams
+	err := c.ShouldBindJSON(&params)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
 		return
 	}
-	err = utils.Verify(formList, utils.IdVerify)
+	err = utils.Verify(params, utils.IdVerify)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.DeleteProjectDetailInfo(formList.Id)
+	err = projectDetailParticipleListService.DeleteInfo(params)
 	if err != nil {
 		global.Log.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败", c)
@@ -34,8 +35,8 @@ func (s *ProjectDetailInfoApi) DeleteProjectDetailInfo(c *gin.Context) {
 	response.OkWithMessage("删除成功", c)
 }
 
-// UpdateProjectDetailInfo 更新单条记录
-func (s *ProjectDetailInfoApi) UpdateProjectDetailInfo(c *gin.Context) {
+// UpdateInfo 更新单条记录
+func (s *ProjectDetailInfoApi) UpdateInfo(c *gin.Context) {
 	var info system.Info
 	err := c.ShouldBindJSON(&info)
 	if err != nil {
@@ -47,7 +48,7 @@ func (s *ProjectDetailInfoApi) UpdateProjectDetailInfo(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.UpdateProjectDetailInfo(info)
+	err = projectDetailParticipleListService.UpdateInfo(info)
 	if err != nil {
 		global.Log.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败"+err.Error(), c)
@@ -56,8 +57,8 @@ func (s *ProjectDetailInfoApi) UpdateProjectDetailInfo(c *gin.Context) {
 	response.OkWithMessage("更新成功", c)
 }
 
-// GetProjectDetailInfo 获取单条记录
-func (s *ProjectDetailInfoApi) GetProjectDetailInfo(c *gin.Context) {
+// GetInfo 获取单条记录
+func (s *ProjectDetailInfoApi) GetInfo(c *gin.Context) {
 	var info system.Info
 	err := c.ShouldBindQuery(&info)
 	fmt.Println(info)
@@ -70,7 +71,7 @@ func (s *ProjectDetailInfoApi) GetProjectDetailInfo(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	res, err := projectDetailParticipleListService.GetProjectDetailInfo(info.Id)
+	res, err := projectDetailParticipleListService.GetInfo(info.Id)
 	if err != nil {
 		global.Log.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败", c)
@@ -79,8 +80,8 @@ func (s *ProjectDetailInfoApi) GetProjectDetailInfo(c *gin.Context) {
 	response.OkWithDetailed(&res, "获取成功", c)
 }
 
-// ExtractTheRoleProjectDetailInfoList 提取角色
-func (s *ProjectDetailInfoApi) ExtractTheRoleProjectDetailInfoList(c *gin.Context) {
+// ExtractTheInfoRole 提取角色
+func (s *ProjectDetailInfoApi) ExtractTheInfoRole(c *gin.Context) {
 	var projectDetail system.ProjectDetail
 	err := c.ShouldBindJSON(&projectDetail)
 	if err != nil {
@@ -92,7 +93,7 @@ func (s *ProjectDetailInfoApi) ExtractTheRoleProjectDetailInfoList(c *gin.Contex
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.ExtractTheRoleProjectDetailInfoList(projectDetail.Id)
+	err = projectDetailParticipleListService.ExtractTheInfoRole(projectDetail.Id)
 	if err != nil {
 		global.Log.Error("角色提取失败!", zap.Error(err))
 		response.FailWithMessage("角色提取失败", c)
@@ -101,8 +102,8 @@ func (s *ProjectDetailInfoApi) ExtractTheRoleProjectDetailInfoList(c *gin.Contex
 	response.OkWithMessage("角色提取成功", c)
 }
 
-// TranslateProjectDetailInfoList 进行翻译
-func (s *ProjectDetailInfoApi) TranslateProjectDetailInfoList(c *gin.Context) {
+// TranslateInfoPrompt 进行翻译
+func (s *ProjectDetailInfoApi) TranslateInfoPrompt(c *gin.Context) {
 	var projectDetailParticipleParams system.Info
 	err := c.ShouldBindJSON(&projectDetailParticipleParams)
 	if err != nil {
@@ -117,7 +118,7 @@ func (s *ProjectDetailInfoApi) TranslateProjectDetailInfoList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.TranslateProjectDetailInfoList(system.Info{
+	err = projectDetailParticipleListService.TranslateInfoPrompt(system.Info{
 		ProjectDetailId: projectDetailParticipleParams.ProjectDetailId,
 		Model: global.Model{
 			Id: projectDetailParticipleParams.Id,

@@ -20,6 +20,7 @@ export interface Info extends BasicResponse {
     projectDetailId?: number;
     stableDiffusionImages?: Array<Partial<FileResponse> & {
         InfoId?: number;
+        fileId?: number;
     }>;
     stableDiffusionImageId: number;
 }

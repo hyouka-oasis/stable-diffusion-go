@@ -9,7 +9,7 @@ type PageInfo struct {
 
 // GetById Find by id structure
 type GetById struct {
-	Id int `json:"id" form:"id"` // 主键ID
+	Id uint `json:"id" form:"id"` // 主键ID
 }
 
 func (r *GetById) Uint() uint {

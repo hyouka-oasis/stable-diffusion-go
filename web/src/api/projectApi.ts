@@ -57,7 +57,7 @@ export const updateProjectDetail = (data: Partial<ProjectDetailResponse>): Promi
  */
 export const extractTheCharacterProjectDetailParticipleList = (data: Pick<BasicResponse, "id">): Promise<ProjectDetailResponse> => {
     return postApi({
-        url: "/projectDetailInfo/extractRole",
+        url: "/info/extractRole",
         data
     });
 };
@@ -67,7 +67,7 @@ export const extractTheCharacterProjectDetailParticipleList = (data: Pick<BasicR
  */
 export const translateProjectDetailParticipleList = (data: Pick<Partial<BasicResponse>, "id"> & Pick<Info, "projectDetailId">): Promise<ProjectDetailResponse> => {
     return postApi({
-        url: "/projectDetailInfo/translate",
+        url: "/info/translate",
         data
     });
 };
@@ -77,7 +77,7 @@ export const translateProjectDetailParticipleList = (data: Pick<Partial<BasicRes
  */
 export const updateProjectDetailInfo = (data: any): Promise<void> => {
     return postApi({
-        url: "/projectDetailInfo/update",
+        url: "/info/update",
         data
     });
 };
@@ -90,7 +90,14 @@ export const getProjectDetailInfo = (data: {
     id: number;
 }): Promise<Info> => {
     return getApi({
-        url: "/projectDetailInfo/get",
+        url: "/info/get",
+        data
+    });
+};
+
+export const deleteInfo = (data: { id: number }) => {
+    return deleteApi({
+        url: "/info/delete",
         data
     });
 };

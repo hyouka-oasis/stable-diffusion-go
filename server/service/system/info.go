@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
+	"github/stable-diffusion-go/server/model/system/request"
 	"github/stable-diffusion-go/server/source"
 	"github/stable-diffusion-go/server/utils"
 	"gorm.io/gorm"
@@ -11,28 +12,40 @@ import (
 	"sync"
 )
 
-type ProjectDetailParticipleInfoService struct{}
+type InfoService struct{}
 
-// DeleteProjectDetailInfo 删除单条记录
-func (s *ProjectDetailParticipleInfoService) DeleteProjectDetailInfo(id uint) error {
-	err := global.DB.Delete(&system.Info{}, "id = ?", id).Error
+// DeleteInfo 删除单条记录
+func (s *InfoService) DeleteInfo(params request.ProjectDetailRequestParams) (err error) {
+	if params.Id != 0 {
+		err = global.DB.Transaction(func(tx *gorm.DB) error {
+			err = tx.Delete(&system.Info{}, "id = ?", params.Id).Error
+			if err != nil {
+				return err
+			}
+			err = tx.Delete(&system.StableDiffusionImages{}, "info_id = ?", params.Id).Error
+			if err != nil {
+				return err
+			}
+			return err
+		})
+	}
 	return err
 }
 
-// UpdateProjectDetailInfo 更新单条记录
-func (s *ProjectDetailParticipleInfoService) UpdateProjectDetailInfo(updateData system.Info) error {
+// UpdateInfo 更新单条记录
+func (s *InfoService) UpdateInfo(updateData system.Info) error {
 	err := global.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&updateData).Error
 	return err
 }
 
-// GetProjectDetailInfo 获取单条记录
-func (s *ProjectDetailParticipleInfoService) GetProjectDetailInfo(id uint) (info system.Info, err error) {
+// GetInfo 获取单条记录
+func (s *InfoService) GetInfo(id uint) (info system.Info, err error) {
 	err = global.DB.Model(&system.Info{}).Where("id = ?", id).First(&info).Error
 	return
 }
 
-// ExtractTheRoleProjectDetailInfoList 进行人物提取
-func (s *ProjectDetailParticipleInfoService) ExtractTheRoleProjectDetailInfoList(id uint) error {
+// ExtractTheInfoRole 进行人物提取
+func (s *InfoService) ExtractTheInfoRole(id uint) error {
 	var currentProjectDetailParticipleList []system.Info
 	//var currentSettings system.Settings
 	//err := global.DB.Model(&system.Settings{}).First(&currentSettings).Error
@@ -50,8 +63,8 @@ func (s *ProjectDetailParticipleInfoService) ExtractTheRoleProjectDetailInfoList
 	})
 }
 
-// TranslateProjectDetailInfoList 进行prompt转换
-func (s *ProjectDetailParticipleInfoService) TranslateProjectDetailInfoList(projectDetailParticipleParams system.Info) error {
+// TranslateInfoPrompt 进行prompt转换
+func (s *InfoService) TranslateInfoPrompt(projectDetailParticipleParams system.Info) error {
 	var projectDetailParticipleList []system.Info
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		var currentSettings system.Settings

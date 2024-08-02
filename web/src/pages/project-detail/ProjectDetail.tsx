@@ -2,9 +2,9 @@ import { useLocation } from "react-router";
 import styled from "styled-components";
 import { Button, Divider, Form, message, Radio, Space, Tooltip, Upload, UploadProps } from "antd";
 import { useEffect, useRef, useState } from "react";
-import { extractTheCharacterProjectDetailParticipleList, getProjectDetail, getProjectDetailInfo, translateProjectDetailParticipleList, updateProjectDetail, updateProjectDetailInfo, uploadProjectDetail } from "../../api/projectApi.ts";
+import { deleteInfo, extractTheCharacterProjectDetailParticipleList, getProjectDetail, getProjectDetailInfo, translateProjectDetailParticipleList, updateProjectDetail, updateProjectDetailInfo, uploadProjectDetail } from "../../api/projectApi.ts";
 import { Info, ProjectDetailResponse } from "../../api/response/projectResponse.ts";
-import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect } from "@ant-design/pro-components";
+import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect, ProFormText } from "@ant-design/pro-components";
 import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
 import { CloseOutlined, NotificationOutlined, SettingOutlined } from "@ant-design/icons";
 import { stableDiffusionText2Image } from "../../api/stableDiffusionApi.ts";
@@ -43,6 +43,9 @@ const ImagesActionWrap = styled.div`
 
 `;
 
+const percentageRegex = /^[-+]\d+%$/;
+const pitchRegex = /^[-+]\d+Hz$/;
+
 const ProjectDetailPage = () => {
     const location = useLocation();
     const [ form ] = Form.useForm();
@@ -65,12 +68,6 @@ const ProjectDetailPage = () => {
         setProjectDetail(detail);
         form.setFieldsValue({
             ...detail,
-            audioConfig: {
-                ...detail.audioConfig,
-                rate: detail?.audioConfig?.rate?.replace("%", ""),
-                volume: detail?.audioConfig?.volume?.replace("%", ""),
-                pitch: detail?.audioConfig?.pitch?.replace("Hz", ""),
-            }
         });
     };
     /**
@@ -84,16 +81,22 @@ const ProjectDetailPage = () => {
                 return;
             }
             const data = (content as TextContent).text;
+            if (!percentageRegex.test(values?.audioConfig?.rate ?? "0")) {
+                message.error("请输入正确的语速值!");
+                return;
+            }
+            if (!percentageRegex.test(values?.audioConfig?.volume ?? "0")) {
+                message.error("请输入正确的音量值!");
+                return;
+            }
+            if (!pitchRegex.test(values?.audioConfig?.pitch ?? "0")) {
+                message.error("请输入正确的分贝值!");
+                return;
+            }
             await updateProjectDetail({
                 id: projectDetail.id,
+                stableDiffusionConfig: data,
                 ...values,
-                audioConfig: {
-                    ...values.audioConfig,
-                    rate: values?.audioConfig?.rate + "%",
-                    volume: values?.audioConfig?.volume + "%",
-                    pitch: values?.audioConfig?.pitch + "Hz",
-                },
-                stableDiffusionConfig: data
             });
             message.success("更新配置成功");
             await getProjectDetailConfig(state.id);
@@ -181,13 +184,11 @@ const ProjectDetailPage = () => {
      * 进行文本转图片
      */
     const text2imageHandler = async () => {
-        const ids = projectDetail?.infoList?.map(i => i.id) ?? [];
         const projectDetailStableDiffusionConfig = projectDetail?.stableDiffusionConfig ?? "{}";
-        console.log(!!projectDetailStableDiffusionConfig);
-        for (const id of ids) {
+        for (const info of (projectDetail?.infoList ?? [])) {
             let selectedId: null | number = null;
             const stableDiffusionImages: Info["stableDiffusionImages"] = [];
-            const data = await getProjectDetailInfo({ id });
+            const data = await getProjectDetailInfo({ id: info.id });
             const stableDiffusionParams: {
                 [key: string]: any
             } = {};
@@ -198,14 +199,14 @@ const ProjectDetailPage = () => {
                 stableDiffusionParams[key] = jsonConfig[key];
             }
             const images = await stableDiffusionText2Image({
-                id,
+                id: info.id,
                 projectDetailId: projectDetail?.id,
             });
             if (images.length) {
                 for (let i = 0; i < images.length; i++) {
                     const image = images[i];
                     const blob = dataURLtoBlob(`data:image/png;base64,${image}`);
-                    const file = blobToFile(blob, `${id}-${i}.png`);
+                    const file = blobToFile(blob, `stable-diffusion-${info.id}-${i}.png`);
                     const upload = await uploadFile({
                         file,
                         fileType: "stable-diffusion"
@@ -214,23 +215,23 @@ const ProjectDetailPage = () => {
                         selectedId = upload.id;
                     }
                     stableDiffusionImages.push({
-                        InfoId: id,
+                        InfoId: info.id,
                         name: upload.name,
                         key: upload.key,
                         url: upload.url,
                         tag: upload.tag,
+                        fileId: upload.id,
                     });
                 }
                 await updateProjectDetailInfo(Object.assign({
-                    id: id,
+                    id: info.id,
                     stableDiffusionImages,
-                }, selectedId ? {
+                }, (selectedId && !info.stableDiffusionImageId) ? {
                     stableDiffusionImageId: selectedId
                 } : {}));
             }
             await getProjectDetailConfig(state.id);
         }
-        // await stableDiffusionText2Image({ ids, projectDetailId: projectDetail?.id ?? 0 });
     };
 
     const onStableDiffusionImagesOnChange = async (selectedId: number, infoId: number) => {
@@ -248,6 +249,11 @@ const ProjectDetailPage = () => {
             await createAudioSrt({
                 id: projectDetail?.id
             });
+    };
+
+    const onDetailProjectInfo = async (id: number) => {
+        await deleteInfo({ id });
+        await getProjectDetailConfig(state.id);
     };
 
     const columns: ProColumns<Info>[] = [
@@ -282,6 +288,7 @@ const ProjectDetailPage = () => {
             title: "图片列表",
             editable: false,
             width: 200,
+            // @ts-ignore
             render(values: FileResponse[], record) {
                 return (
                     <ImagesActionWrap>
@@ -311,12 +318,15 @@ const ProjectDetailPage = () => {
         {
             title: "操作",
             align: "center",
-            width: 170,
             valueType: 'option',
             fixed: "right",
+            // @ts-ignore
             render(text, record, _, action) {
                 return (
                     <>
+                        <Button danger type={"link"} onClick={() => onDetailProjectInfo(record.id)}>
+                            删除
+                        </Button>
                         <Button type={"link"} onClick={() => {
                             action?.startEditable?.(record.id);
                         }}>
@@ -372,16 +382,16 @@ const ProjectDetailPage = () => {
                             上传文件
                         </Button>
                     </Upload>,
-                    <Button onClick={extractTheRole}>
+                    <Button disabled={!projectDetail?.infoList?.length} onClick={extractTheRole}>
                         角色提取
                     </Button>,
-                    <Button onClick={() => translatePrompt({ projectDetailId: projectDetail?.id })}>
+                    <Button disabled={!projectDetail?.infoList?.length} onClick={() => translatePrompt({ projectDetailId: projectDetail?.id })}>
                         翻译
                     </Button>,
-                    <Button onClick={createAudioAndSrtHandler}>
+                    <Button disabled={!projectDetail?.infoList?.length} onClick={createAudioAndSrtHandler}>
                         生成音频和字幕
                     </Button>,
-                    <Button onClick={text2imageHandler}>
+                    <Button disabled={!projectDetail?.infoList?.length} onClick={text2imageHandler}>
                         生成图片
                     </Button>,
                     <ModalForm
@@ -421,26 +431,26 @@ const ProjectDetailPage = () => {
                                 placeholder="请输入最大文字数量"
                                 min={10}
                             />
-                            <ProFormDigit
+                            <ProFormText
                                 width="md"
                                 name={[ "audioConfig", "rate" ]}
                                 label="音频语速"
                                 placeholder="请输入音频语速"
-                                min={false}
+                                tooltip={"格式为(+-)0%"}
                             />
-                            <ProFormDigit
+                            <ProFormText
                                 width="md"
                                 name={[ "audioConfig", "volume" ]}
                                 label="音量"
+                                tooltip={"格式为(+-)0%"}
                                 placeholder="请输入音量"
-                                min={0}
                             />
-                            <ProFormDigit
+                            <ProFormText
                                 width="md"
                                 name={[ "audioConfig", "pitch" ]}
                                 label="分贝"
+                                tooltip={"格式为(+-)0Hz"}
                                 placeholder="请输入分贝"
-                                min={0}
                             />
                             <ProFormSelect
                                 width="md"

@@ -7,6 +7,9 @@ import aiofiles
 import re
 import os
 from datetime import datetime
+from xml.sax.saxutils import unescape
+from typing import List
+from edge_tts.submaker import formatter
 
 
 async def spilt_str2(s, t, k):
@@ -267,6 +270,64 @@ class SubMarker(edge_tts.SubMaker):
             i += 1
         return data
 
+    def generate_subs_pro(self, content_list) -> str:
+
+        if len(self.subs) != len(self.offset):
+            raise ValueError("subs and offset are not of the same length")
+
+        data = ""
+        sub_state_count = 0
+        sub_state_start = -1.0
+        sub_state_subs = ""
+        index = 0
+        content = content_list[index]
+
+        for idx, (offset, subs) in enumerate(zip(self.offset, self.subs)):
+            start_time, end_time = offset
+            subs = unescape(subs)
+
+            if len(sub_state_subs) > 0:
+                sub_state_subs += " "
+            sub_state_subs += subs
+
+            if sub_state_start == -1.0:
+                sub_state_start = start_time
+            sub_state_count += 1
+            if idx == len(self.offset) - 1 or self.subs[idx + 1] not in content:
+                subs = sub_state_subs
+
+                split_subs: List[str] = [
+                    subs[i: i + 100] for i in range(0, len(subs), 100)
+                ]
+                for i in range(len(split_subs) - 1):
+                    sub = split_subs[i]
+                    split_at_word = True
+                    if sub[-1] == " ":
+                        split_subs[i] = sub[:-1]
+                        split_at_word = False
+
+                    if sub[0] == " ":
+                        split_subs[i] = sub[1:]
+                        split_at_word = False
+
+                    if split_at_word:
+                        split_subs[i] += "-"
+
+                data += formatter(
+                    start_time=sub_state_start,
+                    end_time=end_time,
+                    subdata="\r\n".join(split_subs),
+                )
+                sub_state_count = 0
+                sub_state_start = -1
+                sub_state_subs = ""
+                if index < len(content_list) - 1:
+                    index += 1
+                    content = content_list[index]
+            else:
+                content = re.sub(subs, '', content, count=1)
+        return data
+
 
 # 通过edge-tts生成字幕文件
 async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> None:
@@ -304,11 +365,25 @@ async def edge_tts_create_srt(text_path, mp3_path, srt_path, *edge_tts_args) -> 
                     line = line.replace(".", ",")  # 这行不是必须的，srt也能识别'.'
                 if idx > 1:  # 跳过header部分
                     f_out.write(line)
+    else:
+        # 定义一个空列表来存储文件的每一行
+        lines = []
+
+        # 打开文件并读取每一行
+        with open(participle_book_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                # 去除每行末尾的换行符，并添加到列表中
+                lines.append(line.strip())
+
+        # 使用列表推导式去除空行
+        lines = [line for line in lines if line and not line.isdigit()]
+
+        with open(srt_tmp_path, "w", encoding="utf-8") as f_out:
+            f_out.write(sub_marker.generate_subs_pro(lines))
 
 
 # 生成字幕时间列表
 async def create_processing_time(text_path, txt_time_path):
-    print(txt_time_path, "txt_time_path")
     subtitles = await srt_to_list(audio_srt_path)
     if language == "zh":
         with open(text_path, "r", encoding="utf-8") as f:
@@ -338,6 +413,15 @@ async def create_processing_time(text_path, txt_time_path):
                     break
         with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
             f3.write(str(section_time_list))
+    else:
+        time_list = []
+        init_time = "00:00:00.000"
+        for subtitle in subtitles:
+            duration = await time_difference(init_time, subtitle[0].split(" --> ")[1], time_format=r"%H:%M:%S.%f")
+            time_list.append(duration)
+            init_time = subtitle[0].split(" --> ")[1]
+        with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
+            f3.write(str(time_list))
 
 
 # 保存字幕

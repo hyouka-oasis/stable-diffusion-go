@@ -3,7 +3,7 @@ package system
 type RouterGroup struct {
 	ProjectRouter
 	ProjectDetailRouter
-	ProjectDetailParticipleListRouter
+	InfoRouter
 	SettingsRouter
 	StableDiffusionLorasRouter
 	StableDiffusionRouter

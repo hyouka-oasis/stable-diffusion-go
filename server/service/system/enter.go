@@ -3,7 +3,7 @@ package system
 type ServiceGroup struct {
 	ProjectService
 	ProjectDetailService
-	ProjectDetailParticipleInfoService
+	InfoService
 	SettingsService
 	StableDiffusionLorasService
 	StableDiffusionService

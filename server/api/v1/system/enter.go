@@ -18,7 +18,7 @@ type ApiGroup struct {
 var (
 	projectService                       = service.ServiceGroupApp.SystemServiceGroup.ProjectService
 	projectDetailService                 = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailService
-	projectDetailParticipleListService   = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailParticipleInfoService
+	projectDetailParticipleListService   = service.ServiceGroupApp.SystemServiceGroup.InfoService
 	settingsService                      = service.ServiceGroupApp.SystemServiceGroup.SettingsService
 	stableDiffusionLorasService          = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
 	stableDiffusionService               = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
