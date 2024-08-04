@@ -28,7 +28,7 @@ func (s *ProjectApi) CreateProject(c *gin.Context) {
 	err = projectService.CreateProject(projectConfig)
 	if err != nil {
 		global.Log.Error("新增失败!", zap.Error(err))
-		response.FailWithMessage("添加失败", c)
+		response.FailWithMessage("添加失败:"+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("添加成功", c)

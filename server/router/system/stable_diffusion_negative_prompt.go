@@ -11,7 +11,12 @@ func (s *StableDiffusionNegativePromptRouter) InitStableDiffusionNegativePromptR
 	stableDiffusionNegativePromptRouter := Router.Group("stableDiffusion")
 	stableDiffusionNegativePromptApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionNegativePromptApi
 	{
+		stableDiffusionNegativePromptRouter.GET("negativePromptList", stableDiffusionNegativePromptApi.GetStableDiffusionNegativePromptList)
+	}
+	{
 		stableDiffusionNegativePromptRouter.POST("createNegativePrompt", stableDiffusionNegativePromptApi.CreateStableDiffusionNegativePrompt)
+		stableDiffusionNegativePromptRouter.POST("updateNegativePrompt", stableDiffusionNegativePromptApi.UpdateStableDiffusionNegativePrompt)
+		stableDiffusionNegativePromptRouter.DELETE("deleteNegativePrompt", stableDiffusionNegativePromptApi.DeleteStableDiffusionNegativePrompt)
 	}
 	return stableDiffusionNegativePromptRouter
 }

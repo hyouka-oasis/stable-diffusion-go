@@ -8,7 +8,7 @@ import (
 	"github/stable-diffusion-go/server/source"
 	"github/stable-diffusion-go/server/utils"
 	"path"
-	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -26,15 +26,58 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 	if err != nil {
 		return errors.New("查找项目详情失败:" + err.Error())
 	}
+	var project system.Project
+	err = global.DB.Model(&system.Project{}).Where("id = ?", projectDetail.ProjectId).First(&project).Error
+	if err != nil {
+		return errors.New("查找项目失败:" + err.Error())
+	}
+	var infoList []system.Info
+	if params.AudioConfig.InfoId != 0 {
+		err = global.DB.Preload("AudioConfig").Model(&system.Info{}).Where("id = ?", params.AudioConfig.InfoId).Find(&infoList).Error
+		if err != nil {
+			return errors.New("查找项目详情失败:" + err.Error())
+		}
+	} else {
+		err = global.DB.Preload("AudioConfig").Model(&system.Info{}).Where("project_detail_id = ?", projectDetail.Id).Find(&infoList).Error
+		if err != nil {
+			return errors.New("查找项目详情失败:" + err.Error())
+		}
+	}
 	filename := strings.TrimSuffix(projectDetail.FileName, path.Ext(projectDetail.FileName))
-	savePath := path.Join(filepath.ToSlash(settings.SavePath), filename)
-	err = utils.EnsureDirectory(savePath)
+	projectPath := path.Join(settings.SavePath, project.Name, filename)
+	err = utils.EnsureDirectory(projectPath)
 	if err != nil {
 		return errors.New("创建目录失败:" + err.Error())
 	}
-	err = source.CreateAudioAndSrt(savePath, filename, projectDetail)
-	if err != nil {
-		return errors.New("生成音频和字幕失败:" + err.Error())
+	for _, info := range infoList {
+		err = global.DB.Model(&info).Update("loading", true).Error
+		if err != nil {
+			return err
+		}
+		savePath := path.Join(projectPath, strconv.Itoa(int(info.Id)))
+		var config source.AudioAndSrtParams
+		config.SavePath = savePath
+		config.Language = projectDetail.Language
+		config.Content = info.Text
+		config.BreakAudio = projectDetail.BreakAudio
+		if params.AudioConfig.InfoId != 0 {
+			config.BreakAudio = false
+		}
+		err = utils.EnsureDirectory(savePath)
+		if err != nil {
+			return errors.New("创建目录失败:" + err.Error())
+		}
+		if info.AudioConfig == (system.AudioConfig{}) {
+			config.AudioConfig = projectDetail.AudioConfig
+		} else {
+			config.AudioConfig = info.AudioConfig
+		}
+		config.Name = filename + "-" + strconv.Itoa(int(projectDetail.Id)) + "-" + strconv.Itoa(int(info.Id))
+		err = source.CreateAudioAndSrt(config)
+		err = global.DB.Model(&info).Update("loading", false).Error
+		if err != nil {
+			return errors.New("生成音频和字幕失败:" + err.Error())
+		}
 	}
-	return nil
+	return err
 }

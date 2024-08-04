@@ -34,6 +34,7 @@ func startCmd() error {
 		"--participle_book_path", outParticipleBookPathBookPath,
 		"--max_word", maxWords,
 		"--min_word", minWords,
+		"--whether_participle", "no",
 	}
 	fmt.Println(args)
 	err := utils.ExecCommand("python", args)

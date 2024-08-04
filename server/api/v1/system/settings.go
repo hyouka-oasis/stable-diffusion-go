@@ -41,17 +41,17 @@ func (s *SettingsApi) UpdateSettings(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	err = utils.Verify(settings.StableDiffusionConfig, utils.StableDiffusionConfigVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
 	if settings.TranslateType == "ollama" {
 		err = utils.Verify(settings, utils.OllamaConfigVerify)
 		if err != nil {
 			response.FailWithMessage(err.Error(), c)
 			return
 		}
-	}
-	err = utils.Verify(settings, utils.StableDiffusionConfigVerify)
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
 	}
 	err = settingsService.UpdateSettings(settings)
 	if err != nil {

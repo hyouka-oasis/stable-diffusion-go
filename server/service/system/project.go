@@ -13,6 +13,11 @@ type ProjectService struct{}
 // CreateProject 新增项目
 func (s *ProjectService) CreateProject(config system.Project) (err error) {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
+		var project system.Project
+		err = tx.Model(&system.Project{}).Where("name = ?", config.Name).First(&project).Error
+		if project != (system.Project{}) {
+			return errors.New("存在相同名称项目")
+		}
 		err = tx.Create(&config).Error
 		if err != nil {
 			return err
@@ -57,7 +62,20 @@ func (s *ProjectService) DeleteProject(config system.Project) (err error) {
 		if err != nil {
 			return err
 		}
-		err = tx.Model(&system.ProjectDetail{}).Where("project_id = ?", config.Id).Delete(&system.ProjectDetail{}).Error
+		var projectDetail system.ProjectDetail
+		err = tx.Model(&system.ProjectDetail{}).Where("project_id = ?", config.Id).First(&projectDetail).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Where("project_id = ?", config.Id).Delete(&system.ProjectDetail{}).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.Info{}).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.StableDiffusionImages{}).Error
 		if err != nil {
 			return err
 		}

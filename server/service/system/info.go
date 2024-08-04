@@ -9,7 +9,6 @@ import (
 	"github/stable-diffusion-go/server/utils"
 	"gorm.io/gorm"
 	"strings"
-	"sync"
 )
 
 type InfoService struct{}
@@ -23,6 +22,10 @@ func (s *InfoService) DeleteInfo(params request.ProjectDetailRequestParams) (err
 				return err
 			}
 			err = tx.Delete(&system.StableDiffusionImages{}, "info_id = ?", params.Id).Error
+			if err != nil {
+				return err
+			}
+			err = tx.Delete(&system.AudioConfig{}, "info_id = ?", params.Id).Error
 			if err != nil {
 				return err
 			}
@@ -65,53 +68,65 @@ func (s *InfoService) ExtractTheInfoRole(id uint) error {
 
 // TranslateInfoPrompt 进行prompt转换
 func (s *InfoService) TranslateInfoPrompt(projectDetailParticipleParams system.Info) error {
-	var projectDetailParticipleList []system.Info
-	return global.DB.Transaction(func(tx *gorm.DB) error {
-		var currentSettings system.Settings
-		err := tx.Model(&system.Settings{}).Preload("OllamaConfig").First(&currentSettings).Error
-		if err != nil {
-			return errors.New("请先初始化配置")
-		}
-		if projectDetailParticipleParams.ProjectDetailId != 0 {
-			err = tx.Model(&system.Info{}).Find(&projectDetailParticipleList, "project_detail_id = ?", projectDetailParticipleParams.ProjectDetailId).Error
-		}
-		if projectDetailParticipleParams.Id != 0 {
-			err = tx.Model(&system.Info{}).Find(&projectDetailParticipleList, "id = ?", projectDetailParticipleParams.Id).Error
-		}
-		if currentSettings.TranslateType == "sd-prompt-translator" {
-			return errors.New("当前配置不需要进行prompt转换")
-		}
-		if currentSettings.TranslateType == "ollama" {
-			var wg sync.WaitGroup
-			wg.Wait()
-			// 异步处理翻译
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for _, projectDetailParticiple := range projectDetailParticipleList {
-					lorasText := ""
-					var loras []system.StableDiffusionLoras
-					err = tx.Model(&system.StableDiffusionLoras{}).Find(&loras).Error
-					if err != nil {
-						return
-					}
-					for _, lora := range loras {
-						if strings.Contains(lora.Roles, projectDetailParticiple.Role) {
-							lorasText += lora.Name + ","
-						}
-					}
-
-					prompt, _ := source.ChatgptOllama(projectDetailParticiple.Text, currentSettings.OllamaConfig)
-					if lorasText != "" {
-						projectDetailParticiple.Prompt = prompt + "," + lorasText
-					} else {
-						projectDetailParticiple.Prompt = prompt
-					}
-					err = tx.Model(&projectDetailParticiple).Select("prompt").Updates(&projectDetailParticiple).Error
+	var infoList []system.Info
+	var currentSettings system.Settings
+	err := global.DB.Model(&system.Settings{}).Preload("OllamaConfig").First(&currentSettings).Error
+	if err != nil {
+		return errors.New("请先初始化配置")
+	}
+	if projectDetailParticipleParams.ProjectDetailId != 0 {
+		err = global.DB.Model(&system.Info{}).Find(&infoList, "project_detail_id = ?", projectDetailParticipleParams.ProjectDetailId).Error
+	}
+	if projectDetailParticipleParams.Id != 0 {
+		err = global.DB.Model(&system.Info{}).Find(&infoList, "id = ?", projectDetailParticipleParams.Id).Error
+	}
+	var loras []system.StableDiffusionLoras
+	err = global.DB.Model(&system.StableDiffusionLoras{}).Find(&loras).Error
+	if err != nil {
+		return err
+	}
+	// 如果采用翻译模型
+	if currentSettings.TranslateType == "sd-prompt-translator" {
+		for _, info := range infoList {
+			err = global.DB.Model(&info).Update("loading", true).Error
+			if err != nil {
+				return err
+			}
+			lorasText := ""
+			for _, lora := range loras {
+				if strings.Contains(lora.Roles, info.Role) {
+					lorasText += lora.Name + ","
 				}
-			}()
-			wg.Wait()
+			}
+			info.Prompt = lorasText
+			err = global.DB.Model(&info).Update("prompt", info.Prompt).Update("loading", false).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if currentSettings.TranslateType == "ollama" {
+		for _, info := range infoList {
+			err = global.DB.Model(&info).Update("loading", true).Error
+			lorasText := ""
+			for _, lora := range loras {
+				if strings.Contains(lora.Roles, info.Role) {
+					lorasText += lora.Name + ","
+				}
+			}
+			prompt, _ := source.ChatgptOllama(info.Text, currentSettings.OllamaConfig)
+			if lorasText != "" {
+				info.Prompt = prompt + "," + lorasText
+			} else {
+				info.Prompt = prompt
+			}
+			err = global.DB.Model(&info).Update("prompt", info.Prompt).Update("loading", false).Error
+			if err != nil {
+				return err
+			}
 		}
 		return err
-	})
+	}
+	return err
 }

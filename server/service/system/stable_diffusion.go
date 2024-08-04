@@ -7,7 +7,6 @@ import (
 	"github/stable-diffusion-go/server/model/system"
 	systemRequest "github/stable-diffusion-go/server/model/system/request"
 	"github/stable-diffusion-go/server/source"
-	"gorm.io/gorm"
 )
 
 type StableDiffusionService struct{}
@@ -27,34 +26,32 @@ func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest
 	if err != nil {
 		return images, errors.New("获取项目详情失败")
 	}
-	return images, global.DB.Transaction(func(tx *gorm.DB) error {
-		stableDiffusionParams := map[string]interface{}{}
-		request := map[string]interface{}{}
-		err = json.Unmarshal([]byte(projectDetail.StableDiffusionConfig), &stableDiffusionParams)
-		if err == nil {
-			// 如果json解析成功则合并 Stable Diffusion 配置参数
-			for key, value := range stableDiffusionParams {
-				request[key] = value
-			}
+	stableDiffusionParams := map[string]interface{}{}
+	request := map[string]interface{}{}
+	err = json.Unmarshal([]byte(projectDetail.StableDiffusionConfig), &stableDiffusionParams)
+	if err == nil {
+		// 如果json解析成功则合并 Stable Diffusion 配置参数
+		for key, value := range stableDiffusionParams {
+			request[key] = value
 		}
-		// 异步处理翻译
-		var projectDetailInfo system.Info
-		// 查到单个的列表
-		err = tx.Model(&system.Info{}).Where("id = ?", params.Id).Find(&projectDetailInfo).Error
-		if projectDetailInfo.Prompt == "" {
-			request["prompt"] = projectDetailInfo.Text
-		} else {
-			request["prompt"] = projectDetailInfo.Prompt
-		}
-		if projectDetailInfo.NegativePrompt != "" {
-			request["negative_prompt"] = projectDetailInfo.NegativePrompt
-		}
-		apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/txt2img"
-		stableDiffusionImages, generateError := source.StableDiffusionGenerateImage(apiUrl, request)
-		if generateError != nil {
-			err = generateError
-		}
-		images = stableDiffusionImages
-		return err
-	})
+	}
+	// 异步处理翻译
+	var projectDetailInfo system.Info
+	// 查到单个的列表
+	err = global.DB.Model(&system.Info{}).Where("id = ?", params.Id).Find(&projectDetailInfo).Error
+	if projectDetailInfo.Prompt == "" {
+		request["prompt"] = projectDetailInfo.Text
+	} else {
+		request["prompt"] = projectDetailInfo.Prompt
+	}
+	if projectDetailInfo.NegativePrompt != "" {
+		request["negative_prompt"] = projectDetailInfo.NegativePrompt
+	}
+	apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/txt2img"
+	stableDiffusionImages, generateError := source.StableDiffusionGenerateImage(apiUrl, request)
+	if generateError != nil {
+		err = generateError
+	}
+	images = stableDiffusionImages
+	return images, err
 }

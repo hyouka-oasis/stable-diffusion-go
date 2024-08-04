@@ -5,6 +5,7 @@ import (
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/common/response"
 	"github/stable-diffusion-go/server/model/system"
+	"github/stable-diffusion-go/server/model/system/request"
 	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
 	"strconv"
@@ -14,21 +15,14 @@ type ProjectDetailApi struct{}
 
 // UploadProjectDetailFile 上传文件
 func (s *ProjectDetailApi) UploadProjectDetailFile(c *gin.Context) {
-	minWords, err := strconv.Atoi(c.PostForm("minWords"))
-	maxWords, err := strconv.Atoi(c.PostForm("maxWords"))
 	projectDetailId, err := strconv.Atoi(c.PostForm("id"))
+	saveType := c.DefaultPostForm("saveType", "create")
+	whetherParticiple := c.DefaultPostForm("whetherParticiple", "yes")
 	file, err := c.FormFile("file")
-	projectDetail := system.ProjectDetail{
-		FileName: file.Filename,
-		ParticipleConfig: system.ParticipleConfig{
-			MinWords: minWords,
-			MaxWords: maxWords,
-		},
-	}
-	err = projectDetailService.UploadProjectDetailFile(uint(projectDetailId), projectDetail, file)
+	err = projectDetailService.UploadProjectDetailFile(uint(projectDetailId), file, saveType, whetherParticiple)
 	if err != nil {
 		global.Log.Error("更新失败!", zap.Error(err))
-		response.FailWithMessage("更新失败", c)
+		response.FailWithMessage("更新失败:"+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("更新成功", c)
@@ -36,7 +30,7 @@ func (s *ProjectDetailApi) UploadProjectDetailFile(c *gin.Context) {
 
 // UpdateProjectDetail 更新详情
 func (s *ProjectDetailApi) UpdateProjectDetail(c *gin.Context) {
-	var config system.ProjectDetail
+	var config request.UpdateProjectDetailRequestParams
 	err := c.ShouldBindJSON(&config)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)

@@ -38,15 +38,15 @@ func batchGoRun(bookName string) {
 		log.Fatal("创建视频目录失败:", err)
 	}
 	//3. 处理文本文件
-	//err = core.SplitText()
-	//if err != nil {
-	//	panic(err)
-	//}
+	err = core.SplitText()
+	if err != nil {
+		panic(err)
+	}
 	// 4. 翻译文本
-	//err = core.Translate()
-	//if err != nil {
-	//	panic(err)
-	//}
+	err = core.Translate()
+	if err != nil {
+		panic(err)
+	}
 	//5.翻译成功后进行字幕提取
 	core.TextToSrt()
 	// 6.调用

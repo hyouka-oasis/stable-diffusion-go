@@ -27,7 +27,7 @@ func windowCmdArgsConversionPath(path string) (absPath string, err error) {
 			fmt.Println("转换相对路径失败:", err)
 			return absPath, err
 		}
-		absPath := filepath.ToSlash(absPath)
+		absPath = filepath.ToSlash(absPath)
 		return absPath, err
 	}
 	return path, nil

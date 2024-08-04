@@ -9,12 +9,12 @@ import (
 	"sync"
 )
 
-func SplitText(projectDetail system.ProjectDetail) (err error) {
+func SplitText(projectDetail system.ProjectDetail, whetherParticiple string) (err error) {
 	// 异步处理文本
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-		err = startCmd(projectDetail)
+		err = startCmd(projectDetail, whetherParticiple)
 		if err != nil {
 			return
 		}
@@ -24,7 +24,7 @@ func SplitText(projectDetail system.ProjectDetail) (err error) {
 	return nil
 }
 
-func startCmd(projectDetail system.ProjectDetail) error {
+func startCmd(projectDetail system.ProjectDetail, whetherParticiple string) error {
 	participlePythonPath := global.ParticiplePythonPath
 	bookPath := global.Config.Local.Path + "/" + projectDetail.FileName
 	outParticipleBookPathBookPath := global.Config.Local.Path + "/" + "participleBook.txt"
@@ -36,6 +36,7 @@ func startCmd(projectDetail system.ProjectDetail) error {
 		"--participle_book_path", outParticipleBookPathBookPath,
 		"--max_word", strconv.Itoa(maxWords),
 		"--min_word", strconv.Itoa(minWords),
+		"--whether_participle", whetherParticiple,
 	}
 	fmt.Println(args)
 	err := utils.ExecCommand("python", args)

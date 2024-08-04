@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
+	"path/filepath"
 )
 
 type SettingsService struct{}
@@ -18,12 +19,14 @@ func (s *SettingsService) CreateSettings(config system.Settings) (err error) {
 	if len(settings) > 0 {
 		return fmt.Errorf("已经存在配置文件")
 	}
+	config.SavePath = filepath.ToSlash(config.SavePath)
 	err = global.DB.Create(&config).Error
 	return err
 }
 
 // UpdateSettings 修改配置
 func (s *SettingsService) UpdateSettings(config system.Settings) (err error) {
+	config.SavePath = filepath.ToSlash(config.SavePath)
 	err = global.DB.Model(&config).Updates(&config).Error
 	if err != nil {
 		return err
