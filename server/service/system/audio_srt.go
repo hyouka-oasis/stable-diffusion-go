@@ -65,7 +65,7 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		}
 		err = utils.EnsureDirectory(savePath)
 		if err != nil {
-			return errors.New("创建目录失败:" + err.Error())
+			continue
 		}
 		if info.AudioConfig == (system.AudioConfig{}) {
 			config.AudioConfig = projectDetail.AudioConfig
@@ -76,7 +76,7 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		err = source.CreateAudioAndSrt(config)
 		err = global.DB.Model(&info).Update("loading", false).Error
 		if err != nil {
-			return errors.New("生成音频和字幕失败:" + err.Error())
+			continue
 		}
 	}
 	return err

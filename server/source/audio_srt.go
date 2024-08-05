@@ -42,7 +42,6 @@ func CreateAudioAndSrt(config AudioAndSrtParams) error {
 	if config.BreakAudio && err == nil {
 		return nil
 	}
-	fmt.Println(audioPath, "audioPath")
 	//filepath := path.Join(global.Config.Local.StorePath, "participleBook.txt")
 	args := []string{
 		voiceCaptionPythonPath,
@@ -59,7 +58,6 @@ func CreateAudioAndSrt(config AudioAndSrtParams) error {
 		"--limit", strconv.Itoa(limit), // 分贝
 		"--language", config.Language, // 语言
 	}
-	fmt.Println(args)
 	err = utils.ExecCommand("python", args)
 	if err != nil {
 		return err

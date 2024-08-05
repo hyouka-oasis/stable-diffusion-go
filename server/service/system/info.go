@@ -3,11 +3,14 @@ package system
 import (
 	"errors"
 	"github/stable-diffusion-go/server/global"
+	"github/stable-diffusion-go/server/model/example"
 	"github/stable-diffusion-go/server/model/system"
 	"github/stable-diffusion-go/server/model/system/request"
 	"github/stable-diffusion-go/server/source"
 	"github/stable-diffusion-go/server/utils"
 	"gorm.io/gorm"
+	"path"
+	"strconv"
 	"strings"
 )
 
@@ -50,11 +53,6 @@ func (s *InfoService) GetInfo(id uint) (info system.Info, err error) {
 // ExtractTheInfoRole 进行人物提取
 func (s *InfoService) ExtractTheInfoRole(id uint) error {
 	var currentProjectDetailParticipleList []system.Info
-	//var currentSettings system.Settings
-	//err := global.DB.Model(&system.Settings{}).First(&currentSettings).Error
-	//if err != nil {
-	//	return errors.New("请先初始化配置")
-	//}
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&system.Info{}).Find(&currentProjectDetailParticipleList, "project_detail_id = ?", id).Error
 		for _, projectDetailParticiple := range currentProjectDetailParticipleList {
@@ -67,18 +65,18 @@ func (s *InfoService) ExtractTheInfoRole(id uint) error {
 }
 
 // TranslateInfoPrompt 进行prompt转换
-func (s *InfoService) TranslateInfoPrompt(projectDetailParticipleParams system.Info) error {
+func (s *InfoService) TranslateInfoPrompt(infoParams system.Info) error {
 	var infoList []system.Info
 	var currentSettings system.Settings
 	err := global.DB.Model(&system.Settings{}).Preload("OllamaConfig").First(&currentSettings).Error
 	if err != nil {
 		return errors.New("请先初始化配置")
 	}
-	if projectDetailParticipleParams.ProjectDetailId != 0 {
-		err = global.DB.Model(&system.Info{}).Find(&infoList, "project_detail_id = ?", projectDetailParticipleParams.ProjectDetailId).Error
+	if infoParams.ProjectDetailId != 0 {
+		err = global.DB.Model(&system.Info{}).Find(&infoList, "project_detail_id = ?", infoParams.ProjectDetailId).Error
 	}
-	if projectDetailParticipleParams.Id != 0 {
-		err = global.DB.Model(&system.Info{}).Find(&infoList, "id = ?", projectDetailParticipleParams.Id).Error
+	if infoParams.Id != 0 {
+		err = global.DB.Model(&system.Info{}).Find(&infoList, "id = ?", infoParams.Id).Error
 	}
 	var loras []system.StableDiffusionLoras
 	err = global.DB.Model(&system.StableDiffusionLoras{}).Find(&loras).Error
@@ -127,6 +125,64 @@ func (s *InfoService) TranslateInfoPrompt(projectDetailParticipleParams system.I
 			}
 		}
 		return err
+	}
+	return err
+}
+
+// CreateInfoVideo 生成视频
+func (s *InfoService) CreateInfoVideo(infoParams request.InfoCreateVideoRequest) (err error) {
+	var settings system.Settings
+	err = global.DB.Model(&system.Settings{}).First(&settings).Error
+	if err != nil {
+		return errors.New("请先初始化配置")
+	}
+	var projectDetail system.ProjectDetail
+	err = global.DB.Model(&system.ProjectDetail{}).First(&projectDetail, "id = ?", infoParams.ProjectDetailId).Error
+	if err != nil {
+		return errors.New("查找项目详情失败:" + err.Error())
+	}
+	var project system.Project
+	err = global.DB.Model(&system.Project{}).First(&project, "id = ?", projectDetail.ProjectId).Error
+	if err != nil {
+		return errors.New("查找项目失败:" + err.Error())
+	}
+	filename := strings.TrimSuffix(projectDetail.FileName, path.Ext(projectDetail.FileName))
+	projectPath := path.Join(settings.SavePath, project.Name, filename)
+	err = utils.EnsureDirectory(projectPath)
+	if err != nil {
+		return err
+	}
+	var infoList []system.Info
+	if len(infoParams.Ids) != 0 {
+		var info system.Info
+		for _, id := range infoParams.Ids {
+			err = global.DB.Model(&system.Info{}).Find(&info, "id = ?", id).Error
+			if err != nil {
+				continue
+			}
+			infoList = append(infoList, info)
+		}
+	} else {
+		err = global.DB.Model(&system.Info{}).Find(&infoList, "project_detail_id = ?", infoParams.ProjectDetailId).Error
+		if err != nil {
+			return nil
+		}
+	}
+	for _, info := range infoList {
+		if info.StableDiffusionImageId == 0 {
+			continue
+		}
+		savePath := path.Join(projectPath, strconv.Itoa(int(info.Id)))
+		err = utils.EnsureDirectory(savePath)
+		if err != nil {
+			continue
+		}
+		var image example.ExaFileUploadAndDownload
+		err = global.DB.Model(&example.ExaFileUploadAndDownload{}).Where("id = ?", info.StableDiffusionImageId).First(&image).Error
+		if err != nil {
+			continue
+		}
+		err = source.DisposableSynthesisVideo(info)
 	}
 	return err
 }

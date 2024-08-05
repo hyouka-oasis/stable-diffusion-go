@@ -104,13 +104,13 @@ func (s *ProjectDetailInfoApi) ExtractTheInfoRole(c *gin.Context) {
 
 // TranslateInfoPrompt 进行翻译
 func (s *ProjectDetailInfoApi) TranslateInfoPrompt(c *gin.Context) {
-	var projectDetailParticipleParams system.Info
-	err := c.ShouldBindJSON(&projectDetailParticipleParams)
+	var infoParams system.Info
+	err := c.ShouldBindJSON(&infoParams)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
 		return
 	}
-	if projectDetailParticipleParams.ProjectDetailId == 0 && projectDetailParticipleParams.Id == 0 {
+	if infoParams.ProjectDetailId == 0 && infoParams.Id == 0 {
 		response.FailWithMessage("projectDetailId和Id必须传一个", c)
 		return
 	}
@@ -119,11 +119,33 @@ func (s *ProjectDetailInfoApi) TranslateInfoPrompt(c *gin.Context) {
 		return
 	}
 	err = projectDetailParticipleListService.TranslateInfoPrompt(system.Info{
-		ProjectDetailId: projectDetailParticipleParams.ProjectDetailId,
+		ProjectDetailId: infoParams.ProjectDetailId,
 		Model: global.Model{
-			Id: projectDetailParticipleParams.Id,
+			Id: infoParams.Id,
 		},
 	})
+	if err != nil {
+		global.Log.Error("翻译失败!", zap.Error(err))
+		response.FailWithMessage("翻译失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("翻译成功", c)
+}
+
+// CreateInfoVideo 生成视频
+func (s *ProjectDetailInfoApi) CreateInfoVideo(c *gin.Context) {
+	var infoParams request.InfoCreateVideoRequest
+	err := c.ShouldBindJSON(&infoParams)
+	if err != nil {
+		response.FailWithMessage("请传入参数", c)
+		return
+	}
+	err = utils.Verify(infoParams, utils.InfoCreateVideoParamsVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = projectDetailParticipleListService.CreateInfoVideo(infoParams)
 	if err != nil {
 		global.Log.Error("翻译失败!", zap.Error(err))
 		response.FailWithMessage("翻译失败:"+err.Error(), c)

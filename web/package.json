@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "0.0.1",
   "keywords": [
     "electron",
     "boilerplate",
@@ -11,10 +11,20 @@
     "hot",
     "reload"
   ],
+  "author": {
+    "name": "Hyouka",
+    "email": "838611931@qq.com"
+  },
   "license": "MIT",
   "main": "./src/main/main.ts",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\" electron-builder",
+    "build:mac": "electron-builder --config .erb/electron-builder/electron-builder-mac.js --mac --x64",
+    "build:mac:arm": "npm run copy-data-process-center:mac:arm && electron-builder --config .erb/electron-builder/electron-builder-mac-arm.js --mac --arm64",
+    "build:win": "electron-builder --config .erb/electron-builder/electron-builder-win.js --win --x64",
+    "build:win:arm": "electron-builder --config .erb/electron-builder/electron-builder-win-arm.js --win --arm64",
+    "build:linux": "electron-builder --config .erb/electron-builder/electron-builder-linux.js --linux --x64",
+    "build:linux:arm": "electron-builder --config .erb/electron-builder/electron-builder-linux-arm.js --linux --arm64",
     "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
     "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts",
     "build:dll": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps && cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.dev.dll.ts",
@@ -22,9 +32,10 @@
     "package": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never",
     "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
     "start": "ts-node ./.erb/scripts/check-port-in-use.js && npm run start:renderer",
-    "start:main": "cross-env NODE_ENV=development electronmon -r ts-node/register/transpile-only .",
-    "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.preload.dev.ts",
-    "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./.erb/configs/webpack.config.renderer.dev.ts",
+    "start:main": "cross-env PORT=5173 NODE_ENV=development electronmon -r ts-node/register/transpile-only .",
+    "start:preload": "cross-env PORT=5173 NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.preload.dev.ts",
+    "start:renderer": "cross-env PORT=5173 NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./.erb/configs/webpack.config.renderer.dev.ts",
+    "update-client-version": "ts-node .erb/scripts/update-client-version.js",
     "test": "jest"
   },
   "browserslist": [],
@@ -146,7 +157,8 @@
     "webpack-bundle-analyzer": "^4.7.0",
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^4.11.1",
-    "webpack-merge": "^5.8.0"
+    "webpack-merge": "^5.8.0",
+    "ajv": "^8.17.1"
   },
   "collective": {
     "url": "https://opencollective.com/electron-react-boilerplate-594"

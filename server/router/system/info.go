@@ -17,6 +17,7 @@ func (s *InfoRouter) InitInfoRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 		infoRouter.POST("update", infoApi.UpdateInfo)
 		infoRouter.POST("extractRole", infoApi.ExtractTheInfoRole)
 		infoRouter.POST("translate", infoApi.TranslateInfoPrompt)
+		infoRouter.POST("createVideo", infoApi.CreateInfoVideo)
 		infoRouter.DELETE("delete", infoApi.DeleteInfo)
 	}
 	return infoRouter

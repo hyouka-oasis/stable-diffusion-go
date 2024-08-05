@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router";
 import styled from "styled-components";
-import { Button, Divider, Form, message, Modal, Radio, Space, Spin, Tooltip, UploadProps } from "antd";
+import { Button, Divider, Form, Modal, Radio, Space, Spin, Tooltip, UploadProps } from "antd";
 import { useContext, useEffect, useRef, useState } from "react";
 import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect, ProFormText, ProFormUploadButton } from "@ant-design/pro-components";
 import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
@@ -13,7 +13,7 @@ import { createAudioSrt } from "renderer/api/audioSrtApi";
 import { baseURL } from "renderer/request/request";
 import { audioList } from "renderer/utils/audio-list";
 import VanillaUploadJson from "renderer/components/json-edit/VanillaUploadJson";
-import { projectApi } from "renderer/api";
+import { projectApi, stableDiffusionApi } from "renderer/api";
 import { AppGlobalContext } from "renderer/shared/context/appGlobalContext";
 import { FileResponse } from "renderer/api/response/fileResponse";
 import { RcFile } from "antd/lib/upload";
@@ -53,7 +53,7 @@ const AudioActionItemWrap = styled.div`
 `;
 
 const percentageRegex = /^[-+]\d+%$/;
-const pitchRegex = /^[-+]\d+Hz$/;
+const pitchRegex = /^[+]\d+Hz$/;
 
 const ProjectDetailPage = () => {
     const location = useLocation();
@@ -74,12 +74,20 @@ const ProjectDetailPage = () => {
     const state = location.state;
     const mp3Ref = useRef<HTMLAudioElement | null>(null);
 
-    const changeInfoLoading = (id: number, loading: boolean) => {
+    const changeInfoLoading = (idConfig: {
+        id?: number;
+        batch?: boolean;
+    }, loading: boolean) => {
         setProjectDetail((detail) => {
             if (!detail) return detail;
             let infoList = detail?.infoList ?? [];
             infoList = infoList.map(info => {
-                if (info.id === id) {
+                if (idConfig?.id) {
+                    if (info.id === idConfig?.id) {
+                        info.loading = loading;
+                    }
+                }
+                if (idConfig?.batch) {
                     info.loading = loading;
                 }
                 return info;
@@ -114,20 +122,20 @@ const ProjectDetailPage = () => {
         return new Promise(resolve => {
             if (projectDetail) {
                 if (!editThemeFormatRight) {
-                    message.error("json错误!");
+                    openMessageBox({ type: "error", message: "json错误!" });
                     return;
                 }
                 const data = (content as TextContent).text;
                 if (!percentageRegex.test(values?.audioConfig?.rate ?? "0")) {
-                    message.error("请输入正确的语速值!");
+                    openMessageBox({ type: "error", message: "请输入正确的语速值!" });
                     return;
                 }
                 if (!percentageRegex.test(values?.audioConfig?.volume ?? "0")) {
-                    message.error("请输入正确的音量值!");
+                    openMessageBox({ type: "error", message: "请输入正确的音量值!" });
                     return;
                 }
                 if (!pitchRegex.test(values?.audioConfig?.pitch ?? "0")) {
-                    message.error("请输入正确的分贝值!");
+                    openMessageBox({ type: "error", message: "请输入正确的分贝值!" });
                     return;
                 }
                 projectApi.updateProjectDetail({
@@ -135,7 +143,7 @@ const ProjectDetailPage = () => {
                     stableDiffusionConfig: data,
                     ...values,
                 }).then(res => {
-                    message.success("更新配置成功");
+                    openMessageBox({ type: "success", message: "更新配置成功" });
                     getProjectDetailConfig(state.id);
                     resolve(true);
                 });
@@ -226,7 +234,9 @@ const ProjectDetailPage = () => {
     }) => {
         if (!projectDetail) return;
         if (data.id) {
-            changeInfoLoading(data.id, true);
+            changeInfoLoading({
+                id: data.id
+            }, true);
         }
         await projectApi.translateProjectDetailParticipleList(data);
         openMessageBox({ type: "success", message: "翻译成功" });
@@ -270,23 +280,12 @@ const ProjectDetailPage = () => {
     /**
      * 进行文本转图片
      */
-    const text2imageHandler = async () => {
-        const projectDetailStableDiffusionConfig = projectDetail?.stableDiffusionConfig ?? "{}";
-        for (const info of (projectDetail?.infoList ?? [])) {
+    const text2imageBatchHandler = async (infoDetail?: Info) => {
+        const handler = async (info: Info) => {
             let selectedId: null | number = null;
             const stableDiffusionImages: Info["stableDiffusionImages"] = [];
-            const data = await projectApi.getProjectDetailInfo({ id: info.id });
-            const stableDiffusionParams: {
-                [key: string]: any
-            } = {};
-            stableDiffusionParams["prompt"] = data.prompt;
-            stableDiffusionParams["negativePrompt"] = data.negativePrompt;
-            const jsonConfig = JSON.parse(!projectDetailStableDiffusionConfig ? "{}" : projectDetailStableDiffusionConfig);
-            for (const key in jsonConfig) {
-                stableDiffusionParams[key] = jsonConfig[key];
-            }
             const images = await stableDiffusionText2Image({
-                id: info.id,
+                ids: [ info.id ],
                 projectDetailId: projectDetail?.id,
             });
             if (images.length) {
@@ -319,9 +318,22 @@ const ProjectDetailPage = () => {
                 } : {}));
             }
             await getProjectDetailConfig(state.id);
+        };
+        if (infoDetail) {
+            changeInfoLoading({ id: infoDetail.id }, true);
+            await handler(infoDetail);
+        } else {
+            for (const info of (projectDetail?.infoList ?? [])) {
+                changeInfoLoading({ batch: true }, true);
+                await handler(info);
+            }
         }
     };
-
+    /**
+     * 改变选中的图片
+     * @param selectedId
+     * @param infoId
+     */
     const onStableDiffusionImagesOnChange = async (selectedId: number, infoId: number) => {
         await projectApi.updateProjectDetailInfo(Object.assign({
             id: infoId,
@@ -333,10 +345,14 @@ const ProjectDetailPage = () => {
      * 生成音频和字幕
      */
     const createAudioAndSrtHandler = async () => {
-        if (projectDetail)
+        changeInfoLoading({ batch: true }, true);
+        if (projectDetail) {
             await createAudioSrt({
                 id: projectDetail?.id
             });
+            openMessageBox({ type: "success", message: "生成成功" });
+            changeInfoLoading({ batch: true }, false);
+        }
     };
 
     const onDetailProjectInfo = async (id: number) => {
@@ -346,15 +362,15 @@ const ProjectDetailPage = () => {
 
     const onInfoAudioOkHandler = async (values: any, id: number) => {
         if (!percentageRegex.test(values?.rate ?? "0")) {
-            message.error("请输入正确的语速值!");
+            openMessageBox({ type: "error", message: "请输入正确的语速值!" });
             return;
         }
         if (!percentageRegex.test(values?.volume ?? "0")) {
-            message.error("请输入正确的音量值!");
+            openMessageBox({ type: "error", message: "请输入正确的音量值!" });
             return;
         }
         if (!pitchRegex.test(values?.pitch ?? "0")) {
-            message.error("请输入正确的分贝值!");
+            openMessageBox({ type: "error", message: "请输入正确的分贝值!" });
             return;
         }
         await projectApi.updateProjectDetailInfo({
@@ -363,7 +379,7 @@ const ProjectDetailPage = () => {
                 ...values,
             }
         });
-        message.success("更新配置成功");
+        openMessageBox({ type: "success", message: "更新配置成功" });
         await getProjectDetailConfig(state.id);
         return true;
     };
@@ -374,19 +390,6 @@ const ProjectDetailPage = () => {
     };
 
     const columns: ProColumns<Info>[] = [
-        {
-            dataIndex: "index",
-            title: "序号",
-            fixed: "left",
-            align: "center",
-            width: 100,
-            editable: false,
-            render(_, _1, index) {
-                return (
-                    <span>{index + 1}</span>
-                );
-            }
-        },
         {
             dataIndex: "text",
             title: "文本",
@@ -411,7 +414,7 @@ const ProjectDetailPage = () => {
             title: "人物",
             valueType: "textarea",
             width: 100,
-            tooltip: '多个人物名称通过","拼接',
+            tooltip: '多个人物名称通过","拼接。会自动和loras列表中存在的lora关联到prompt中',
         },
         {
             dataIndex: "stableDiffusionImages",
@@ -428,9 +431,11 @@ const ProjectDetailPage = () => {
                                         return (
                                             <Radio key={file.id} value={file.id}>
                                                 <span
-                                                    className={"action-delete"} onClick={(e) => {
+                                                    className={"action-delete"} onClick={async (e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
+                                                        await stableDiffusionApi.stableDiffusionDeleteImage({ ids: [ file.id ] });
+                                                        await getProjectDetailConfig(state.id);
                                                     }}>
                                                     <CloseOutlined/>
                                                 </span>
@@ -555,20 +560,6 @@ const ProjectDetailPage = () => {
             render(text, record, _, action, s) {
                 return (
                     <Spin spinning={record.loading}>
-                        <Button danger type={"link"} onClick={() => onDetailProjectInfo(record.id)}>
-                            删除
-                        </Button>
-                        <Button
-                            type={"link"} onClick={async () => {
-                                changeInfoLoading(record.id, true);
-                                await createAudioSrt({
-                                    id: projectDetail?.id,
-                                    infoId: record.id
-                                });
-                                changeInfoLoading(record.id, false);
-                            }}>
-                            生成音频
-                        </Button>
                         <Button
                             type={"link"} onClick={() => {
                                 action?.startEditable?.(record.id);
@@ -577,6 +568,27 @@ const ProjectDetailPage = () => {
                         </Button>
                         <Button type={"link"} onClick={() => translatePrompt({ id: record?.id })}>
                             翻译
+                        </Button>
+                        <Button
+                            type={"link"} onClick={async () => {
+                                changeInfoLoading({
+                                    id: record.id
+                                }, true);
+                                await createAudioSrt({
+                                    id: projectDetail?.id,
+                                    infoId: record.id
+                                });
+                                changeInfoLoading({
+                                    id: record.id
+                                }, false);
+                            }}>
+                            生成音频
+                        </Button>
+                        <Button
+                            type={"link"} onClick={async () => {
+                                await text2imageBatchHandler(record);
+                            }}>
+                            生成图片
                         </Button>
                     </Spin>
                 );
@@ -604,234 +616,241 @@ const ProjectDetailPage = () => {
         <ProjectDetailPageWrap>
             {setModalContext}
             <audio ref={mp3Ref} style={{ display: "none" }}/>
-            <EditableProTable
-                loading={tableLoading}
-                rowKey={"id"}
-                editable={{
-                    onSave: async (_, data) => {
-                        await projectApi.updateProjectDetailInfo({
-                            ...data
-                        });
-                        openMessageBox({ type: "success", message: "保存成功" });
-                        await getProjectDetailConfig(state.id);
-                    },
-                }}
-                recordCreatorProps={false}
-                value={projectDetail?.infoList ?? []}
-                columns={columns}
-                virtual={true}
-                scroll={{ y: tableHeight, x: 400 }}
-                headerTitle={<div>
-                    <Button
-                        style={{ marginRight: "8px" }} onClick={() => {
-                            navigate("/");
-                        }}>返回</Button>
-                    {projectDetail?.fileName}
-                </div>}
-                pagination={false}
-                search={false}
-                toolBarRender={() => [
-                    <ModalForm
-                        key={"upload"}
-                        title="配置参数"
-                        trigger={
-                            <Button>上传文本</Button>
-                        }
-                        form={uploadForm}
-                        onFinish={onUploadOkHandler}
-                    >
-                        <ProFormSelect
-                            name={"saveType"}
-                            label="文件添加类型"
-                            placeholder="请选择添加类型"
-                            options={[
-                                {
-                                    value: "create",
-                                    label: "新增"
-                                },
-                                {
-                                    value: "update",
-                                    label: "覆盖"
-                                }
-                            ]}
-                            rules={[ { required: true, message: '请选择添加类型' } ]}
-                        />
-                        <ProFormSelect
-                            name={"whetherParticiple"}
-                            label="是否进行分词"
-                            placeholder="请选择是否进行分词"
-                            tooltip={"是则按照设置的长度进行分割，反之只是去除多余非正常字符"}
-                            options={[
-                                {
-                                    value: "no",
-                                    label: "否"
-                                },
-                                {
-                                    value: "yes",
-                                    label: "是"
-                                }
-                            ]}
-                            rules={[ { required: true, message: '请选择是否进行分词' } ]}
-                        />
-                        <ProFormUploadButton
-                            name={"files"}
-                            label="文件"
-                            accept={".txt"}
-                            fieldProps={{
-                                maxCount: 1,
-                                beforeUpload: () => false
-                            }}
-                            placeholder="文件"
-                            rules={[ { required: true, message: '请上传文本' } ]}
-                        />
-                    </ModalForm>,
-                    <Button key={"extract"} disabled={!projectDetail?.infoList?.length} onClick={extractTheRole}>
-                        角色提取
-                    </Button>,
-                    <Button key={"translate"} disabled={!projectDetail?.infoList?.length} onClick={() => translatePrompt({ projectDetailId: projectDetail?.id })}>
-                        翻译
-                    </Button>,
-                    <Button key={"audio"} disabled={!projectDetail?.infoList?.length} onClick={createAudioAndSrtHandler}>
-                        生成音频和字幕
-                    </Button>,
-                    <Button key={"stable-diffusion"} disabled={!projectDetail?.infoList?.length} onClick={text2imageHandler}>
-                        生成图片
-                    </Button>,
-                    <ModalForm
-                        key={"settings"}
-                        title="配置参数"
-                        trigger={
-                            <Tooltip title={"配置stable-diffusion请求参数"}>
-                                <SettingOutlined onClick={setStableDiffusionJson}/>
-                            </Tooltip>
-                        }
-                        form={form}
-                        onFinish={onSettingsOkHandler}
-                    >
-                        <ProForm.Group title={"分词配置"}>
-                            <ProFormDigit
-                                width="md"
-                                name={[ "participleConfig", "minWords" ]}
-                                label="最小文字数量"
-                                placeholder="请输入最小文字数量"
-                                min={10}
-                                rules={[ { required: true, message: '请输入最小文字数量' } ]}
-                            />
-
-                            <ProFormDigit
-                                width="md"
-                                name={[ "participleConfig", "maxWords" ]}
-                                label="最大文字数量"
-                                placeholder="请输入最大文字数量"
-                                min={10}
-                                rules={[ { required: true, message: '请输入最大文字数量' } ]}
-                            />
-                        </ProForm.Group>
-                        <ProForm.Group title={"音频设置"}>
-                            <ProFormDigit
-                                width="md"
-                                name={[ "audioConfig", "srtLimit" ]}
-                                label="字幕最大长度"
-                                placeholder="请输入最大文字数量"
-                                min={10}
-                            />
-                            <ProFormText
-                                width="md"
-                                name={[ "audioConfig", "rate" ]}
-                                label="音频语速"
-                                placeholder="请输入音频语速"
-                                tooltip={"格式为(+-)0%"}
-                            />
-                            <ProFormText
-                                width="md"
-                                name={[ "audioConfig", "volume" ]}
-                                label="音量"
-                                tooltip={"格式为(+-)0%"}
-                                placeholder="请输入音量"
-                            />
-                            <ProFormText
-                                width="md"
-                                name={[ "audioConfig", "pitch" ]}
-                                label="分贝"
-                                tooltip={"格式为(+-)0Hz"}
-                                placeholder="请输入分贝"
+            <Spin spinning={tableLoading}>
+                <EditableProTable
+                    rowKey={"id"}
+                    editable={{
+                        onDelete: async (_, data) => {
+                            await onDetailProjectInfo(data.id);
+                        },
+                        onSave: async (_, data) => {
+                            await projectApi.updateProjectDetailInfo({
+                                ...data
+                            });
+                            openMessageBox({ type: "success", message: "保存成功" });
+                            await getProjectDetailConfig(state.id);
+                        },
+                    }}
+                    recordCreatorProps={false}
+                    value={projectDetail?.infoList ?? []}
+                    columns={columns}
+                    virtual={true}
+                    scroll={{ y: tableHeight, x: 400 }}
+                    headerTitle={<div>
+                        <Button
+                            style={{ marginRight: "8px" }} onClick={() => {
+                                navigate("/");
+                            }}>返回</Button>
+                        {projectDetail?.fileName}
+                    </div>}
+                    pagination={false}
+                    search={false}
+                    toolBarRender={() => [
+                        <ModalForm
+                            key={"upload"}
+                            title="配置参数"
+                            trigger={
+                                <Button>上传文本</Button>
+                            }
+                            form={uploadForm}
+                            onFinish={onUploadOkHandler}
+                        >
+                            <ProFormSelect
+                                name={"saveType"}
+                                label="文件添加类型"
+                                placeholder="请选择添加类型"
+                                options={[
+                                    {
+                                        value: "create",
+                                        label: "新增"
+                                    },
+                                    {
+                                        value: "update",
+                                        label: "覆盖"
+                                    }
+                                ]}
+                                rules={[ { required: true, message: '请选择添加类型' } ]}
                             />
                             <ProFormSelect
-                                width="md"
-                                name={[ "audioConfig", "voice" ]}
-                                label="音频角色"
-                                placeholder="请选择音频角色"
-                                options={audioList}
+                                name={"whetherParticiple"}
+                                label="是否进行分词"
+                                placeholder="请选择是否进行分词"
+                                tooltip={"是则按照设置的长度进行分割，反之只是去除多余非正常字符"}
+                                options={[
+                                    {
+                                        value: "no",
+                                        label: "否"
+                                    },
+                                    {
+                                        value: "yes",
+                                        label: "是"
+                                    }
+                                ]}
+                                rules={[ { required: true, message: '请选择是否进行分词' } ]}
+                            />
+                            <ProFormUploadButton
+                                name={"files"}
+                                label="文件"
+                                accept={".txt"}
                                 fieldProps={{
-                                    optionRender(option) {
-                                        return (
-                                            <Space>
-                                                <div style={{ width: '265px', overflow: "hidden", textOverflow: "ellipsis" }}>
-                                                    {option.data.name + "-" + option.data.value}
-                                                </div>
-                                                {option.data.mp3 && <NotificationOutlined
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (mp3Ref.current) {
-                                                            mp3Ref.current.src = option.data.mp3;
-                                                            mp3Ref.current.play();
-                                                        }
-                                                    }}
-                                                />}
-                                            </Space>
-                                        );
-                                    }
+                                    maxCount: 1,
+                                    beforeUpload: () => false
                                 }}
+                                placeholder="文件"
+                                rules={[ { required: true, message: '请上传文本' } ]}
                             />
-                            <ProFormSelect
-                                width="md"
-                                name={"batchAudio"}
-                                label="全量替换音频"
-                                placeholder="请选择是否全量替换音频"
-                                rules={[ { required: true, message: '请选择是否全量替换音频' } ]}
-                                options={[
-                                    {
-                                        label: "是",
-                                        // @ts-ignore
-                                        value: true,
-                                    },
-                                    {
-                                        label: "否",
-                                        // @ts-ignore
-                                        value: false,
-                                    }
-                                ]}
+                        </ModalForm>,
+                        <Button key={"extract"} disabled={!projectDetail?.infoList?.length} onClick={extractTheRole}>
+                            角色提取
+                        </Button>,
+                        <Button key={"translate"} disabled={!projectDetail?.infoList?.length} onClick={() => translatePrompt({ projectDetailId: projectDetail?.id })}>
+                            翻译
+                        </Button>,
+                        <Button key={"audio"} disabled={!projectDetail?.infoList?.length} onClick={createAudioAndSrtHandler}>
+                            生成音频和字幕
+                        </Button>,
+                        <Button key={"stable-diffusion"} disabled={!projectDetail?.infoList?.length} onClick={() => text2imageBatchHandler()}>
+                            生成图片
+                        </Button>,
+                        <Button key={"video"} disabled={!projectDetail?.infoList?.length} onClick={() => text2imageBatchHandler()}>
+                            生成视频
+                        </Button>,
+                        <ModalForm
+                            key={"settings"}
+                            title="配置参数"
+                            trigger={
+                                <Tooltip title={"配置stable-diffusion请求参数"}>
+                                    <SettingOutlined onClick={setStableDiffusionJson}/>
+                                </Tooltip>
+                            }
+                            form={form}
+                            onFinish={onSettingsOkHandler}
+                        >
+                            <ProForm.Group title={"分词配置"}>
+                                <ProFormDigit
+                                    width="md"
+                                    name={[ "participleConfig", "minWords" ]}
+                                    label="最小文字数量"
+                                    placeholder="请输入最小文字数量"
+                                    min={10}
+                                    rules={[ { required: true, message: '请输入最小文字数量' } ]}
+                                />
+
+                                <ProFormDigit
+                                    width="md"
+                                    name={[ "participleConfig", "maxWords" ]}
+                                    label="最大文字数量"
+                                    placeholder="请输入最大文字数量"
+                                    min={10}
+                                    rules={[ { required: true, message: '请输入最大文字数量' } ]}
+                                />
+                            </ProForm.Group>
+                            <ProForm.Group title={"音频设置"}>
+                                <ProFormDigit
+                                    width="md"
+                                    name={[ "audioConfig", "srtLimit" ]}
+                                    label="字幕最大长度"
+                                    placeholder="请输入最大文字数量"
+                                    min={10}
+                                />
+                                <ProFormText
+                                    width="md"
+                                    name={[ "audioConfig", "rate" ]}
+                                    label="音频语速"
+                                    placeholder="请输入音频语速"
+                                    tooltip={"格式为(+-)0%"}
+                                />
+                                <ProFormText
+                                    width="md"
+                                    name={[ "audioConfig", "volume" ]}
+                                    label="音量"
+                                    tooltip={"格式为(+-)0%"}
+                                    placeholder="请输入音量"
+                                />
+                                <ProFormText
+                                    width="md"
+                                    name={[ "audioConfig", "pitch" ]}
+                                    label="分贝"
+                                    tooltip={"格式为(+-)0Hz"}
+                                    placeholder="请输入分贝"
+                                />
+                                <ProFormSelect
+                                    width="md"
+                                    name={[ "audioConfig", "voice" ]}
+                                    label="音频角色"
+                                    placeholder="请选择音频角色"
+                                    options={audioList}
+                                    fieldProps={{
+                                        optionRender(option) {
+                                            return (
+                                                <Space>
+                                                    <div style={{ width: '265px', overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                        {option.data.name + "-" + option.data.value}
+                                                    </div>
+                                                    {option.data.mp3 && <NotificationOutlined
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (mp3Ref.current) {
+                                                                mp3Ref.current.src = option.data.mp3;
+                                                                mp3Ref.current.play();
+                                                            }
+                                                        }}
+                                                    />}
+                                                </Space>
+                                            );
+                                        }
+                                    }}
+                                />
+                                <ProFormSelect
+                                    width="md"
+                                    name={"batchAudio"}
+                                    label="全量替换音频"
+                                    placeholder="请选择是否全量替换音频"
+                                    rules={[ { required: true, message: '请选择是否全量替换音频' } ]}
+                                    options={[
+                                        {
+                                            label: "是",
+                                            // @ts-ignore
+                                            value: true,
+                                        },
+                                        {
+                                            label: "否",
+                                            // @ts-ignore
+                                            value: false,
+                                        }
+                                    ]}
+                                />
+                                <ProFormSelect
+                                    width="md"
+                                    name={"breakAudio"}
+                                    label="是否跳过存在的音频"
+                                    placeholder="请选择是否跳过存在的音频"
+                                    rules={[ { required: true, message: '请选择是否跳过存在的音频' } ]}
+                                    options={[
+                                        {
+                                            label: "是",
+                                            // @ts-ignore
+                                            value: true,
+                                        },
+                                        {
+                                            label: "否",
+                                            // @ts-ignore
+                                            value: false,
+                                        }
+                                    ]}
+                                />
+                            </ProForm.Group>
+                            <Divider orientation="left">stable-diffusion配置</Divider>
+                            <VanillaUploadJson
+                                content={content}
+                                onChange={handleChange}
+                                onImportHandler={handleUpload}
+                                onExportHandler={handleDownload}
                             />
-                            <ProFormSelect
-                                width="md"
-                                name={"breakAudio"}
-                                label="是否跳过存在的音频"
-                                placeholder="请选择是否跳过存在的音频"
-                                rules={[ { required: true, message: '请选择是否跳过存在的音频' } ]}
-                                options={[
-                                    {
-                                        label: "是",
-                                        // @ts-ignore
-                                        value: true,
-                                    },
-                                    {
-                                        label: "否",
-                                        // @ts-ignore
-                                        value: false,
-                                    }
-                                ]}
-                            />
-                        </ProForm.Group>
-                        <Divider orientation="left">stable-diffusion配置</Divider>
-                        <VanillaUploadJson
-                            content={content}
-                            onChange={handleChange}
-                            onImportHandler={handleUpload}
-                            onExportHandler={handleDownload}
-                        />
-                    </ModalForm>
-                ]}
-            />
+                        </ModalForm>
+                    ]}
+                />
+            </Spin>
         </ProjectDetailPageWrap>
     );
 };

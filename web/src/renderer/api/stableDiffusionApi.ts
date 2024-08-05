@@ -27,11 +27,20 @@ export const createStableDiffusionLoras = (data: any) => {
 };
 
 export const stableDiffusionText2Image = (data: {
-    id: number;
+    ids: number[];
     projectDetailId?: number;
 }): Promise<string[]> => {
     return postApi({
         url: "/stableDiffusion/text2image",
+        data
+    });
+};
+
+export const stableDiffusionDeleteImage = (data: {
+    ids: number[];
+}): Promise<void> => {
+    return deleteApi({
+        url: "/stableDiffusion/deleteImage",
         data
     });
 };
