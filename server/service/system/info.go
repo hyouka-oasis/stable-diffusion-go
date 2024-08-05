@@ -1,7 +1,9 @@
 package system
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/example"
 	"github/stable-diffusion-go/server/model/system"
@@ -182,7 +184,31 @@ func (s *InfoService) CreateInfoVideo(infoParams request.InfoCreateVideoRequest)
 		if err != nil {
 			continue
 		}
-		err = source.DisposableSynthesisVideo(info)
+		stableDiffusionParams := map[string]interface{}{}
+		stableDiffusionRequest := map[string]interface{}{}
+		err = json.Unmarshal([]byte(projectDetail.StableDiffusionConfig), &stableDiffusionParams)
+		if err != nil {
+			continue
+		}
+		// 如果json解析成功则合并 Stable Diffusion 配置参数
+		for key, value := range stableDiffusionParams {
+			stableDiffusionRequest[key] = value
+		}
+		width := utils.GetInterfaceToInt(stableDiffusionRequest["width"])
+		height := utils.GetInterfaceToInt(stableDiffusionRequest["height"])
+		params := source.DisposableSynthesisVideoParams{
+			SavePath:                 savePath,
+			Info:                     info,
+			ExaFileUploadAndDownload: image,
+			Width:                    width,
+			Height:                   height,
+		}
+		params.Name = filename + "-" + strconv.Itoa(int(projectDetail.Id)) + "-" + strconv.Itoa(int(info.Id))
+		err = source.DisposableSynthesisVideo(params)
+		if err != nil {
+			fmt.Println(err.Error(), "生成视频错误")
+			continue
+		}
 	}
 	return err
 }

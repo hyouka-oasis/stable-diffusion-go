@@ -4,8 +4,5 @@
     "steps": 20,
     "cfg_scale": 7,
     "height": 960,
-    "width": 540,
-    "override_settings": {
-        "sd_model_checkpoint": "1.5_悬疑小说推文模型（限时下载）_V1.safetensors"
-    }
+    "width": 540
 }

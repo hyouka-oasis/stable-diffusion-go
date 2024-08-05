@@ -282,3 +282,30 @@ func CutPos(text string) string {
 	}
 	return character
 }
+
+// GetAudioSrtMap 获取字幕切片
+func GetAudioSrtMap(path string) (srtTime string, err error) {
+	// 指定的srt_map路径
+	file, err := os.Open(path)
+	if err != nil {
+		return srtTime, err
+	}
+	defer file.Close()
+	// 创建 scanner 读取文件内容
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// 去除方括号
+		line = strings.TrimPrefix(line, "[")
+		line = strings.TrimSuffix(line, "]")
+		srtTime = strings.TrimSpace(line)
+		if scannerError := scanner.Err(); scannerError != nil {
+			return srtTime, scannerError
+		}
+	}
+	// 检查是否有错误发生
+	if scannerErr := scanner.Err(); err != nil {
+		return srtTime, scannerErr
+	}
+	return srtTime, nil
+}
