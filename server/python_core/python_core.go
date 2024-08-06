@@ -1,12 +1,11 @@
 package python_core
 
 import (
-	"embed"
 	_ "embed"
 )
 
 //go:embed voice_caption.py
-var PythonVoiceCaptionPath embed.FS
+var PythonVoiceCaptionPath string
 
 //go:embed participle.py
 var PythonParticiplePythonPath string
