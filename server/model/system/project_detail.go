@@ -13,8 +13,9 @@ type ProjectDetail struct {
 	StableDiffusionConfig string           `json:"stableDiffusionConfig" gorm:"type:json;default:\"{\n  \"width\":512,\n  \"height\": 512\n}\""` // api调用参数
 	Language              string           `json:"language" gorm:"default:zh"`                                                                   //语言
 	AudioConfig           AudioConfig      `json:"audioConfig"`
-	BreakAudio            bool             `json:"breakAudio" gorm:"default:true"`  // 是否跳过存在的音频
-	BatchAudio            bool             `json:"batchAudio" gorm:"default:false"` // 是否全量替换音频配置
+	BreakAudio            bool             `json:"breakAudio" gorm:"default:true"`   // 是否跳过存在的音频
+	ConcatAudio           bool             `json:"concatAudio" gorm:"default:false"` // 是否合并音频
+	ConcatVideo           bool             `json:"concatVideo" gorm:"default:false"` // 是否合并视频
 }
 
 func (ProjectDetail) TableName() string {

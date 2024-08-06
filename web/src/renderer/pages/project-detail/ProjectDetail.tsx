@@ -1,10 +1,10 @@
 import { useLocation, useNavigate } from "react-router";
 import styled from "styled-components";
-import { Button, Divider, Form, Modal, Radio, Space, Spin, Tooltip, UploadProps } from "antd";
+import { Button, Divider, Form, Radio, Space, Spin, Tooltip, Upload, UploadProps } from "antd";
 import { useContext, useEffect, useRef, useState } from "react";
 import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect, ProFormText, ProFormUploadButton } from "@ant-design/pro-components";
 import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
-import { CloseOutlined, NotificationOutlined, SettingOutlined } from "@ant-design/icons";
+import { CloseOutlined, ExclamationOutlined, LoadingOutlined, NotificationOutlined, SettingOutlined } from "@ant-design/icons";
 import { Info, ProjectDetailResponse } from "renderer/api/response/projectResponse";
 import { stableDiffusionText2Image } from "renderer/api/stableDiffusionApi";
 import { blobToFile, dataURLtoBlob } from "renderer/utils/utils";
@@ -24,6 +24,10 @@ const ProjectDetailPageWrap = styled.div`
 `;
 
 const ImagesActionWrap = styled.div`
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
     .ant-radio-wrapper {
         position: relative;
 
@@ -59,7 +63,6 @@ const pitchRegex = /^[+]\d+Hz$/;
 const ProjectDetailPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [ modalApi, setModalContext ] = Modal.useModal();
     const [ form ] = Form.useForm();
     const [ currentAudioForm ] = Form.useForm();
     const [ uploadForm ] = Form.useForm();
@@ -71,34 +74,11 @@ const ProjectDetailPage = () => {
     const [ editThemeFormatRight, setEditThemeFormatRight ] = useState<boolean>(true);
     const [ tableHeight, setTableHeight ] = useState<number>(350);
     const [ tableLoading, setTableLoading ] = useState<boolean>(true);
+    const [ renderLoading, setRenderLoading ] = useState<boolean>(false);
     const { openMessageBox } = useContext(AppGlobalContext);
     const state = location.state;
     const mp3Ref = useRef<HTMLAudioElement | null>(null);
-
-    const changeInfoLoading = (idConfig: {
-        id?: number;
-        batch?: boolean;
-    }, loading: boolean) => {
-        setProjectDetail((detail) => {
-            if (!detail) return detail;
-            let infoList = detail?.infoList ?? [];
-            infoList = infoList.map(info => {
-                if (idConfig?.id) {
-                    if (info.id === idConfig?.id) {
-                        info.loading = loading;
-                    }
-                }
-                if (idConfig?.batch) {
-                    info.loading = loading;
-                }
-                return info;
-            });
-            return {
-                ...detail,
-                infoList: infoList
-            };
-        });
-    };
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     /**
      * 获取项目
@@ -113,8 +93,29 @@ const ProjectDetailPage = () => {
         form.setFieldsValue({
             ...detail,
         });
-        console.log(123);
         setTableLoading(false);
+    };
+    /**
+     * 启动查询任务
+     */
+    const removeInterval = () => {
+        if (!intervalRef.current) {
+            return;
+        }
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+    };
+    /**
+     * 启动查询任务
+     */
+    const startInterval = () => {
+        if (intervalRef.current) {
+            openMessageBox({ type: "warning", message: "有正在执行的任务，请稍后执行。" });
+            return;
+        }
+        intervalRef.current = setInterval(() => {
+            getProjectDetailConfig(state.id);
+        }, 1000);
     };
     /**
      * 项目详情配置
@@ -193,12 +194,9 @@ const ProjectDetailPage = () => {
         projectDetailId?: number;
     }) => {
         if (!projectDetail) return;
-        if (data.id) {
-            changeInfoLoading({
-                id: data.id
-            }, true);
-        }
+        setRenderLoading(true);
         await projectApi.translateProjectDetailParticipleList(data);
+        setRenderLoading(false);
         openMessageBox({ type: "success", message: "翻译成功" });
         await getProjectDetailConfig(state.id);
     };
@@ -242,6 +240,7 @@ const ProjectDetailPage = () => {
      */
     const text2imageBatchHandler = async (infoDetail?: Info) => {
         const handler = async (info: Info) => {
+            setRenderLoading(true);
             let selectedId: null | number = null;
             const stableDiffusionImages: Info["stableDiffusionImages"] = [];
             const images = await stableDiffusionText2Image({
@@ -278,30 +277,50 @@ const ProjectDetailPage = () => {
                 } : {}));
             }
             await getProjectDetailConfig(state.id);
+            setRenderLoading(false);
         };
         if (infoDetail) {
-            changeInfoLoading({ id: infoDetail.id }, true);
             await handler(infoDetail);
         } else {
             for (const info of (projectDetail?.infoList ?? [])) {
-                changeInfoLoading({ batch: true }, true);
                 await handler(info);
             }
         }
+    };
+    const text2imageHandler = async (file: RcFile, info: Info) => {
+        setRenderLoading(true);
+        const upload = await uploadFile({
+            file,
+            fileType: "stable-diffusion"
+        });
+        const data = {
+            projectDetailId: info.projectDetailId,
+            InfoId: info.id,
+            name: upload.name,
+            key: upload.key,
+            url: upload.url,
+            tag: upload.tag,
+            fileId: upload.id,
+        };
+        await stableDiffusionApi.addImage(data);
+        openMessageBox({ type: "success", message: "上传成功" });
+        setRenderLoading(false);
+        await getProjectDetailConfig(state.id);
+        return false;
     };
     /**
      * 生成视频
      */
     const createInfoVideo = async (id?: number) => {
         const ids = id ? [ id ] : [];
-        changeInfoLoading({ batch: true }, true);
         if (projectDetail) {
+            setRenderLoading(true);
             await projectApi.createInfoVideo({
                 ids,
                 projectDetailId: projectDetail?.id,
             });
+            setRenderLoading(false);
             openMessageBox({ type: "success", message: "生成成功" });
-            changeInfoLoading({ batch: true }, false);
         }
     };
     /**
@@ -320,13 +339,13 @@ const ProjectDetailPage = () => {
      * 生成音频和字幕
      */
     const createAudioAndSrtHandler = async () => {
-        changeInfoLoading({ batch: true }, true);
         if (projectDetail) {
+            setRenderLoading(true);
             await createAudioSrt({
                 id: projectDetail?.id
             });
+            setRenderLoading(false);
             openMessageBox({ type: "success", message: "生成成功" });
-            changeInfoLoading({ batch: true }, false);
         }
     };
 
@@ -421,13 +440,30 @@ const ProjectDetailPage = () => {
                                 }
                             </Space>
                         </Radio.Group>
+                        <Upload showUploadList={false} maxCount={1} accept={"image/*"} beforeUpload={(file) => text2imageHandler(file, record)}>
+                            <Button>上传图片</Button>
+                        </Upload>
                     </ImagesActionWrap>
                 );
             }
         },
         {
             dataIndex: "audioConfig",
-            title: "音频设置",
+            title: () => {
+                return (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span>音频设置</span>
+                        <Button
+                            type={"link"} onClick={async () => {
+                                setRenderLoading(true);
+                                await projectApi.updateAudio({ projectDetailId: projectDetail?.id });
+                                openMessageBox({ type: "success", message: "一键设置成功" });
+                                await getProjectDetailConfig(state.id);
+                                setRenderLoading(false);
+                            }}>一键设置</Button>
+                    </div>
+                );
+            },
             width: 300,
             editable: false,
             render(values, record) {
@@ -534,7 +570,7 @@ const ProjectDetailPage = () => {
             fixed: "right",
             render(text, record, _, action, s) {
                 return (
-                    <Spin spinning={record.loading}>
+                    <Spin spinning={false}>
                         <Button
                             type={"link"} onClick={() => {
                                 action?.startEditable?.(record.id);
@@ -546,16 +582,12 @@ const ProjectDetailPage = () => {
                         </Button>
                         <Button
                             type={"link"} onClick={async () => {
-                                changeInfoLoading({
-                                    id: record.id
-                                }, true);
+                                setRenderLoading(true);
                                 await createAudioSrt({
                                     id: projectDetail?.id,
                                     infoId: record.id
                                 });
-                                changeInfoLoading({
-                                    id: record.id
-                                }, false);
+                                setRenderLoading(false);
                             }}>
                             生成音频
                         </Button>
@@ -564,6 +596,12 @@ const ProjectDetailPage = () => {
                                 await text2imageBatchHandler(record);
                             }}>
                             生成图片
+                        </Button>
+                        <Button
+                            type={"link"} onClick={async () => {
+                                await createInfoVideo(record.id);
+                            }}>
+                            生成视频
                         </Button>
                     </Spin>
                 );
@@ -589,7 +627,6 @@ const ProjectDetailPage = () => {
 
     return (
         <ProjectDetailPageWrap>
-            {setModalContext}
             <audio ref={mp3Ref} style={{ display: "none" }}/>
             <Spin spinning={tableLoading}>
                 <EditableProTable
@@ -621,6 +658,14 @@ const ProjectDetailPage = () => {
                     pagination={false}
                     search={false}
                     toolBarRender={() => [
+                        <Tooltip key={"loading"} title={"生成状态中，建议不要点击修改操作。没有做这部分的处理。避免没必要的错误"}>
+                            {
+                                renderLoading && <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <Spin indicator={<LoadingOutlined spin/>} size={"small"}/>
+                                    <ExclamationOutlined/>
+                                </div>
+                            }
+                        </Tooltip>,
                         <ModalForm
                             key={"upload"}
                             title="配置参数"
@@ -779,10 +824,10 @@ const ProjectDetailPage = () => {
                                     />
                                     <ProFormSelect
                                         width="md"
-                                        name={"batchAudio"}
-                                        label="全量替换音频"
-                                        placeholder="请选择是否全量替换音频"
-                                        rules={[ { required: true, message: '请选择是否全量替换音频' } ]}
+                                        name={"breakAudio"}
+                                        label="是否跳过存在的音频"
+                                        placeholder="请选择是否跳过存在的音频"
+                                        rules={[ { required: true, message: '请选择是否跳过存在的音频' } ]}
                                         options={[
                                             {
                                                 label: "是",
@@ -798,10 +843,31 @@ const ProjectDetailPage = () => {
                                     />
                                     <ProFormSelect
                                         width="md"
-                                        name={"breakAudio"}
-                                        label="是否跳过存在的音频"
-                                        placeholder="请选择是否跳过存在的音频"
-                                        rules={[ { required: true, message: '请选择是否跳过存在的音频' } ]}
+                                        name={"concatAudio"}
+                                        tooltip={"当前版本不生效"}
+                                        label="合并音频"
+                                        placeholder="请选择是否合并音频"
+                                        rules={[ { required: true, message: '请选择是否合并音频' } ]}
+                                        options={[
+                                            {
+                                                label: "是",
+                                                // @ts-ignore
+                                                value: true,
+                                            },
+                                            {
+                                                label: "否",
+                                                // @ts-ignore
+                                                value: false,
+                                            }
+                                        ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"concatVideo"}
+                                        tooltip={"当前版本不生效"}
+                                        label="合并视频"
+                                        placeholder="请选择是否合并视频"
+                                        rules={[ { required: true, message: '请选择是否合并视频' } ]}
                                         options={[
                                             {
                                                 label: "是",

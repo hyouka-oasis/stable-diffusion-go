@@ -113,7 +113,7 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 		if err != nil {
 			return err
 		}
-		err = tx.Model(&system.ProjectDetail{}).Where("id = ?", config.Id).Update("break_audio", config.BreakAudio).Update("batch_audio", config.BatchAudio).Error
+		err = tx.Model(&system.ProjectDetail{}).Where("id = ?", config.Id).Update("break_audio", config.BreakAudio).Error
 		if err != nil {
 			return err
 		}
@@ -126,30 +126,11 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 		}
 		// 更新分词
 		if config.AudioConfig != (system.AudioConfig{}) {
-			if config.BatchAudio {
-				var infoList []system.Info
-				err = tx.Model(&system.Info{}).Where("project_detail_id = ?", config.Id).Find(&infoList).Error
-				if err != nil {
-					return err
-				}
-				err = tx.Model(&system.AudioConfig{}).Where("project_detail_id = ?", config.Id).Updates(&config.AudioConfig).Error
-				if err != nil {
-					return err
-				}
-				for _, info := range infoList {
-					err = tx.Model(&system.AudioConfig{}).Where("info_id = ?", info.Id).Updates(&config.AudioConfig).Error
-					if err != nil {
-						return err
-					}
-				}
-				return err
-			} else {
-				err = tx.Model(&system.AudioConfig{}).Where("project_detail_id = ?", config.Id).Updates(&config.AudioConfig).Error
-				if err != nil {
-					return err
-				}
+			err = tx.Model(&system.AudioConfig{}).Where("project_detail_id = ?", config.Id).Updates(&config.AudioConfig).Error
+			if err != nil {
 				return err
 			}
+			return err
 		}
 		return err
 	})

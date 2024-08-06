@@ -73,3 +73,11 @@ export const deleteNegativePrompt = (data: Partial<StableDiffusionNegativePrompt
         data
     });
 };
+
+
+export const addImage = (data: Partial<any>): Promise<void> => {
+    return postApi({
+        url: "/stableDiffusion/addImage",
+        data
+    });
+};

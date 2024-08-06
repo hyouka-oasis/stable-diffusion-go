@@ -31,6 +31,7 @@ export interface Info extends BasicResponse {
         volume: string;
         pitch: string;
     };
+    audioCreateStatus?: boolean;
     loading?: boolean;
 }
 

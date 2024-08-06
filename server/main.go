@@ -5,6 +5,7 @@ import (
 	"github/stable-diffusion-go/server/core"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/initialize"
+	"github/stable-diffusion-go/server/python_core"
 	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
 	"log"
@@ -105,6 +106,10 @@ func localStartMain() {
 }
 
 func main() {
+	// 获取 resources 目录下的所有文件
+	fmt.Println(python_core.PythonParticiplePythonPath)
+	//files, _ := python_core.PythonVoiceCaptionPath.ReadFile("voice_caption.py")
+	//fmt.Println(files, "files")
 	global.Viper = core.InitViper()
 	//localStartMain()
 	startGinServer()

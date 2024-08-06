@@ -38,10 +38,16 @@ func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest
 		}
 	}
 	for _, infoId := range params.Ids {
+		if err != nil {
+			continue
+		}
 		// 异步处理翻译
 		var info system.Info
 		// 查到单个的列表
 		err = global.DB.Model(&system.Info{}).Where("id = ?", infoId).Find(&info).Error
+		if err != nil {
+			continue
+		}
 		if info.Prompt == "" {
 			stableDiffusionRequest["prompt"] = info.Text
 		} else {
@@ -54,6 +60,7 @@ func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest
 		stableDiffusionImages, generateError := source.StableDiffusionGenerateImage(apiUrl, stableDiffusionRequest)
 		if generateError != nil {
 			err = generateError
+			continue
 		}
 		images = stableDiffusionImages
 	}
@@ -89,5 +96,11 @@ func (s *StableDiffusionService) DeleteStableDiffusionImage(params request.IdsRe
 			return err
 		}
 	}
+	return err
+}
+
+// AddStableDiffusionImage 添加图片
+func (s *StableDiffusionService) AddStableDiffusionImage(params system.StableDiffusionImages) error {
+	err := global.DB.Model(&system.StableDiffusionImages{}).Create(&params).Error
 	return err
 }

@@ -9,4 +9,5 @@ type RouterGroup struct {
 	StableDiffusionRouter
 	StableDiffusionNegativePromptRouter
 	AudioSrtRouter
+	VideoRouter
 }

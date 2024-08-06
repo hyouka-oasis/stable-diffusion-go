@@ -11,10 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
-type ProjectDetailInfoApi struct{}
+type InfoApi struct{}
 
 // DeleteInfo 删除单条记录
-func (s *ProjectDetailInfoApi) DeleteInfo(c *gin.Context) {
+func (s *InfoApi) DeleteInfo(c *gin.Context) {
 	var params request.ProjectDetailRequestParams
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
@@ -26,7 +26,7 @@ func (s *ProjectDetailInfoApi) DeleteInfo(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.DeleteInfo(params)
+	err = infoService.DeleteInfo(params)
 	if err != nil {
 		global.Log.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败", c)
@@ -36,7 +36,7 @@ func (s *ProjectDetailInfoApi) DeleteInfo(c *gin.Context) {
 }
 
 // UpdateInfo 更新单条记录
-func (s *ProjectDetailInfoApi) UpdateInfo(c *gin.Context) {
+func (s *InfoApi) UpdateInfo(c *gin.Context) {
 	var info system.Info
 	err := c.ShouldBindJSON(&info)
 	if err != nil {
@@ -48,7 +48,29 @@ func (s *ProjectDetailInfoApi) UpdateInfo(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.UpdateInfo(info)
+	err = infoService.UpdateInfo(info)
+	if err != nil {
+		global.Log.Error("更新失败!", zap.Error(err))
+		response.FailWithMessage("更新失败"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("更新成功", c)
+}
+
+// UpdateInfoAudioConfig 更新详情的音频
+func (s *InfoApi) UpdateInfoAudioConfig(c *gin.Context) {
+	var info system.AudioConfig
+	err := c.ShouldBindJSON(&info)
+	if err != nil {
+		response.FailWithMessage("请传入参数", c)
+		return
+	}
+	err = utils.Verify(info, utils.InfoCreateVideoParamsVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = infoService.UpdateInfoAudioConfig(info)
 	if err != nil {
 		global.Log.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败"+err.Error(), c)
@@ -58,7 +80,7 @@ func (s *ProjectDetailInfoApi) UpdateInfo(c *gin.Context) {
 }
 
 // GetInfo 获取单条记录
-func (s *ProjectDetailInfoApi) GetInfo(c *gin.Context) {
+func (s *InfoApi) GetInfo(c *gin.Context) {
 	var info system.Info
 	err := c.ShouldBindQuery(&info)
 	fmt.Println(info)
@@ -71,7 +93,7 @@ func (s *ProjectDetailInfoApi) GetInfo(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	res, err := projectDetailParticipleListService.GetInfo(info.Id)
+	res, err := infoService.GetInfo(info.Id)
 	if err != nil {
 		global.Log.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败", c)
@@ -81,7 +103,7 @@ func (s *ProjectDetailInfoApi) GetInfo(c *gin.Context) {
 }
 
 // ExtractTheInfoRole 提取角色
-func (s *ProjectDetailInfoApi) ExtractTheInfoRole(c *gin.Context) {
+func (s *InfoApi) ExtractTheInfoRole(c *gin.Context) {
 	var projectDetail system.ProjectDetail
 	err := c.ShouldBindJSON(&projectDetail)
 	if err != nil {
@@ -93,7 +115,7 @@ func (s *ProjectDetailInfoApi) ExtractTheInfoRole(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.ExtractTheInfoRole(projectDetail.Id)
+	err = infoService.ExtractTheInfoRole(projectDetail.Id)
 	if err != nil {
 		global.Log.Error("角色提取失败!", zap.Error(err))
 		response.FailWithMessage("角色提取失败", c)
@@ -103,7 +125,7 @@ func (s *ProjectDetailInfoApi) ExtractTheInfoRole(c *gin.Context) {
 }
 
 // TranslateInfoPrompt 进行翻译
-func (s *ProjectDetailInfoApi) TranslateInfoPrompt(c *gin.Context) {
+func (s *InfoApi) TranslateInfoPrompt(c *gin.Context) {
 	var infoParams system.Info
 	err := c.ShouldBindJSON(&infoParams)
 	if err != nil {
@@ -118,34 +140,12 @@ func (s *ProjectDetailInfoApi) TranslateInfoPrompt(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectDetailParticipleListService.TranslateInfoPrompt(system.Info{
+	err = infoService.TranslateInfoPrompt(system.Info{
 		ProjectDetailId: infoParams.ProjectDetailId,
 		Model: global.Model{
 			Id: infoParams.Id,
 		},
 	})
-	if err != nil {
-		global.Log.Error("翻译失败!", zap.Error(err))
-		response.FailWithMessage("翻译失败:"+err.Error(), c)
-		return
-	}
-	response.OkWithMessage("翻译成功", c)
-}
-
-// CreateInfoVideo 生成视频
-func (s *ProjectDetailInfoApi) CreateInfoVideo(c *gin.Context) {
-	var infoParams request.InfoCreateVideoRequest
-	err := c.ShouldBindJSON(&infoParams)
-	if err != nil {
-		response.FailWithMessage("请传入参数", c)
-		return
-	}
-	err = utils.Verify(infoParams, utils.InfoCreateVideoParamsVerify)
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-	err = projectDetailParticipleListService.CreateInfoVideo(infoParams)
 	if err != nil {
 		global.Log.Error("翻译失败!", zap.Error(err))
 		response.FailWithMessage("翻译失败:"+err.Error(), c)

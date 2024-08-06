@@ -32,8 +32,8 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		return errors.New("查找项目失败:" + err.Error())
 	}
 	var infoList []system.Info
-	if params.AudioConfig.InfoId != 0 {
-		err = global.DB.Preload("AudioConfig").Model(&system.Info{}).Where("id = ?", params.AudioConfig.InfoId).Find(&infoList).Error
+	if params.InfoId != 0 {
+		err = global.DB.Preload("AudioConfig").Model(&system.Info{}).Where("id = ?", params.InfoId).Find(&infoList).Error
 		if err != nil {
 			return errors.New("查找项目详情失败:" + err.Error())
 		}
@@ -50,9 +50,9 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		return errors.New("创建目录失败:" + err.Error())
 	}
 	for _, info := range infoList {
-		err = global.DB.Model(&info).Update("loading", true).Error
+		err = global.DB.Model(&info).Update("audio_create_status", false).Error
 		if err != nil {
-			return err
+			continue
 		}
 		savePath := path.Join(projectPath, strconv.Itoa(int(info.Id)))
 		var config source.AudioAndSrtParams
@@ -74,10 +74,16 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		}
 		config.Name = filename + "-" + strconv.Itoa(int(projectDetail.Id)) + "-" + strconv.Itoa(int(info.Id))
 		err = source.CreateAudioAndSrt(config)
-		err = global.DB.Model(&info).Update("loading", false).Error
+		err = global.DB.Model(&info).Update("audio_create_status", true).Error
 		if err != nil {
 			continue
 		}
 	}
+	// 只有合并音频和infoId不存在时代表生成全部音频
+	//if projectDetail.ConcatAudio && params.InfoId == 0 {
+	//	for _, info := range infoList {
+	//		var config source.AudioAndSrtParams
+	//	}
+	//}
 	return err
 }

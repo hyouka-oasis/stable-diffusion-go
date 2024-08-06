@@ -158,7 +158,9 @@ func maxLength(a, b int) int {
 // ExecCommand 异步执行cmd
 func ExecCommand(name string, args []string) error {
 	cmd := exec.Command(name, args...)
-	err := cmd.Start()
+	body, err := cmd.CombinedOutput()
+	fmt.Println(string(body))
+	err = cmd.Start()
 	if err != nil {
 		return errors.New("执行" + name + "start失败:" + err.Error())
 	}
@@ -166,7 +168,7 @@ func ExecCommand(name string, args []string) error {
 	if err != nil {
 		return errors.New("执行" + name + "wait失败:" + err.Error())
 	}
-	body, err := cmd.CombinedOutput()
+	body, err = cmd.CombinedOutput()
 	if string(body) != "" {
 		return errors.New("执行" + name + "combinedOutput失败:" + err.Error())
 	}

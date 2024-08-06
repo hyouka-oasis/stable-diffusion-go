@@ -1,6 +1,6 @@
 const PACKAGE_JSON_NAME = "stable-diffusion-client";
 
-const BUILDER_NAME = "FeelFreeClient";
+const BUILDER_NAME = "推文助手";
 
 const VERSION = "0.0.1";
 

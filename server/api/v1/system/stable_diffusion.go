@@ -5,6 +5,7 @@ import (
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/common/request"
 	"github/stable-diffusion-go/server/model/common/response"
+	"github/stable-diffusion-go/server/model/system"
 	systemRequest "github/stable-diffusion-go/server/model/system/request"
 	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
@@ -54,4 +55,26 @@ func (s *StableDiffusionApi) DeleteStableDiffusionImage(c *gin.Context) {
 		return
 	}
 	response.OkWithMessage("删除成功", c)
+}
+
+// AddStableDiffusionImage 添加图片
+func (s *StableDiffusionApi) AddStableDiffusionImage(c *gin.Context) {
+	var params system.StableDiffusionImages
+	err := c.ShouldBindJSON(&params)
+	if err != nil {
+		response.FailWithMessage("请传入参数", c)
+		return
+	}
+	err = utils.Verify(params, utils.AddStableDiffusionImageVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = stableDiffusionService.AddStableDiffusionImage(params)
+	if err != nil {
+		global.Log.Error("添加失败!", zap.Error(err))
+		response.FailWithMessage("添加失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("添加成功", c)
 }

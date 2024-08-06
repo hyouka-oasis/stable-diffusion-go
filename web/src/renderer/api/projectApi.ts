@@ -103,10 +103,16 @@ export const deleteInfo = (data: { id: number }) => {
         data
     });
 };
+export const updateAudio = (data: { projectDetailId?: number }) => {
+    return postApi({
+        url: "/info/updateAudio",
+        data
+    });
+};
 
 export const createInfoVideo = (data: { ids?: number[], projectDetailId: number }) => {
     return postApi({
-        url: "/info/createVideo",
+        url: "/video/create",
         data
     });
 };
