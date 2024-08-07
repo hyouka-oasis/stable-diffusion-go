@@ -11,3 +11,5 @@ tmp
 *.mp4
 *.db
 log
+*.exe
+*.db
