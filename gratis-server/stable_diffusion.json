@@ -1,0 +1,8 @@
+{
+    "seed": -1,
+    "batch_size": 1,
+    "steps": 20,
+    "cfg_scale": 7,
+    "height": 960,
+    "width": 540
+}
