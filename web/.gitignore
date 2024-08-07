@@ -25,6 +25,6 @@ npm-debug.log.*
 *.sass.d.ts
 *.scss.d.ts
 
-win/*
+win/
 mac/*
 
