@@ -9,14 +9,21 @@ import { BROWSER_WINDOW_KEY } from "./shared/ipcConst";
 import { BasicIpc } from "./ipc/basicIpc";
 import { error } from "./shared/debugLog";
 import { system } from "systeminformation";
+import GoServiceController from "./controllers/goServiceController";
 
 let mainWindow: BrowserWindow | null = null;
 let ipcHandler: BasicIpc | null = null;
+
+const goServiceController = new GoServiceController();
 
 if (isDebug) {
     require('electron-debug')();
     const sourceMapSupport = require('source-map-support');
     sourceMapSupport.install();
+}
+
+async function startGoService(): Promise<string | undefined> {
+    return await goServiceController.startGoProgram();
 }
 
 const createWindow = async () => {
@@ -26,6 +33,7 @@ const createWindow = async () => {
     if (app.isPackaged) {
         closeDevTools(mainWindow);
     }
+    const port = await startGoService();
 
     const getAssetPath = (...paths: string[]): string => join(resourcePath, ...paths);
     const mainBrowserWindowConfig: BrowserWindowConstructorOptions = ElectronBrowserWindowDefaultConfig.mainBrowserWindowConfig({ icon: getAssetPath("icon.png") });
@@ -67,15 +75,15 @@ app.on('window-all-closed', () => {
 
 const onWhenReady = () => {
     app.whenReady()
-       .then(async () => {
-           await createWindow();
-           app.on("activate", () => {
-               if (mainWindow === null) {
-                   createWindow();
-               }
-           });
-       })
-       .catch(error);
+        .then(async () => {
+            await createWindow();
+            app.on("activate", () => {
+                if (mainWindow === null) {
+                    createWindow();
+                }
+            });
+        })
+        .catch(error);
 };
 
 system().then(systemData => {

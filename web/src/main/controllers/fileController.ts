@@ -1,7 +1,9 @@
 import { BrowserWindow, dialog, OpenDialogReturnValue, shell } from "electron";
 import fs from "fs";
-import { error, log } from "../shared/debugLog";
+import { error, info, log } from "../shared/debugLog";
 import { FileFolderOptions } from "../../renderer/ipc/types";
+import { exec } from "child_process";
+import { BasicDirHelper } from "../shared/basicHelper";
 
 class FileController {
 
@@ -110,6 +112,121 @@ class FileController {
                 error(`读取失败信息:${constants} ${errorMessage}`);
                 reject(errorMessage);
             }
+        });
+    }
+
+    /**
+     * 授权文件
+     * @param directory
+     */
+    async execAuthorityFile(directory: string) {
+        return new Promise((resolve, reject) => {
+            const transformPath = BasicDirHelper.transformMacWindowPath(directory, process.platform == "win32");
+            exec(`chmod +x ${transformPath}`, (errorMessage) => {
+                if (errorMessage) {
+                    error("授权失败信息", errorMessage, `chmod +x ${transformPath}`);
+                    reject(errorMessage);
+                    return;
+                }
+                log("授权成功信息", `chmod +x ${transformPath}`);
+                resolve(true);
+            });
+        });
+    }
+
+    /**
+     * 校验文件
+     * @param filePath
+     * @param config
+     * 1. 校验文件是否存在，并且是否存在读写等权限
+     * 2. 如无权限则调用原生dialog
+     * 3. 通过用户选择去进行操作
+     */
+    staticCheckFilePermissions(filePath: string, config?: {
+        /**
+         * fs.constants 默认为是否可执行、是否可写、是否存在
+         */
+        fileConstants?: number;
+        /**
+         * 提示消息
+         */
+        messageBoxTitle?: string;
+        /**
+         * 提示type
+         */
+        messageBoxType?: Electron.MessageBoxOptions["type"];
+        /**
+         * 校验文件成功
+         * @param success
+         */
+        constantsSuccessCallback?(success?: boolean): void;
+        /**
+         * 校验文件失败
+         * @param error
+         */
+        constantsCatchCallback?(error?: string): void;
+        /**
+         * 弹窗事件
+         * @param confirm
+         * @param 1 拒绝
+         * @param 0 同意
+         */
+        messageBoxSuccessCallback?(confirm: number): void;
+        /**
+         * 弹窗错误处理
+         * @param error
+         */
+        messageBoxCatchCallback?(error?: string): void;
+    }) {
+        if (!filePath) {
+            error("当前文件路径不存在");
+            throw Error("当前文件路径不存在");
+        }
+        this.checkWritePermissions(filePath, config?.fileConstants ?? fs.constants.X_OK | fs.constants.R_OK | fs.constants.F_OK).then((success) => {
+            config?.constantsSuccessCallback?.(success);
+        }).catch((err) => {
+            config?.constantsCatchCallback?.();
+            error("当前启动程序没有执行权限", err);
+            // 没有权限的话让用户授权
+            dialog.showMessageBox({
+                type: config?.messageBoxType ?? "warning",
+                message: config?.messageBoxTitle ?? "软件正常运行需要同意相关授权,是否同意授权?",
+                buttons: [
+                    "是",
+                    "否"
+                ],
+                defaultId: 0,
+                cancelId: 1,
+            }).then((response) => {
+                config?.messageBoxSuccessCallback?.(response.response);
+            }).catch((e) => {
+                error("授权失败", e);
+                config?.messageBoxCatchCallback?.(e?.toString());
+                // 如果拒绝或者错误
+            });
+        });
+    }
+
+    /**
+     * 授权文件
+     * @param directory
+     */
+    async sudoAuthorityFile(directory: string) {
+        return new Promise((resolve, reject) => {
+            // 首先去校验当前文件是否存在
+            this.checkWritePermissions(directory, fs.constants.F_OK).then(() => {
+                // 如果文件存在则去校验是否存在可执行标志
+                this.checkWritePermissions(directory, fs.constants.X_OK).then(() => {
+                    // 如果存在并且存在执行标志
+                    info("当前存在执行标志的文件路径", directory);
+                    resolve(true);
+                }).catch(() => {
+                    this.execAuthorityFile(directory).then(resolve).catch(reject);
+                });
+            }).catch((errorMessage) => {
+                error("文件读取失败信息", errorMessage, "当前文件不存在");
+                reject(errorMessage);
+            });
         });
     }
 }

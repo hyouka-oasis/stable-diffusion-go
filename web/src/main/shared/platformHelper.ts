@@ -1,6 +1,27 @@
 const { platform, arch } = process;
 
 export class PlatformHelper {
+    static getGoServerName() {
+        if (platform === "win32") {
+            return "stable-diffusion-server.exe";
+        }
+        return "stable-diffusion-server";
+    }
+
+    static getInstructionSet() {
+        if (arch === "arm" || arch === "arm64") {
+            return "arm";
+        } else {
+            return "amd";
+        }
+    }
+
+    /**
+     * 获取平台操作系统的名称
+     * */
+    static getPlatformName(): NodeJS.Platform {
+        return platform;
+    }
 
     /**
      * 校验当前平台

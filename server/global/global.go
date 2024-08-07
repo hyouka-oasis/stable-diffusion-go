@@ -22,7 +22,6 @@ var (
 	BlackCache            local_cache.Cache
 	Seg                   gse.Segmenter
 	PosSeg                pos.Segmenter
-	new, _                = gse.New("zh,testdata/test_en_dict3.txt", "alpha")
 
 	OutPath            string                 // 输出的目录
 	OutImagesPath      string                 // 输出图片的路径

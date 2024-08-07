@@ -5,18 +5,29 @@ import (
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/initialize"
 	"go.uber.org/zap"
+	"net"
 )
 
 type server interface {
 	ListenAndServe() error
 }
 
+func getRandomPort() int {
+	// 使用 net.Listen 获取一个随机可用端口
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+	return listener.Addr().(*net.TCPAddr).Port
+}
+
 func RunServer() {
 	Router := initialize.Routers()
 	//Router.Static("/form-generator", "./resource/page")
-	address := fmt.Sprintf(":%d", global.Config.System.Addr)
+	address := fmt.Sprintf(":%d", getRandomPort())
 	s := initServer(address, Router)
-	global.Log.Info("server run success on ", zap.String("address", address))
+	global.Log.Info("Using port:", zap.String("address", address))
 	fmt.Printf(`
 	后端启动成功:http://127.0.0.1%s
 	`, address)
