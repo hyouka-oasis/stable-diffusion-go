@@ -4,8 +4,12 @@ import (
 	_ "embed"
 )
 
-//go:embed voice_caption.py
-var PythonVoiceCaptionPath string
-
-//go:embed participle.py
-var PythonParticiplePythonPath string
+var (
+	//go:embed requirements.txt
+	PythonRequirements string
+	//go:embed participle.py
+	PythonParticiplePythonPath string
+	//go:embed voice_caption.py
+	PythonVoiceCaptionPath string
+	PythonRequirementsName = "requirements.txt"
+)

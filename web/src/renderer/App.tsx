@@ -1,13 +1,14 @@
 import { Layout, Menu, message, notification, theme } from 'antd';
 import React, { Suspense, useEffect, useState } from 'react';
 import { Routes, useLocation, useNavigate } from 'react-router-dom';
-import { SettingOutlined, UserOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import { FormOutlined, QuestionOutlined, SettingOutlined, SignatureOutlined, TagOutlined } from "@ant-design/icons";
 import router from "renderer/router";
 import { ReactSmoothScrollbar } from "renderer/components/smooth-scroll/SmoothScroll";
 import { AppGlobalContext, MessageBoxConfigProps } from "renderer/shared/context/appGlobalContext";
 import NavigationBar from "renderer/components/navigation-bar/NavigationBar";
 import { navBarHeight } from "renderer/shared";
 import styled from "styled-components";
+import Donate from "renderer/components/donate/Donate";
 
 const { Content, Sider } = Layout;
 
@@ -129,28 +130,33 @@ export default function App() {
                             items={[
                                 {
                                     key: '/',
-                                    icon: <UserOutlined/>,
+                                    icon: <FormOutlined/>,
                                     label: '项目管理',
                                 },
                                 {
                                     key: '/loras',
-                                    icon: <VideoCameraOutlined/>,
+                                    icon: <TagOutlined/>,
                                     label: 'loras管理',
                                 },
                                 {
                                     key: '/negativePrompts',
-                                    icon: <VideoCameraOutlined/>,
+                                    icon: <SignatureOutlined/>,
                                     label: '通用反向提示词管理',
                                 },
-                                {
-                                    key: '/files',
-                                    icon: <VideoCameraOutlined/>,
-                                    label: '附件管理',
-                                },
+                                // {
+                                //     key: '/files',
+                                //     icon: <VideoCameraOutlined/>,
+                                //     label: '附件管理',
+                                // },
                                 {
                                     key: '/settings',
                                     icon: <SettingOutlined/>,
                                     label: '系统设置',
+                                },
+                                {
+                                    key: '/help',
+                                    icon: <QuestionOutlined/>,
+                                    label: '使用帮助',
                                 },
                             ]}
                         />
@@ -176,6 +182,7 @@ export default function App() {
                     </Layout>
                 </Layout>
             </AppWrapper>
+            <Donate/>
         </AppGlobalContext.Provider>
     );
 }

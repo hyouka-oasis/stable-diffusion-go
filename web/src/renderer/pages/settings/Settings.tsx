@@ -15,7 +15,7 @@ const translateConfigs = [
         value: "sd-prompt-translator",
     },
     {
-        label: "aliyun",
+        label: "阿里云",
         value: "aliyun",
     },
     {
@@ -104,6 +104,17 @@ const SettingsPage = () => {
                                         </Form.Item>
                                         <Form.Item rules={[ { required: true, message: '请输入ollama模型名称' } ]} name={[ "ollamaConfig", "modelName" ]} label={"ollama模型名称"}>
                                             <Input/>
+                                        </Form.Item>
+                                    </>
+                                );
+                            if (value === "aliyun")
+                                return (
+                                    <>
+                                        <Form.Item rules={[ { required: true, message: '请填写阿里云ACCESS_KEY_ID' } ]} name={[ "aliyunConfig", "keyId" ]} label={"ACCESS_KEY_ID"}>
+                                            <Input.Password visibilityToggle={false}/>
+                                        </Form.Item>
+                                        <Form.Item rules={[ { required: true, message: '请填写阿里云ACCESS_KEY_SECRET' } ]} name={[ "aliyunConfig", "keySecret" ]} label={"ACCESS_KEY_SECRET"}>
+                                            <Input.Password visibilityToggle={false}/>
                                         </Form.Item>
                                     </>
                                 );

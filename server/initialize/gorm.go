@@ -28,6 +28,7 @@ func RegisterTables() {
 		system.Settings{},
 		system.SettingsStableDiffusionConfig{},
 		system.SettingsOllamaConfig{},
+		system.SettingsAliyunConfig{},
 
 		example.ExaFile{},
 		example.ExaFileChunk{},

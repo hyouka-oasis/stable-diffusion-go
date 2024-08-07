@@ -460,6 +460,9 @@ async def create_voice_caption():
     await edge_tts_create_srt(audio_path, srt_tmp_path, voice, rate, volume, pitch)
     if language == "zh":
         await srt_regen_new(False)
+        #  删除其他生成文件
+        os.remove(vtt_path)
+        os.remove(srt_tmp_path)
     else:
         os.replace(srt_tmp_path, audio_srt_path)
     # 通过字幕生成时间表

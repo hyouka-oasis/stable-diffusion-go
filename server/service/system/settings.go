@@ -31,20 +31,12 @@ func (s *SettingsService) UpdateSettings(config system.Settings) (err error) {
 	if err != nil {
 		return err
 	}
-	err = global.DB.Model(&config.StableDiffusionConfig).Updates(&config.StableDiffusionConfig).Error
-	if err != nil {
-		return err
-	}
-	err = global.DB.Model(&config.OllamaConfig).Updates(&config.OllamaConfig).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // GetSettings 获取项目列表
 func (s *SettingsService) GetSettings() (settings system.Settings, err error) {
 	var config system.Settings
-	err = global.DB.Preload("StableDiffusionConfig").Preload("OllamaConfig").First(&config).Error
+	err = global.DB.Preload("StableDiffusionConfig").Preload("OllamaConfig").Preload("AliyunConfig").First(&config).Error
 	return config, err
 }

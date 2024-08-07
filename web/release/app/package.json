@@ -1,5 +1,5 @@
 {
-  "name": "electron-react-webpack",
+  "name": "stable-diffusion-client",
   "version": "0.0.1",
   "license": "MIT",
   "main": "./dist/main/main.js",

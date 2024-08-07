@@ -5,6 +5,7 @@ import (
 	"github/stable-diffusion-go/server/core"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/initialize"
+	"github/stable-diffusion-go/server/python_core"
 	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
 	"log"
@@ -105,6 +106,21 @@ func localStartMain() {
 }
 
 func main() {
+	// 1. 创建python所需依赖
+	_, err := os.Stat(python_core.PythonRequirementsName)
+	if err != nil {
+		file, createError := os.Create(python_core.PythonRequirementsName)
+		if createError != nil {
+			global.Log.Error("创建require失败")
+			panic(createError.Error())
+		}
+		defer file.Close()
+		_, err = file.WriteString(python_core.PythonRequirements) // 写入内容
+		if err != nil {
+			global.Log.Error("创建require失败文件失败")
+			panic(createError.Error())
+		}
+	}
 	global.Viper = core.InitViper()
 	//localStartMain()
 	startGinServer()

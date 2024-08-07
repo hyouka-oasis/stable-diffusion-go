@@ -11,6 +11,7 @@ import (
 	"github/stable-diffusion-go/server/source"
 	"github/stable-diffusion-go/server/utils"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -35,7 +36,7 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 		return errors.New("查找项目失败:" + err.Error())
 	}
 	filename := strings.TrimSuffix(projectDetail.FileName, path.Ext(projectDetail.FileName))
-	projectPath := path.Join(settings.SavePath, project.Name, filename)
+	projectPath := path.Join(settings.SavePath, project.Name+"-"+strconv.Itoa(int(project.Id)), filename)
 	err = utils.EnsureDirectory(projectPath)
 	if err != nil {
 		return err
@@ -56,11 +57,12 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 			return nil
 		}
 	}
-	for _, info := range infoList {
+	var videoList []string
+	for index, info := range infoList {
 		if info.StableDiffusionImageId == 0 {
 			continue
 		}
-		savePath := path.Join(projectPath, strconv.Itoa(int(info.Id)))
+		savePath := path.Join(projectPath, strconv.Itoa(index+1))
 		err = utils.EnsureDirectory(savePath)
 		if err != nil {
 			continue
@@ -89,12 +91,16 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 			Width:                    width,
 			Height:                   height,
 		}
-		params.Name = filename + "-" + strconv.Itoa(int(projectDetail.Id)) + "-" + strconv.Itoa(int(info.Id))
+		params.Name = filename + "-" + strconv.Itoa(index+1)
 		err = source.DisposableSynthesisVideo(params)
 		if err != nil {
 			fmt.Println(err.Error(), "生成视频错误")
 			continue
 		}
+		videoList = append(videoList, filepath.Join(savePath, params.Name+".mp4"))
 	}
+	//if projectDetail.ConcatVideo {
+	//
+	//}
 	return err
 }

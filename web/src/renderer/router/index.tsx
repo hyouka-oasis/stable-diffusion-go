@@ -7,6 +7,7 @@ const ProjectDetailPage = lazy(() => import("renderer/pages/project-detail/Proje
 const FilesPage = lazy(() => import("renderer/pages/file/File"));
 const SettingsPage = lazy(() => import("renderer/pages/settings/Settings"));
 const NegativePromptsPage = lazy(() => import("renderer/pages/negative-prompts/NegativePrompts"));
+const HelpPage = lazy(() => import("renderer/pages/help/Help"));
 
 
 export const routeRender = (routeList: any[]) => {
@@ -49,6 +50,10 @@ const routers = [
     {
         path: "/settings",
         element: <SettingsPage/>,
+    },
+    {
+        path: "/help",
+        element: <HelpPage/>,
     },
 ];
 

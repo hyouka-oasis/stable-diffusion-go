@@ -33,7 +33,7 @@ func startCmd(projectDetail system.ProjectDetail, whetherParticiple string) erro
 		return err
 	}
 	bookPath := global.Config.Local.Path + "/" + projectDetail.FileName
-	outParticipleBookPathBookPath := global.Config.Local.Path + "/" + "participleBook.txt"
+	outParticipleBookPathBookPath := global.Config.Local.Path + "/" + global.ParticipleBookName
 	maxWords := projectDetail.ParticipleConfig.MaxWords
 	minWords := projectDetail.ParticipleConfig.MinWords
 	_, err = tmpFile.Write([]byte(python_core.PythonParticiplePythonPath))

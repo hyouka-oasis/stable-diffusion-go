@@ -44,17 +44,17 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		}
 	}
 	filename := strings.TrimSuffix(projectDetail.FileName, path.Ext(projectDetail.FileName))
-	projectPath := path.Join(settings.SavePath, project.Name, filename)
+	projectPath := path.Join(settings.SavePath, project.Name+"-"+strconv.Itoa(int(project.Id)), filename)
 	err = utils.EnsureDirectory(projectPath)
 	if err != nil {
 		return errors.New("创建目录失败:" + err.Error())
 	}
-	for _, info := range infoList {
+	for index, info := range infoList {
 		err = global.DB.Model(&info).Update("audio_create_status", false).Error
 		if err != nil {
 			continue
 		}
-		savePath := path.Join(projectPath, strconv.Itoa(int(info.Id)))
+		savePath := path.Join(projectPath, strconv.Itoa(index+1))
 		var config source.AudioAndSrtParams
 		config.SavePath = savePath
 		config.Language = projectDetail.Language
@@ -72,7 +72,7 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		} else {
 			config.AudioConfig = info.AudioConfig
 		}
-		config.Name = filename + "-" + strconv.Itoa(int(projectDetail.Id)) + "-" + strconv.Itoa(int(info.Id))
+		config.Name = filename + "-" + strconv.Itoa(index+1)
 		err = source.CreateAudioAndSrt(config)
 		err = global.DB.Model(&info).Update("audio_create_status", true).Error
 		if err != nil {

@@ -24,9 +24,10 @@ var (
 	PosSeg                pos.Segmenter
 	new, _                = gse.New("zh,testdata/test_en_dict3.txt", "alpha")
 
-	OutPath         string // 输出的目录
-	OutImagesPath   string // 输出图片的路径
-	OutBookJsonPath string // 输出的prompt路径
+	OutPath            string                 // 输出的目录
+	OutImagesPath      string                 // 输出图片的路径
+	OutBookJsonPath    string                 // 输出的prompt路径
+	ParticipleBookName = "participleBook.txt" //分词后的文件
 )
 
 // 音频字幕类型

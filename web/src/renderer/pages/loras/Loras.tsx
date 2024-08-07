@@ -22,17 +22,22 @@ const LorasPage = () => {
         let fileId;
         if (values.file) {
             const file = await uploadFile({
-                file: values.file?.[0]?.originFileObj as RcFile
+                file: values.file?.[0]?.originFileObj as RcFile,
+                fileType: "lora"
             });
             fileId = file.id;
             await createStableDiffusionLoras({
                 imageId: fileId,
                 ...args,
             });
+            await getLorasList();
+            return true;
         } else {
             await createStableDiffusionLoras({
                 ...args,
             });
+            await getLorasList();
+            return true;
         }
     };
 
@@ -69,28 +74,12 @@ const LorasPage = () => {
             dataIndex: "url",
             title: "图片",
             render(value) {
-                return <img style={{
-                    width: "100px",
-                    height: "100px"
-                }} src={`${baseURL}/${value}`}/>;
-            }
-        },
-        {
-            dataIndex: "action",
-            title: "操作",
-            align: "center",
-            width: 200,
-            render() {
-                return (
-                    <Button.Group>
-                        <Button>
-                            修改
-                        </Button>
-                        <Button danger>
-                            删除
-                        </Button>
-                    </Button.Group>
-                );
+                return <img
+                    style={{
+                        width: "100px",
+                        height: "100px"
+                    }} src={`${baseURL}/${value}`}
+                />;
             }
         },
     ];

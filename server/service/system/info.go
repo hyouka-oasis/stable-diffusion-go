@@ -86,7 +86,7 @@ func (s *InfoService) ExtractTheInfoRole(id uint) error {
 func (s *InfoService) TranslateInfoPrompt(infoParams system.Info) error {
 	var infoList []system.Info
 	var currentSettings system.Settings
-	err := global.DB.Model(&system.Settings{}).Preload("OllamaConfig").First(&currentSettings).Error
+	err := global.DB.Model(&system.Settings{}).Preload("OllamaConfig").Preload("AliyunConfig").First(&currentSettings).Error
 	if err != nil {
 		return errors.New("请先初始化配置")
 	}
@@ -109,6 +109,9 @@ func (s *InfoService) TranslateInfoPrompt(infoParams system.Info) error {
 			}
 			lorasText := ""
 			for _, lora := range loras {
+				if info.Role == "" {
+					continue
+				}
 				if strings.Contains(lora.Roles, info.Role) {
 					lorasText += lora.Name + ","
 				}
@@ -120,11 +123,13 @@ func (s *InfoService) TranslateInfoPrompt(infoParams system.Info) error {
 			}
 		}
 		return nil
-	}
-	if currentSettings.TranslateType == "ollama" {
+	} else if currentSettings.TranslateType == "ollama" {
 		for _, info := range infoList {
 			lorasText := ""
 			for _, lora := range loras {
+				if info.Role == "" {
+					continue
+				}
 				if strings.Contains(lora.Roles, info.Role) {
 					lorasText += lora.Name + ","
 				}
@@ -141,6 +146,30 @@ func (s *InfoService) TranslateInfoPrompt(infoParams system.Info) error {
 			}
 		}
 		return err
+	} else if currentSettings.TranslateType == "aliyun" {
+		for _, info := range infoList {
+			lorasText := ""
+			for _, lora := range loras {
+				if info.Role == "" {
+					continue
+				}
+				if strings.Contains(lora.Roles, info.Role) {
+					lorasText += lora.Name + ","
+				}
+			}
+			prompt, _ := source.TranslateAliyun(info.Text, currentSettings.AliyunConfig)
+			if lorasText != "" {
+				info.Prompt = prompt + "," + lorasText
+			} else {
+				info.Prompt = prompt
+			}
+			err = global.DB.Model(&info).Update("prompt", info.Prompt).Error
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		return errors.New("请选择正确的翻译配置")
 	}
 	return err
 }

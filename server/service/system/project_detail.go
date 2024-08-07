@@ -52,7 +52,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 		}
 	}
 	filePath := global.Config.Local.Path + "/" + file.Filename
-	outParticipleBookPathBookPath := global.Config.Local.Path + "/" + "participleBook.txt"
+	outParticipleBookPathBookPath := global.Config.Local.Path + "/" + global.ParticipleBookName
 	err = utils.UploadFileToLocal(file, filePath)
 	if err != nil {
 		return errors.New("处理文件失败:" + err.Error())
@@ -96,6 +96,8 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 	if err != nil {
 		return errors.New("更新音频配置失败:" + err.Error())
 	}
+	os.Remove(filePath)
+	os.Remove(outParticipleBookPathBookPath)
 	return err
 }
 
