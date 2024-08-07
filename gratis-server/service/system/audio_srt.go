@@ -77,11 +77,5 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 			continue
 		}
 	}
-	// 只有合并音频和infoId不存在时代表生成全部音频
-	//if projectDetail.ConcatAudio && params.InfoId == 0 {
-	//	for _, info := range infoList {
-	//		var config source.AudioAndSrtParams
-	//	}
-	//}
 	return err
 }

@@ -2,8 +2,8 @@ package source
 
 import (
 	"fmt"
-	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
+	"github/stable-diffusion-go/server/python_core"
 	"github/stable-diffusion-go/server/utils"
 	"os"
 	"path"
@@ -28,7 +28,11 @@ func windowCmdArgsConversion(value string) string {
 }
 
 func CreateAudioAndSrt(config AudioAndSrtParams) error {
-	voiceCaptionPythonPath := global.VoiceCaptionPath
+	tmpFile, err := os.CreateTemp(".", "participle-*.py")
+	if err != nil {
+		fmt.Println("创建python文件失败:", err)
+		return err
+	}
 	voice := config.Voice
 	rate := config.Rate
 	volume := config.Volume
@@ -37,14 +41,19 @@ func CreateAudioAndSrt(config AudioAndSrtParams) error {
 	audioPath := path.Join(config.SavePath, config.Name+".mp3")
 	audioSrtPath := path.Join(config.SavePath, config.Name+".srt")
 	audioSrtMapPath := path.Join(config.SavePath, config.Name+"map.txt")
-	_, err := os.Stat(audioPath)
+	_, err = os.Stat(audioPath)
 	// 如果跳过，并且文件存在
 	if config.BreakAudio && err == nil {
 		return nil
 	}
+	_, err = tmpFile.Write([]byte(python_core.PythonVoiceCaptionPath))
+	if err != nil {
+		fmt.Println("写入python内容失败", err)
+		return err
+	}
 	//filepath := path.Join(global.Config.Local.StorePath, "participleBook.txt")
 	args := []string{
-		voiceCaptionPythonPath,
+		tmpFile.Name(),
 		"--content", config.Content,
 		"--participle_book_path", "",
 		"--audi_srt_map_path", audioSrtMapPath,
