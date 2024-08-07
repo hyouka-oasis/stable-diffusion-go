@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { app, BrowserWindow, BrowserWindowConstructorOptions, dialog, shell } from 'electron';
 import { isDebug, resolveHtmlPath } from './util';
-import { closedBrowserWindowHandler, closeDevTools, readyToShowBrowserWindowHandler } from "./shared/electronFormalHelper";
+import { closedBrowserWindowHandler, closeDevTools, killRelaunchServer, readyToShowBrowserWindowHandler } from "./shared/electronFormalHelper";
 import { resourcePath } from "./shared/pathHelper";
 import { ElectronBrowserWindowDefaultConfig } from "./shared/browserWindowConfigUtils";
 import browserWindowHelp from "./shared/browserWindowHelp";
@@ -10,6 +10,7 @@ import { BasicIpc } from "./ipc/basicIpc";
 import { error } from "./shared/debugLog";
 import { system } from "systeminformation";
 import GoServiceController from "./controllers/goServiceController";
+import { ProcessHelper } from "./shared/processHelper";
 
 let mainWindow: BrowserWindow | null = null;
 let ipcHandler: BasicIpc | null = null;
@@ -33,9 +34,16 @@ const createWindow = async () => {
     if (app.isPackaged) {
         closeDevTools(mainWindow);
     }
-    const port = await startGoService();
-
+    const pids = ProcessHelper.getOasisServerPids();
     const getAssetPath = (...paths: string[]): string => join(resourcePath, ...paths);
+    const port = await startGoService();
+    if (!port || (pids && pids.length && app.isPackaged)) {
+        error("go启动出现了问题, 不允许被启动", port, pids);
+        killRelaunchServer({
+            icon: getAssetPath("icon.png"),
+        });
+        return;
+    }
     const mainBrowserWindowConfig: BrowserWindowConstructorOptions = ElectronBrowserWindowDefaultConfig.mainBrowserWindowConfig({ icon: getAssetPath("icon.png") });
     mainWindow = browserWindowHelp.initBrowserWindow(BROWSER_WINDOW_KEY.MAIN_BROWSER, mainBrowserWindowConfig);
     // 一定得确保在browserWindow后初始化IPC以确保拿到正确的browserWindow
@@ -49,12 +57,12 @@ const createWindow = async () => {
      * 显示的时候处理
      */
     readyToShowBrowserWindowHandler(mainWindow, (mainWindow) => {
-        mainWindow?.webContents.send("SERVER_PORT", 8889);
+        mainWindow?.webContents.send("SERVER_PORT", port);
     });
     /**
      * 在app准备完成并且加载完file的时候发送给渲染进程
      */
-    mainWindow?.webContents.send("SERVER_PORT", 8889);
+    mainWindow?.webContents.send("SERVER_PORT", port);
 
     await mainWindow?.loadURL(webRenderPath);
 
@@ -65,6 +73,9 @@ const createWindow = async () => {
 };
 
 app.on("quit", () => {
+    if (goServiceController) {
+        goServiceController.endGoProgram();
+    }
     ipcHandler?.replace();
     browserWindowHelp?.destroyBrowserWindow();
 });

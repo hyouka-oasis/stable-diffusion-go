@@ -1,7 +1,7 @@
 const { BUILDER_NAME } = require("./system-config");
 const basicBuilderConfig = {
     "productName": BUILDER_NAME,
-    "appId": "com.hyouka.stale.diffusion",
+    "appId": "com.hyouka.stable.diffusion",
     "asar": true,
     "files": [
         "dist",

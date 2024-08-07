@@ -13,21 +13,18 @@ import TerserPlugin from 'terser-webpack-plugin';
 import baseConfig from './webpack.config.base';
 import webpackPaths from './webpack.paths';
 import checkNodeEnv from '../scripts/check-node-env';
-import deleteSourceMaps from '../scripts/delete-source-maps';
 import webpackConfigLoader from './webpack.config.loader';
 
 checkNodeEnv('production');
-
-deleteSourceMaps();
 
 const configuration: webpack.Configuration = {
     devtool: 'source-map',
 
     mode: 'production',
 
-    target: ['web', 'electron-renderer'],
+    target: [ 'web', 'electron-renderer' ],
 
-    entry: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
+    entry: [ path.join(webpackPaths.srcRendererPath, 'index.tsx') ],
 
     output: {
         path: webpackPaths.distRendererPath,

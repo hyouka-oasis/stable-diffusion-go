@@ -50,7 +50,6 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		return errors.New("创建目录失败:" + err.Error())
 	}
 	for index, info := range infoList {
-		err = global.DB.Model(&info).Update("audio_create_status", false).Error
 		if err != nil {
 			continue
 		}
@@ -74,7 +73,6 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 		}
 		config.Name = filename + "-" + strconv.Itoa(index+1)
 		err = source.CreateAudioAndSrt(config)
-		err = global.DB.Model(&info).Update("audio_create_status", true).Error
 		if err != nil {
 			continue
 		}

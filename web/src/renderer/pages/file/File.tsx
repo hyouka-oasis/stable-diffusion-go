@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "antd";
 import { getFileList } from "renderer/api/fileApi";
 import { LorasResponse } from "renderer/api/response/lorasResponse";
-import { baseURL } from "renderer/request/request";
+import { host } from "renderer/request/request";
 
 const FilePageWrap = styled.div`
 `;
@@ -41,10 +41,14 @@ const FilePage = () => {
             dataIndex: "url",
             title: "图片",
             render(value) {
-                return <img style={{
-                    width: "100px",
-                    height: "100px"
-                }} src={`${baseURL}/${value}`}/>;
+                return (
+                    <img
+                        style={{
+                            width: "100px",
+                            height: "100px"
+                        }}
+                        src={`${host()}/${value}`}></img>
+                );
             }
         },
         {

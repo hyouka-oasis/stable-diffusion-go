@@ -14,6 +14,7 @@ type ApiGroup struct {
 	StableDiffusionNegativePromptApi
 	AudioSrtApi
 	VideoApi
+	BasicApi
 }
 
 var (

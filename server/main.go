@@ -57,9 +57,14 @@ func batchGoRun(bookName string) {
 }
 
 func startGinServer() {
+	err := utils.EnsureDirectory(global.Config.Local.StorePath)
+	if err != nil {
+		panic("创建目录失败:" + err.Error())
+	}
+	port := core.GetRandomPort()
+	fmt.Println("Using port:", port, "...")
 	// 加载默认词典
 	global.Seg.LoadDict()
-	core.InitGlobalConfig("")
 	global.Log = core.Zap() // 初始化zap日志库
 	zap.ReplaceGlobals(global.Log)
 	global.DB = initialize.Gorm() // gorm连接数据库
@@ -69,7 +74,7 @@ func startGinServer() {
 		db, _ := global.DB.DB()
 		defer db.Close()
 	}
-	core.RunServer()
+	core.RunServer(port)
 }
 
 func localStartMain() {

@@ -9,4 +9,10 @@
 <body>
 <div id="root"></div>
 </body>
+<script>
+    const { ipcRenderer } = window.electron;
+    ipcRenderer.on('SERVER_PORT', (port) => {
+        window['server_port'] = port;
+    });
+</script>
 </html>

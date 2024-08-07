@@ -6,7 +6,7 @@ import { RcFile } from "antd/lib/upload";
 import { LorasResponse } from "renderer/api/response/lorasResponse";
 import { uploadFile } from "renderer/api/fileApi";
 import { createStableDiffusionLoras, getStableDiffusionLorasList } from "renderer/api/stableDiffusionApi";
-import { baseURL } from "renderer/request/request";
+import { host } from "renderer/request/request";
 
 const LorasWrap = styled.div`
 `;
@@ -78,7 +78,7 @@ const LorasPage = () => {
                     style={{
                         width: "100px",
                         height: "100px"
-                    }} src={`${baseURL}/${value}`}
+                    }} src={`${host()}/${value}`}
                 />;
             }
         },

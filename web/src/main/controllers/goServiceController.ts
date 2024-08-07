@@ -1,7 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { PlatformHelper } from "../shared/PlatformHelper";
 import { join } from "path";
-import { app } from "electron";
+import { app, net } from "electron";
 import fileController from "../controllers/FileController";
 import FileController from "../controllers/FileController";
 import sudo from "../shared/super";
@@ -126,7 +126,7 @@ class GoServiceController {
                 "后端端口地址": goPortPath,
             });
             const child_process = this.spawnEncapsulation(goServicePath, isWindow);
-            log(child_process.pid, "进程pid1");
+            log(child_process.pid, "进程pid");
             this.goChildProcess = child_process;
             child_process.stdout?.on("error", (data) => {
                 this.structReset();
@@ -136,14 +136,12 @@ class GoServiceController {
             child_process.stdout?.on("data", (data) => {
                 const reg = "Using port:(.*?)\\.\\.\\.";
                 const res = data.toString().trim().match(reg);
-                // mainWindow?.webContents.executeJavaScript("alert('成功启动go')");
                 if (res?.[1]) {
-                    // mainWindow?.webContents.executeJavaScript("alert('存在端口')");
                     FileHelper.createFile(goPortPath, JSON.stringify({
-                        port: res?.[1]
+                        port: res?.[1]?.trim()
                     }));
-                    this.serverPort = res?.[1];
-                    resolve(res?.[1]);
+                    this.serverPort = res?.[1]?.trim();
+                    resolve(res?.[1]?.trim());
                 }
                 log(data.toString().trim());
             });
@@ -172,7 +170,7 @@ class GoServiceController {
         if (this.goChildProcess && this.serverPort) {
             const goChildProcess = this.goChildProcess;
             const port = this.serverPort;
-            // net.fetch(`http://127.0.0.1:${port}/api/system/exit`);
+            net.fetch(`http://127.0.0.1:${port}/basic/exit`);
             goChildProcess.stdin.end(() => {
                 log("终止程序");
             });

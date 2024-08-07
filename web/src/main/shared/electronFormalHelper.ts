@@ -1,4 +1,6 @@
-import { BrowserWindow } from "electron";
+import { app, BrowserWindow, dialog } from "electron";
+import { ProcessHelper } from "../shared/processHelper";
+import { error, log } from "../shared/debugLog";
 
 /**
  * 不允许打开devtools
@@ -56,5 +58,41 @@ export const readyToShowBrowserWindowHandler = (mainWindow: BrowserWindow | null
             }
         }
         callback?.(mainWindow);
+    });
+};
+
+interface KillRelaunchServerServer {
+    /**
+     * 展示图标
+     */
+    icon?: string;
+}
+
+/**
+ * 异常状态杀死
+ */
+export const killRelaunchServer = (options?: KillRelaunchServerServer) => {
+    dialog.showMessageBox({
+        message: "客户端启动失败，请尝试重新启动客户端。",
+        buttons: [ "退出程序", "重新启动" ],
+        icon: options?.icon,
+    }).then(response => {
+        const pids = ProcessHelper.getOasisServerPids();
+        if (!pids) {
+            error("关闭进程失败", pids);
+        } else {
+            ProcessHelper.killProgramByPid(pids);
+            log("拿到的所有pid进程", pids);
+        }
+        if (response?.response === 0) {
+            app.quit();
+        }
+        if (response?.response === 1) {
+            app.relaunch();
+            app.quit();
+        }
+    }).catch(err => {
+        app.quit();
+        error(err, "启动错误后用户手动行为");
     });
 };
