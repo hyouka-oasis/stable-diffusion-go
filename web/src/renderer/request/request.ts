@@ -1,11 +1,32 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { message } from "antd";
+import { getQueryData } from "renderer/shared/basic/urlHelper";
 
-const baseURL = 'http://127.0.0.1:8889';
+export const getServerPort = (isDebug?: boolean) => {
+    if (isDebug) {
+        return "8881";
+    }
+    const urlPort = getQueryData()?.["server_port"];
+    if (urlPort) {
+        return urlPort.replace(/[^0-9]/g, "");
+    }
+    if (window["server_port"]) {
+        return window["server_port"];
+    }
+};
+
+export const host = (customPort?: string) => {
+    const port = customPort ?? getServerPort();
+    if (process.env.NODE_ENV === "development") {
+        return `http://localhost:${port}`;
+    }
+    return `http://127.0.0.1:${port}`;
+};
+
 
 // 1. 创建axios实例
 const instance = axios.create({
-    baseURL: baseURL,
+    baseURL: host(),
     // timeout: 5000,// 请求超时时间
     headers: { //设置请求头
         "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
@@ -147,5 +168,4 @@ export {
     getApi,
     deleteApi,
     postFormApi,
-    baseURL
 };

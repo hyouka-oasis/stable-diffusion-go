@@ -10,7 +10,7 @@ import { stableDiffusionText2Image } from "renderer/api/stableDiffusionApi";
 import { blobToFile, dataURLtoBlob } from "renderer/utils/utils";
 import { uploadFile } from "renderer/api/fileApi";
 import { createAudioSrt } from "renderer/api/audioSrtApi";
-import { baseURL } from "renderer/request/request";
+import { host } from "renderer/request/request";
 import { audioList } from "renderer/utils/audio-list";
 import VanillaUploadJson from "renderer/components/json-edit/VanillaUploadJson";
 import { projectApi, stableDiffusionApi } from "renderer/api";
@@ -433,7 +433,7 @@ const ProjectDetailPage = () => {
                                                     }}>
                                                     <CloseOutlined/>
                                                 </span>
-                                                <img width={150} src={`${baseURL}/${file?.url}`} alt=""/>
+                                                <img width={150} src={`${host()}/${file?.url}`} alt=""/>
                                             </Radio>
                                         );
                                     })
