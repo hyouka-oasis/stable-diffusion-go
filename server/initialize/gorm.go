@@ -24,6 +24,7 @@ func RegisterTables() {
 		system.ParticipleConfig{},
 		system.Info{},
 		system.AudioConfig{},
+		system.VideoConfig{},
 		// 系统配置表
 		system.Settings{},
 		system.SettingsStableDiffusionConfig{},

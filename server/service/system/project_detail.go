@@ -7,6 +7,7 @@ import (
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
 	"github/stable-diffusion-go/server/model/system/request"
+	"github/stable-diffusion-go/server/python_core"
 	"github/stable-diffusion-go/server/source"
 	"github/stable-diffusion-go/server/utils"
 	"gorm.io/gorm"
@@ -18,7 +19,19 @@ type ProjectDetailService struct{}
 
 // UploadProjectDetailFile 上传文件并且处理分词
 func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.FileHeader, saveType string, whetherParticiple string) (err error) {
-	if saveType != "create" && saveType != "push" {
+	tmpFile, err := os.CreateTemp(".", "participle-*.py")
+	if err != nil {
+		fmt.Println("创建python文件失败:", err)
+		return err
+	}
+	_, err = tmpFile.Write([]byte(python_core.PythonParticiplePythonPath))
+	if err != nil {
+		fmt.Println("写入python内容失败", err)
+		return err
+	}
+	defer tmpFile.Close()
+	defer os.Remove(tmpFile.Name())
+	if saveType != "create" && saveType != "update" {
 		return errors.New("请选择需要创建还是覆盖")
 	}
 	var projectDetail system.ProjectDetail
@@ -57,7 +70,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 	if err != nil {
 		return errors.New("处理文件失败:" + err.Error())
 	}
-	splitTextError := source.SplitText(projectDetail, whetherParticiple)
+	splitTextError := source.SplitText(projectDetail, whetherParticiple, tmpFile.Name())
 	if splitTextError != nil {
 		return errors.New("进行分词失败:" + splitTextError.Error())
 	}
@@ -103,7 +116,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 
 // GetProjectDetail 获取项目详情
 func (s *ProjectDetailService) GetProjectDetail(config system.ProjectDetail) (detail system.ProjectDetail, err error) {
-	err = global.DB.Preload("ParticipleConfig").Preload("AudioConfig").Preload("InfoList").Preload("InfoList.StableDiffusionImages").Preload("InfoList.AudioConfig").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
+	err = global.DB.Preload("VideoConfig").Preload("ParticipleConfig").Preload("AudioConfig").Preload("InfoList").Preload("InfoList.StableDiffusionImages").Preload("InfoList.AudioConfig").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
 	return
 }
 
@@ -115,7 +128,7 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 		if err != nil {
 			return err
 		}
-		err = tx.Model(&system.ProjectDetail{}).Where("id = ?", config.Id).Update("break_audio", config.BreakAudio).Error
+		err = tx.Model(&system.ProjectDetail{}).Where("id = ?", config.Id).Update("open_subtitles", config.OpenSubtitles).Update("break_audio", config.BreakAudio).Update("break_video", config.BreakVideo).Update("concat_audio", config.ConcatAudio).Update("concat_video", config.ConcatVideo).Error
 		if err != nil {
 			return err
 		}

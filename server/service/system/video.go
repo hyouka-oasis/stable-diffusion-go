@@ -26,7 +26,7 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 		return errors.New("请先初始化配置")
 	}
 	var projectDetail system.ProjectDetail
-	err = global.DB.Model(&system.ProjectDetail{}).First(&projectDetail, "id = ?", infoParams.ProjectDetailId).Error
+	err = global.DB.Model(&system.ProjectDetail{}).Preload("VideoConfig").First(&projectDetail, "id = ?", infoParams.ProjectDetailId).Error
 	if err != nil {
 		return errors.New("查找项目详情失败:" + err.Error())
 	}
@@ -58,6 +58,7 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 		}
 	}
 	var videoList []string
+	var videoSubtitleList []string
 	for index, info := range infoList {
 		if info.StableDiffusionImageId == 0 {
 			continue
@@ -90,17 +91,34 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 			ExaFileUploadAndDownload: image,
 			Width:                    width,
 			Height:                   height,
+			BreakVideo:               projectDetail.BreakVideo,
+			OpenSubtitles:            projectDetail.OpenSubtitles,
+			VideoConfig:              projectDetail.VideoConfig,
 		}
 		params.Name = filename + "-" + strconv.Itoa(index+1)
+		params.VideoPath = filepath.Join(savePath, params.Name+".mp4")
+		params.VideoSubtitlePath = filepath.Join(params.SavePath, params.Name+"subtitle.mp4")
 		err = source.DisposableSynthesisVideo(params)
 		if err != nil {
 			fmt.Println(err.Error(), "生成视频错误")
 			continue
 		}
-		videoList = append(videoList, filepath.Join(savePath, params.Name+".mp4"))
+		videoList = append(videoList, params.VideoPath)
+		videoSubtitleList = append(videoSubtitleList, params.VideoSubtitlePath)
 	}
-	//if projectDetail.ConcatVideo {
-	//
-	//}
+	if projectDetail.ConcatVideo && len(infoParams.Ids) == 0 {
+		outVideoPath := path.Join(projectPath, filename+".mp4")
+		err = source.MergeVideoList(videoList, outVideoPath)
+		if err != nil {
+			return err
+		}
+		if projectDetail.OpenSubtitles {
+			outVideoSubtitlePath := path.Join(projectPath, filename+"subtitle.mp4")
+			err = source.MergeVideoList(videoSubtitleList, outVideoSubtitlePath)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return err
 }

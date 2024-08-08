@@ -1,21 +1,32 @@
 package source
 
 import (
-	"bufio"
+	"errors"
 	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/example"
 	"github/stable-diffusion-go/server/model/system"
 	"github/stable-diffusion-go/server/utils"
-	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 )
+
+type DisposableSynthesisVideoParams struct {
+	system.Info
+	system.VideoConfig
+	example.ExaFileUploadAndDownload
+	SavePath          string
+	VideoPath         string
+	VideoSubtitlePath string
+	Width             int
+	Height            int
+	BreakVideo        bool // 是否跳过存在的音频
+	OpenSubtitles     bool // 是否开启字幕
+}
 
 func windowCmdArgsConversionPath(path string) (string, error) {
 	var absPath string
@@ -34,63 +45,6 @@ func windowCmdArgsConversionPath(path string) (string, error) {
 		return absPath, err
 	}
 	return path, nil
-}
-
-// 获取字幕切片
-func getAudioSrtMap() (audioSrtMap []string, err error) {
-	// 指定的srt_map路径
-	txtFilePath := global.CatchMergeConfig.AudioSrtMapPath
-
-	file, err := os.Open(txtFilePath)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	defer file.Close()
-
-	// 创建 scanner 读取文件内容
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		// 去除方括号
-		line = strings.TrimPrefix(line, "[")
-		line = strings.TrimSuffix(line, "]")
-		// 使用 strconv.Unquote 解析字符串
-		parts := strings.Split(line, ",")
-		for _, part := range parts {
-			audioSrtMap = append(audioSrtMap, strings.TrimSpace(part))
-		}
-		if scannerError := scanner.Err(); scannerError != nil {
-			fmt.Println("解析字符串失败:", scannerError)
-			return
-		}
-	}
-
-	// 检查是否有错误发生
-	if scannerErr := scanner.Err(); err != nil {
-		fmt.Println("读取文件内容失败:", scannerErr)
-		return
-	}
-
-	return audioSrtMap, nil
-}
-
-// 获取图片列表
-func getImagesMap() (picturePathList []string, err error) {
-	imagesPath := global.OutImagesPath
-	picturePathList, err = utils.GetPicturePaths(imagesPath, ".png")
-	if err != nil {
-		log.Fatalln("获取文件目录失败")
-		return nil, err
-	}
-	// 对文件路径列表按照文件名中的数字大小进行排序
-	sort.Slice(picturePathList, func(i, j int) bool {
-		iNum, _ := utils.ExtractNumber(picturePathList[i], ".png")
-		jNum, _ := utils.ExtractNumber(picturePathList[j], ".png")
-		return iNum < jNum
-	})
-	return picturePathList, nil
 }
 
 // 转换字幕时间为float
@@ -117,49 +71,6 @@ func convertTimeToSeconds(timeStr string) (float64, error) {
 	totalSeconds := float64(hours*3600+minutes*60) + seconds + milliseconds/1000
 
 	return totalSeconds, nil
-}
-
-// 合并视频
-func splicingVideo(catchVideoList []string) error {
-	audioPath := global.OutAudioPath
-	videoPath := global.OutVideoName
-	// 打开一个文件用于写入
-	file, err := os.Create(global.CatchMergeConfig.VideoCatchTxtPath)
-	if err != nil {
-		fmt.Println("打开文件失败:", err)
-		return err
-	}
-	defer file.Close()
-
-	for _, video := range catchVideoList {
-		_, err := fmt.Fprintln(file, "file "+"'"+video+"'")
-		if err != nil {
-			fmt.Println("写入文件失败:", err)
-			return err
-		}
-	}
-	fmt.Println("开始合成视频")
-	args := []string{
-		"-y",
-		"-f",
-		"concat",
-		"-safe",
-		"0",
-		"-i",
-		global.CatchMergeConfig.VideoCatchTxtPath,
-		"-i",
-		audioPath,
-		"-vsync",
-		"cfr",
-		"-pix_fmt",
-		"yuv420p",
-		videoPath,
-	}
-	err = utils.ExecCommand("ffmpeg", args)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // 创建单个视频
@@ -229,7 +140,7 @@ func createSubtitleVideo(srtPath string, videoPath string, subtitleVideoName str
 	fontColor := global.Config.Video.FontColor
 	fontPosition := global.Config.Video.Position
 	audioSrtPath := srtPath
-	subtitleStyle := "FontName=" + fontName + "," + "Fontsize=" + fontSize + "," + "PrimaryColour=&H" + fontColor + "," + "Alignment=" + fontPosition + "WrapStyle=0"
+	subtitleStyle := "FontName=" + fontName + "," + "StrokeColor=&HFFFFFF" + "StrokeWidth=2" + "Kerning=1.6" + "Fontsize=" + fontSize + "," + "PrimaryColour=&H" + fontColor + "," + "Alignment=" + fontPosition + "WrapStyle=0"
 	subtitleVideoName, err := windowCmdArgsConversionPath(subtitleVideoName)
 	if err != nil {
 		fmt.Println("Error getting relative out path:", err)
@@ -262,19 +173,31 @@ func createSubtitleVideo(srtPath string, videoPath string, subtitleVideoName str
 	return nil
 }
 
-type DisposableSynthesisVideoParams struct {
-	system.Info
-	example.ExaFileUploadAndDownload
-	SavePath string
-	Width    int
-	Height   int
-}
-
 // DisposableSynthesisVideo 生成视频
 func DisposableSynthesisVideo(params DisposableSynthesisVideoParams) (err error) {
 	_, err = os.Stat(params.Url)
 	if err != nil {
 		return err
+	}
+	videoPath := params.VideoPath
+	videoSubtitlePath := params.VideoSubtitlePath
+	_, videoPathError := os.Stat(videoPath)
+	_, videoSubtitlePathError := os.Stat(videoSubtitlePath)
+	// 如果跳过存在视频
+	if params.BreakVideo {
+		// 如果开启字幕
+		if params.OpenSubtitles {
+			if videoPathError == nil && videoSubtitlePathError == nil {
+				return nil
+			} else {
+				return errors.New(params.VideoPath + "或者" + params.VideoSubtitlePath + "丢失")
+			}
+		}
+		if videoPathError == nil {
+			return nil
+		} else {
+			return errors.New(params.VideoPath + "丢失")
+		}
 	}
 	srtMapPath := filepath.Join(params.SavePath, params.Name+"map.txt")
 	_, err = os.Stat(srtMapPath)
@@ -304,27 +227,54 @@ func DisposableSynthesisVideo(params DisposableSynthesisVideoParams) (err error)
 	if durationErr != nil {
 		return durationErr
 	}
-	videoPath := filepath.Join(params.SavePath, params.Name+".mp4")
 	err = createAnimatedSegment(params.Url, duration, selectedAnimation, videoPath, audioPath, params.Width, params.Height)
 	if err != nil {
 		return err
 	}
-	videoSubtitlePath := filepath.Join(params.SavePath, params.Name+"subtitle.mp4")
-	err = createSubtitleVideo(srtPath, videoPath, videoSubtitlePath)
+	if params.OpenSubtitles {
+		err = createSubtitleVideo(srtPath, videoPath, videoSubtitlePath)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+// MergeVideoList 合并带字幕和不带字幕的视频
+func MergeVideoList(videoList []string, outVideoPath string) error {
+	if len(videoList) == 0 {
+		return nil
+	}
+	// 构建 ffmpeg 命令
+	var inputArgs []string
+	for _, path := range videoList {
+		inputArgs = append(inputArgs, "-i", path)
+	}
+	filterComplexArgs := make([]string, 0, len(videoList)+1)
+	for i := 0; i < len(videoList); i++ {
+		filterComplexArgs = append(filterComplexArgs, fmt.Sprintf("[%d:v]", i), fmt.Sprintf("[%d:a]", i))
+	}
+	filterComplexArgs = append(filterComplexArgs, fmt.Sprintf("concat=n=%d:v=1:a=1[outVideo][outAudio]", len(videoList)))
+
+	outputArgs := []string{
+		"-filter_complex",
+		strings.Join(filterComplexArgs, ""),
+		"-map",
+		"[outVideo]",
+		"-map",
+		"[outAudio]",
+		"-c:v",
+		"libx264",
+		"-crf",
+		"23",
+		"-y",
+		outVideoPath,
+	}
+	args := append(inputArgs, outputArgs...)
+	err := utils.ExecCommand("ffmpeg", args)
 	if err != nil {
 		return err
 	}
-	//err = splicingVideo(catchVideoList)
-	//if err != nil {
-	//	return err
-	//}
-	//subtitles := global.Config.Video.Subtitles
-	//if subtitles {
-	//	err = createSubtitleVideo()
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-	//return err
-	return nil
+	fmt.Println("合并视频完成")
+	return err
 }

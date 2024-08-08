@@ -68,11 +68,9 @@ async def participle(book_path: str, out_book_path: str):
 
 async def main():
     book_path = args.book_path
-    # book_path = "F:\\stable-diffusion-go\\server\\uploads\\file\\读心术.txt"
     if book_path is None:
         raise Exception("源文件路径不能为空")
     participle_book_path = args.participle_book_path
-    # participle_book_path = "F:\\stable-diffusion-go\\server\\uploads\\file\\participleBook.txt"
     if participle_book_path is None:
         raise Exception("输出路径不能为空")
     await participle(book_path, participle_book_path)
@@ -87,9 +85,7 @@ if __name__ == "__main__":
     parser.add_argument("--min_words", help="最大长度")
     parser.add_argument("--whether_participle", help="是否进行分词")
     args = parser.parse_args()
-    # min_words = 30
     min_words = 30 if args.min_words is None else int(args.min_words)
     max_words = 30 if args.max_words is None else int(args.max_words)
     whether_participle = "yes" if args.whether_participle is None else args.whether_participle
-    # max_words = 30
     asyncio.run(main())

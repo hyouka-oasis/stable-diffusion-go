@@ -46,6 +46,14 @@ func (s *ProjectService) CreateProject(config system.Project) (err error) {
 		if err != nil {
 			return err
 		}
+		videoConfig := system.VideoConfig{
+			ProjectDetailId: projectDetail.Id,
+		}
+		// 同时创建项目详情分词
+		err = tx.Create(&videoConfig).Error
+		if err != nil {
+			return err
+		}
 		return err
 	})
 }

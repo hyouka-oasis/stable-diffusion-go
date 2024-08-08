@@ -62,6 +62,9 @@ class GoServiceController {
      * 1.校验go启动程序是否有执行权限如果没有则让用户授权
      */
     startGoProgram(): Promise<string> {
+        if (!app.isPackaged) {
+            return Promise.resolve("8889");
+        }
         const goServicePath = ProjectDirHelper.getGoServicePath();
         return new Promise((resolve, reject) => {
             fileController.staticCheckFilePermissions(goServicePath, {

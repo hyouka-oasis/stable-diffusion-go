@@ -1,5 +1,3 @@
-import ast
-
 import edge_tts
 import argparse
 import asyncio
@@ -470,17 +468,6 @@ async def create_voice_caption():
 
 
 if __name__ == "__main__":
-    # audio_srt_path = "D:\\ComicTweetsGo\\server\\神秘复苏2-10\\participle\\test.wav"
-    # participle_book_path = "../测试/participle/神秘复苏.txt"
-    # audi_srt_map_path = "../测试/participle/神秘复苏time.txt"
-    # asyncio.run(map3_to_srt(audio_srt_path))
-
-    # audio_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.mp3"
-    # participle_book_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.txt"
-    # audi_srt_map_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\神秘复苏16map.txt"
-    # audio_srt_path = "F:\\stable-diffusion-go\\server\\神秘复苏16\\participle\\神秘复苏16.srt"
-    # voice, rate, volume, pitch, language, limit = "zh-CN-YunxiNeural", "+10%", "+100%", "+0Hz", "zh", 10
-    # asyncio.run(create_processing_time(audio_srt_path, participle_book_path, audi_srt_map_path))
     parser = argparse.ArgumentParser()
     # 从go那边获取过来的文本路径
     parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
@@ -495,22 +482,15 @@ if __name__ == "__main__":
     parser.add_argument("--language", help="语言")
     parser.add_argument("--limit", help="每一行限制最大数")
     args = parser.parse_args()
-    participle_book_path = args.participle_book_path
-    if participle_book_path is None:
-        raise Exception("输出路径不能为空")
-    # audi_srt_map_path = "F:\\stable-diffusion-go\\server\\测试\\测试map.txt"
     audi_srt_map_path = args.audi_srt_map_path
     if audi_srt_map_path is None:
         raise Exception("字幕切片文本路径不能为空")
-    # audio_path = "F:\\stable-diffusion-go\\server\\测试\\participle\\测试.mp3"
     audio_path = args.audio_path
     if audio_path is None:
         raise Exception("音频输出路径不能为空")
-    # audio_srt_path = "F:\\stable-diffusion-go\\server\\测试\\participle\\测试.srt"
     audio_srt_path = args.audio_srt_path
     if audio_srt_path is None:
         raise Exception("字幕输出路径不能为空")
-    # participle_book_path, text_content, voice, rate, volume, pitch, language, limit = "" if args.participle_book_path is None else args.participle_book_path, "一场意外获得了读心术，我激动得要告诉全家人。" if args.content is None else args.content, "zh-CN-YunxiNeural", "+30%", "+100%", "+0Hz", "zh", 10
     participle_book_path, text_content, voice, rate, volume, pitch, language, limit = "" if args.participle_book_path is None else args.participle_book_path, "" if args.content is None else args.content, args.voice, args.rate, args.volume, args.pitch, args.language, int(args.limit)
     vtt_path = audio_srt_path.replace(".srt", ".vtt")
     srt_tmp_path = audio_srt_path.replace(".srt", ".tmp.srt")
