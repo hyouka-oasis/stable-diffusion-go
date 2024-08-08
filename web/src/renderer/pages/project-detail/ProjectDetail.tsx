@@ -957,99 +957,99 @@ const ProjectDetailPage = () => {
                                         placeholder="请填写字幕大小"
                                         rules={[ { required: false, message: '请填写字幕大小' } ]}
                                     />
-                                    <ProFormSelect
-                                        width="md"
-                                        name={"breakVideo"}
-                                        label="是否跳过存在的视频"
-                                        placeholder="请选择是否跳过存在的视频"
-                                        rules={[ { required: false, message: '请选择是否跳过存在的视频' } ]}
-                                        options={[
-                                            {
-                                                label: "是",
-                                                // @ts-ignore
-                                                value: true,
-                                            },
-                                            {
-                                                label: "否",
-                                                // @ts-ignore
-                                                value: false,
-                                            }
-                                        ]}
-                                    />
-                                    <ProFormSelect
-                                        width="md"
-                                        name={"concatAudio"}
-                                        label="合并音频"
-                                        placeholder="请选择是否合并音频"
-                                        rules={[ { required: false, message: '请选择是否合并音频' } ]}
-                                        options={[
-                                            {
-                                                label: "是",
-                                                // @ts-ignore
-                                                value: true,
-                                            },
-                                            {
-                                                label: "否",
-                                                // @ts-ignore
-                                                value: false,
-                                            }
-                                        ]}
-                                    />
-                                    <ProFormSelect
-                                        width="md"
-                                        name={"concatVideo"}
-                                        label="合并视频"
-                                        placeholder="请选择是否合并视频"
-                                        rules={[ { required: false, message: '请选择是否合并视频' } ]}
-                                        options={[
-                                            {
-                                                label: "是",
-                                                // @ts-ignore
-                                                value: true,
-                                            },
-                                            {
-                                                label: "否",
-                                                // @ts-ignore
-                                                value: false,
-                                            }
-                                        ]}
-                                    />
-                                    <ProFormSelect
-                                        width="md"
-                                        name={"openSubtitles"}
-                                        label="开启字幕"
-                                        placeholder="请选择是否开启字幕"
-                                        rules={[ { required: false, message: '请选择是否开启字幕' } ]}
-                                        options={[
-                                            {
-                                                label: "是",
-                                                // @ts-ignore
-                                                value: true,
-                                            },
-                                            {
-                                                label: "否",
-                                                // @ts-ignore
-                                                value: false,
-                                            }
-                                        ]}
-                                    />
-                                    <ProFormSelect
-                                        width="md"
-                                        name={"language"}
-                                        label="语言设置"
-                                        placeholder="请选择语言"
-                                        options={[
-                                            {
-                                                value: "zh",
-                                                label: "中文"
-                                            },
-                                            {
-                                                value: "en",
-                                                label: "英语"
-                                            }
-                                        ]}
-                                        rules={[ { required: false, message: '请选择语言' } ]}
-                                    />
+                                    {/*<ProFormSelect*/}
+                                    {/*    width="md"*/}
+                                    {/*    name={"breakVideo"}*/}
+                                    {/*    label="是否跳过存在的视频"*/}
+                                    {/*    placeholder="请选择是否跳过存在的视频"*/}
+                                    {/*    rules={[ { required: false, message: '请选择是否跳过存在的视频' } ]}*/}
+                                    {/*    options={[*/}
+                                    {/*        {*/}
+                                    {/*            label: "是",*/}
+                                    {/*            // @ts-ignore*/}
+                                    {/*            value: true,*/}
+                                    {/*        },*/}
+                                    {/*        {*/}
+                                    {/*            label: "否",*/}
+                                    {/*            // @ts-ignore*/}
+                                    {/*            value: false,*/}
+                                    {/*        }*/}
+                                    {/*    ]}*/}
+                                    {/*/>*/}
+                                    {/*<ProFormSelect*/}
+                                    {/*    width="md"*/}
+                                    {/*    name={"concatAudio"}*/}
+                                    {/*    label="合并音频"*/}
+                                    {/*    placeholder="请选择是否合并音频"*/}
+                                    {/*    rules={[ { required: false, message: '请选择是否合并音频' } ]}*/}
+                                    {/*    options={[*/}
+                                    {/*        {*/}
+                                    {/*            label: "是",*/}
+                                    {/*            // @ts-ignore*/}
+                                    {/*            value: true,*/}
+                                    {/*        },*/}
+                                    {/*        {*/}
+                                    {/*            label: "否",*/}
+                                    {/*            // @ts-ignore*/}
+                                    {/*            value: false,*/}
+                                    {/*        }*/}
+                                    {/*    ]}*/}
+                                    {/*/>*/}
+                                    {/*<ProFormSelect*/}
+                                    {/*    width="md"*/}
+                                    {/*    name={"concatVideo"}*/}
+                                    {/*    label="合并视频"*/}
+                                    {/*    placeholder="请选择是否合并视频"*/}
+                                    {/*    rules={[ { required: false, message: '请选择是否合并视频' } ]}*/}
+                                    {/*    options={[*/}
+                                    {/*        {*/}
+                                    {/*            label: "是",*/}
+                                    {/*            // @ts-ignore*/}
+                                    {/*            value: true,*/}
+                                    {/*        },*/}
+                                    {/*        {*/}
+                                    {/*            label: "否",*/}
+                                    {/*            // @ts-ignore*/}
+                                    {/*            value: false,*/}
+                                    {/*        }*/}
+                                    {/*    ]}*/}
+                                    {/*/>*/}
+                                    {/*<ProFormSelect*/}
+                                    {/*    width="md"*/}
+                                    {/*    name={"openSubtitles"}*/}
+                                    {/*    label="开启字幕"*/}
+                                    {/*    placeholder="请选择是否开启字幕"*/}
+                                    {/*    rules={[ { required: false, message: '请选择是否开启字幕' } ]}*/}
+                                    {/*    options={[*/}
+                                    {/*        {*/}
+                                    {/*            label: "是",*/}
+                                    {/*            // @ts-ignore*/}
+                                    {/*            value: true,*/}
+                                    {/*        },*/}
+                                    {/*        {*/}
+                                    {/*            label: "否",*/}
+                                    {/*            // @ts-ignore*/}
+                                    {/*            value: false,*/}
+                                    {/*        }*/}
+                                    {/*    ]}*/}
+                                    {/*/>*/}
+                                    {/*<ProFormSelect*/}
+                                    {/*    width="md"*/}
+                                    {/*    name={"language"}*/}
+                                    {/*    label="语言设置"*/}
+                                    {/*    placeholder="请选择语言"*/}
+                                    {/*    options={[*/}
+                                    {/*        {*/}
+                                    {/*            value: "zh",*/}
+                                    {/*            label: "中文"*/}
+                                    {/*        },*/}
+                                    {/*        {*/}
+                                    {/*            value: "en",*/}
+                                    {/*            label: "英语"*/}
+                                    {/*        }*/}
+                                    {/*    ]}*/}
+                                    {/*    rules={[ { required: false, message: '请选择语言' } ]}*/}
+                                    {/*/>*/}
                                 </ProForm.Group>
                                 <Divider orientation="left">stable-diffusion配置</Divider>
                                 <VanillaUploadJson

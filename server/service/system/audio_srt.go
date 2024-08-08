@@ -19,7 +19,7 @@ type AudioSrtService struct{}
 
 // CreateAudioAndSrt 批量文字转图片
 func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequestParams) error {
-	tmpFile, err := os.CreateTemp(".", "voice-caption-*.py")
+	tmpFile, err := os.Create("voice-caption.py")
 	if err != nil {
 		fmt.Println("创建python文件失败:", err)
 		return err

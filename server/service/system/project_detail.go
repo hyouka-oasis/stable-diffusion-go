@@ -19,7 +19,7 @@ type ProjectDetailService struct{}
 
 // UploadProjectDetailFile 上传文件并且处理分词
 func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.FileHeader, saveType string, whetherParticiple string) (err error) {
-	tmpFile, err := os.CreateTemp(".", "participle-*.py")
+	tmpFile, err := os.Create("participle.py")
 	if err != nil {
 		fmt.Println("创建python文件失败:", err)
 		return err

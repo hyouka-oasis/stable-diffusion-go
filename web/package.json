@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "1.0.1",
   "keywords": [
     "electron",
     "boilerplate",
@@ -174,5 +174,7 @@
       "src/main/**"
     ],
     "logLevel": "quiet"
-  }
+  },
+  "name": "stable-diffusion-client",
+  "description": "客户端打包时间: 2024/8/8 21:40:26"
 }

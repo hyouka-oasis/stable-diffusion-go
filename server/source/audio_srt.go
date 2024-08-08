@@ -50,8 +50,8 @@ func CreateAudioAndSrt(config AudioAndSrtParams, pythonName string) error {
 		"--audio_path", audioPath,
 		"--audio_srt_path", audioSrtPath,
 		"--voice", voice, // 角色
-		"--rate", windowCmdArgsConversion(rate), // 语速
-		"--volume", windowCmdArgsConversion(volume), // 音量
+		"--rate", rate, // 语速
+		"--volume", volume, // 音量
 		"--pitch", pitch, // 分贝
 		"--pitch", pitch, // 分贝
 		"--limit", strconv.Itoa(limit), // 分贝

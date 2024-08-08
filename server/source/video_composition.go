@@ -75,11 +75,11 @@ func convertTimeToSeconds(timeStr string) (float64, error) {
 
 // 创建单个视频
 func createAnimatedSegment(imagePath string, duration float64, animation string, videoPath string, audioPath string, width int, height int) error {
-	animationSpeed := 1.2 // TODO 需要做成配置
+	animationSpeed := global.Config.Video.AnimationSpeed // TODO 需要做成配置
 	initialZoom := 1.0
 	imageWidth := float64(width)
 	imageHeight := float64(height)
-	offsetTime := float64(26)
+	offsetTime := float64(25)
 	zoomSteps := (animationSpeed - initialZoom) / (offsetTime * duration)
 	leftRightMove := (imageWidth*animationSpeed - imageWidth - offsetTime) / (offsetTime * duration)
 	upDownMove := (imageHeight*animationSpeed - imageHeight - offsetTime - offsetTime) / (offsetTime * duration)
