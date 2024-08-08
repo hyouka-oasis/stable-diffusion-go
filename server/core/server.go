@@ -6,7 +6,6 @@ import (
 	"github/stable-diffusion-go/server/initialize"
 	"go.uber.org/zap"
 	"net"
-	"os"
 )
 
 type server interface {
@@ -14,7 +13,7 @@ type server interface {
 }
 
 func GetRandomPort() int {
-	if global.Config.System.Addr == 0 || os.Getenv("ENV") == "production" {
+	if global.Config.System.Env == "prod" {
 		// 使用 net.Listen 获取一个随机可用端口
 		listener, err := net.Listen("tcp", ":0")
 		if err != nil {
