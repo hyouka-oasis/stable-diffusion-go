@@ -329,12 +329,7 @@ class SubMarker(edge_tts.SubMaker):
 
 # 通过edge-tts生成字幕文件
 async def edge_tts_create_srt(mp3_path, srt_path, *edge_tts_args) -> None:
-    # 打开文件
-    if participle_book_path == "":
-        content = text_content
-    else:
-        with open(participle_book_path, "r", encoding="utf-8") as f:
-            content = f.read()
+    content = text_content
 
     communicate = edge_tts.Communicate(
         text=content,
@@ -370,12 +365,7 @@ async def edge_tts_create_srt(mp3_path, srt_path, *edge_tts_args) -> None:
         # 定义一个空列表来存储文件的每一行
         lines = []
 
-        # 打开文件并读取每一行
-        with open(participle_book_path, 'r', encoding='utf-8') as file:
-            for line in file:
-                # 去除每行末尾的换行符，并添加到列表中
-                lines.append(line.strip())
-
+        lines.append(content)
         # 使用列表推导式去除空行
         lines = [line for line in lines if line and not line.isdigit()]
 
@@ -387,41 +377,31 @@ async def edge_tts_create_srt(mp3_path, srt_path, *edge_tts_args) -> None:
 async def create_processing_time(txt_time_path):
     subtitles = await srt_to_list(audio_srt_path)
     if language == "zh":
-        if participle_book_path == "":
-            section_list = text_content
-        else:
-            with open(participle_book_path, "r", encoding="utf-8") as f:
-                section_list = f.readlines()
+        section_list = text_content
         section_time_list = []
         index_ = 0
         time = "00:00:00,000"
         # 如果是使用文本形式的则直接取最后一段的结束时间作为时长
-        if participle_book_path == "":
-            for si, section in enumerate(section_list):
-                if len(section_list) == si + 1:
-                    next_start_time = subtitles[-1][0].split(" --> ")[1]
-                    section_time_list.append(next_start_time)
-        else:
-            for si, section in enumerate(section_list):
-                if len(section_list) == si + 1:
-                    # 最后这段不处理 默认使用剩余所有time
-                    next_start_time = subtitles[-1][0].split(" --> ")[1]
+        for si, section in enumerate(section_list):
+            if len(section_list) == si + 1:
+                # 最后这段不处理 默认使用剩余所有time
+                next_start_time = subtitles[-1][0].split(" --> ")[1]
+                diff = await time_difference(time, next_start_time)
+                diff = diff.replace(",", ".")
+                section_time_list.append(diff)
+                break
+            content_ = await SubMarker().remove_non_chinese_chars(section)
+            for i, v in enumerate(subtitles):
+                if i <= index_:
+                    continue
+                if v[1] not in content_:
+                    next_start_time = v[0].split(" --> ")[0]
                     diff = await time_difference(time, next_start_time)
                     diff = diff.replace(",", ".")
                     section_time_list.append(diff)
+                    index_ = i
+                    time = next_start_time
                     break
-                content_ = await SubMarker().remove_non_chinese_chars(section)
-                for i, v in enumerate(subtitles):
-                    if i <= index_:
-                        continue
-                    if v[1] not in content_:
-                        next_start_time = v[0].split(" --> ")[0]
-                        diff = await time_difference(time, next_start_time)
-                        diff = diff.replace(",", ".")
-                        section_time_list.append(diff)
-                        index_ = i
-                        time = next_start_time
-                        break
         with open(os.path.join(txt_time_path), "w", encoding="utf-8") as f3:
             f3.write(str(section_time_list))
     else:
@@ -470,7 +450,6 @@ async def create_voice_caption():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # 从go那边获取过来的文本路径
-    parser.add_argument("--participle_book_path", help="字幕的文本路径地址")
     parser.add_argument("--content", help="文本内容")
     parser.add_argument("--audi_srt_map_path", help="字幕时间数组文本路径")
     parser.add_argument("--audio_path", help="输出的音频路径地址")
@@ -491,7 +470,7 @@ if __name__ == "__main__":
     audio_srt_path = args.audio_srt_path
     if audio_srt_path is None:
         raise Exception("字幕输出路径不能为空")
-    participle_book_path, text_content, voice, rate, volume, pitch, language, limit = "" if args.participle_book_path is None else args.participle_book_path, "" if args.content is None else args.content, args.voice, args.rate, args.volume, args.pitch, args.language, int(args.limit)
+    text_content, voice, rate, volume, pitch, language, limit = "" if args.content is None else args.content, args.voice, args.rate, args.volume, args.pitch, args.language, int(args.limit)
     vtt_path = audio_srt_path.replace(".srt", ".vtt")
     srt_tmp_path = audio_srt_path.replace(".srt", ".tmp.srt")
     asyncio.run(create_voice_caption())
