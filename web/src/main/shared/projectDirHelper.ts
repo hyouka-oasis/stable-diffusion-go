@@ -30,8 +30,8 @@ export class ProjectDirHelper {
         if (!suffix) {
             return suffix;
         }
+        console.log(suffix, "suffix");
         const filePath = path.join(suffix);
-        console.log(filePath, "filePath");
         return isWindow ? filePath.replace(/\//g, "//") : filePath;
     }
 

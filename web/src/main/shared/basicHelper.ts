@@ -61,7 +61,7 @@ export class BasicDirHelper {
         const { isWindow, isLinux, isMac } = PlatformHelper.validatePlatform();
         let suffix = "";
         if (process.env.NODE_ENV === "development") {
-            return path.join(process.cwd(), `${name}`);
+            return path.join(process.cwd(), "../", "server/tmp/");
         }
         if (isMac || isLinux) {
             suffix = `${path.join(BasicDirHelper.getAppPath(), "../", "oasis-server")}`;

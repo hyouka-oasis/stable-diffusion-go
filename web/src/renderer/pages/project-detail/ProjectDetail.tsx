@@ -57,7 +57,7 @@ const AudioActionItemWrap = styled.div`
     justify-content: space-between;
 `;
 
-const percentageRegex = /^[-+]\d+%$/;
+const percentageRegex = /^[-+]\d+(%%?)$/;
 const pitchRegex = /^[+]\d+Hz$/;
 
 const ProjectDetailPage = () => {
@@ -131,14 +131,17 @@ const ProjectDetailPage = () => {
                 const data = (content as TextContent).text;
                 if (!percentageRegex.test(values?.audioConfig?.rate ?? "0")) {
                     openMessageBox({ type: "error", message: "请输入正确的语速值!" });
+                    resolve(true);
                     return;
                 }
                 if (!percentageRegex.test(values?.audioConfig?.volume ?? "0")) {
                     openMessageBox({ type: "error", message: "请输入正确的音量值!" });
+                    resolve(true);
                     return;
                 }
                 if (!pitchRegex.test(values?.audioConfig?.pitch ?? "0")) {
                     openMessageBox({ type: "error", message: "请输入正确的分贝值!" });
+                    resolve(true);
                     return;
                 }
                 projectApi.updateProjectDetail({
@@ -303,6 +306,12 @@ const ProjectDetailPage = () => {
             fileId: upload.id,
         };
         await stableDiffusionApi.addImage(data);
+        if (!info.stableDiffusionImageId) {
+            await projectApi.updateProjectDetailInfo({
+                id: info.id,
+                stableDiffusionImageId: upload.id
+            });
+        }
         openMessageBox({ type: "success", message: "上传成功" });
         setRenderLoading(false);
         await getProjectDetailConfig(state.id);
@@ -516,13 +525,13 @@ const ProjectDetailPage = () => {
                             name={"rate"}
                             label="音频语速"
                             placeholder="请输入音频语速"
-                            tooltip={"格式为(+-)0%"}
+                            tooltip={"格式为(+-)0%,如windows不能正常生成改为(+-)0%%"}
                         />
                         <ProFormText
                             width="md"
                             name={"volume"}
                             label="音量"
-                            tooltip={"格式为(+-)0%"}
+                            tooltip={"格式为(+-)0%,如windows不能正常生成改为(+-)0%%"}
                             placeholder="请输入音量"
                         />
                         <ProFormText
@@ -749,28 +758,48 @@ const ProjectDetailPage = () => {
                             onFinish={onSettingsOkHandler}
                         >
                             <ReactSmoothScrollbar style={{ maxHeight: "calc(100vh - 320px)" }}>
-                                <ProForm.Group title={"项目配置"}>
+                                <ProForm.Group title={"项目基础配置"}>
                                     <ProFormSelect
                                         width="md"
-                                        name={"language"}
-                                        label="语言设置"
-                                        placeholder="请选择语言"
+                                        name={"breakAudio"}
+                                        label="是否跳过存在的音频"
+                                        placeholder="请选择是否跳过存在的音频"
+                                        rules={[ { required: true, message: '请选择是否跳过存在的音频' } ]}
                                         options={[
                                             {
-                                                value: "zh",
-                                                label: "中文"
+                                                label: "是",
+                                                // @ts-ignore
+                                                value: true,
                                             },
                                             {
-                                                value: "en",
-                                                label: "英语"
+                                                label: "否",
+                                                // @ts-ignore
+                                                value: false,
                                             }
                                         ]}
-                                        rules={[ { required: true, message: '请选择语言' } ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"breakVideo"}
+                                        label="是否跳过存在的视频"
+                                        placeholder="请选择是否跳过存在的视频"
+                                        rules={[ { required: true, message: '请选择是否跳过存在的视频' } ]}
+                                        options={[
+                                            {
+                                                label: "是",
+                                                // @ts-ignore
+                                                value: true,
+                                            },
+                                            {
+                                                label: "否",
+                                                // @ts-ignore
+                                                value: false,
+                                            }
+                                        ]}
                                     />
                                     <ProFormSelect
                                         width="md"
                                         name={"concatAudio"}
-                                        tooltip={"当前版本不生效"}
                                         label="合并音频"
                                         placeholder="请选择是否合并音频"
                                         rules={[ { required: true, message: '请选择是否合并音频' } ]}
@@ -790,7 +819,6 @@ const ProjectDetailPage = () => {
                                     <ProFormSelect
                                         width="md"
                                         name={"concatVideo"}
-                                        tooltip={"当前版本不生效"}
                                         label="合并视频"
                                         placeholder="请选择是否合并视频"
                                         rules={[ { required: true, message: '请选择是否合并视频' } ]}
@@ -806,6 +834,42 @@ const ProjectDetailPage = () => {
                                                 value: false,
                                             }
                                         ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"openSubtitles"}
+                                        label="开启字幕"
+                                        placeholder="请选择是否开启字幕"
+                                        rules={[ { required: true, message: '请选择是否开启字幕' } ]}
+                                        options={[
+                                            {
+                                                label: "是",
+                                                // @ts-ignore
+                                                value: true,
+                                            },
+                                            {
+                                                label: "否",
+                                                // @ts-ignore
+                                                value: false,
+                                            }
+                                        ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"language"}
+                                        label="语言设置"
+                                        placeholder="请选择语言"
+                                        options={[
+                                            {
+                                                value: "zh",
+                                                label: "中文"
+                                            },
+                                            {
+                                                value: "en",
+                                                label: "英语"
+                                            }
+                                        ]}
+                                        rules={[ { required: true, message: '请选择语言' } ]}
                                     />
                                 </ProForm.Group>
                                 <ProForm.Group title={"分词配置"}>
@@ -840,13 +904,13 @@ const ProjectDetailPage = () => {
                                         name={[ "audioConfig", "rate" ]}
                                         label="音频语速"
                                         placeholder="请输入音频语速"
-                                        tooltip={"格式为(+-)0%"}
+                                        tooltip={"格式为(+-)0%,如windows不能正常生成改为(+-)0%%"}
                                     />
                                     <ProFormText
                                         width="md"
                                         name={[ "audioConfig", "volume" ]}
                                         label="音量"
-                                        tooltip={"格式为(+-)0%"}
+                                        tooltip={"格式为(+-)0%,如windows不能正常生成改为(+-)0%%"}
                                         placeholder="请输入音量"
                                     />
                                     <ProFormText
@@ -883,12 +947,22 @@ const ProjectDetailPage = () => {
                                             }
                                         }}
                                     />
+                                </ProForm.Group>
+                                <ProForm.Group title={"视频配置"} tooltip={"当前版本暂且都不生效"}>
+                                    <ProFormDigit
+                                        width="md"
+                                        name={[ "videoConfig", "fontSize" ]}
+                                        label="字幕大小"
+                                        min={1}
+                                        placeholder="请填写字幕大小"
+                                        rules={[ { required: false, message: '请填写字幕大小' } ]}
+                                    />
                                     <ProFormSelect
                                         width="md"
-                                        name={"breakAudio"}
-                                        label="是否跳过存在的音频"
-                                        placeholder="请选择是否跳过存在的音频"
-                                        rules={[ { required: true, message: '请选择是否跳过存在的音频' } ]}
+                                        name={"breakVideo"}
+                                        label="是否跳过存在的视频"
+                                        placeholder="请选择是否跳过存在的视频"
+                                        rules={[ { required: false, message: '请选择是否跳过存在的视频' } ]}
                                         options={[
                                             {
                                                 label: "是",
@@ -901,6 +975,80 @@ const ProjectDetailPage = () => {
                                                 value: false,
                                             }
                                         ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"concatAudio"}
+                                        label="合并音频"
+                                        placeholder="请选择是否合并音频"
+                                        rules={[ { required: false, message: '请选择是否合并音频' } ]}
+                                        options={[
+                                            {
+                                                label: "是",
+                                                // @ts-ignore
+                                                value: true,
+                                            },
+                                            {
+                                                label: "否",
+                                                // @ts-ignore
+                                                value: false,
+                                            }
+                                        ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"concatVideo"}
+                                        label="合并视频"
+                                        placeholder="请选择是否合并视频"
+                                        rules={[ { required: false, message: '请选择是否合并视频' } ]}
+                                        options={[
+                                            {
+                                                label: "是",
+                                                // @ts-ignore
+                                                value: true,
+                                            },
+                                            {
+                                                label: "否",
+                                                // @ts-ignore
+                                                value: false,
+                                            }
+                                        ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"openSubtitles"}
+                                        label="开启字幕"
+                                        placeholder="请选择是否开启字幕"
+                                        rules={[ { required: false, message: '请选择是否开启字幕' } ]}
+                                        options={[
+                                            {
+                                                label: "是",
+                                                // @ts-ignore
+                                                value: true,
+                                            },
+                                            {
+                                                label: "否",
+                                                // @ts-ignore
+                                                value: false,
+                                            }
+                                        ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"language"}
+                                        label="语言设置"
+                                        placeholder="请选择语言"
+                                        options={[
+                                            {
+                                                value: "zh",
+                                                label: "中文"
+                                            },
+                                            {
+                                                value: "en",
+                                                label: "英语"
+                                            }
+                                        ]}
+                                        rules={[ { required: false, message: '请选择语言' } ]}
                                     />
                                 </ProForm.Group>
                                 <Divider orientation="left">stable-diffusion配置</Divider>
