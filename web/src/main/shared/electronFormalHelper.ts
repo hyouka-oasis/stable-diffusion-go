@@ -10,12 +10,6 @@ export const closeDevTools = (mainWindow: BrowserWindow | null) => {
     if (!mainWindow) {
         return;
     }
-    if (process.env.NODE_ENV === "development") {
-        return;
-    }
-    if (process.env.CLOSE_DEVTOOLS === "true") {
-        return;
-    }
     mainWindow?.webContents?.on("devtools-opened", () => {
         // 关闭开发者工具控制台
         mainWindow?.webContents?.closeDevTools();
