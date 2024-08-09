@@ -12,9 +12,6 @@ import (
 	"os"
 )
 
-//go:embed config.prod.yaml
-var configYaml string
-
 func startGinServer() {
 	err := utils.EnsureDirectory(global.Config.Local.StorePath)
 	if err != nil {
@@ -35,8 +32,8 @@ func startGinServer() {
 	}
 	core.RunServer(port)
 }
+
 func main() {
-	global.Viper = core.InitViper()
 	// 1. 创建python所需依赖
 	_, err := os.Stat(python_core.PythonRequirementsName)
 	if err != nil {
@@ -52,22 +49,6 @@ func main() {
 			panic(createError.Error())
 		}
 	}
-	if global.Config.System.Env != "dev" {
-		// 2.创建配置文件
-		_, err = os.Stat(configYaml)
-		if err != nil {
-			file, createError := os.Create("config.yaml")
-			if createError != nil {
-				global.Log.Error("创建config失败")
-				panic(createError.Error())
-			}
-			defer file.Close()
-			_, err = file.WriteString(configYaml) // 写入内容
-			if err != nil {
-				global.Log.Error("创建config失败文件失败")
-				panic(createError.Error())
-			}
-		}
-	}
+	global.Viper = core.InitViper()
 	startGinServer()
 }

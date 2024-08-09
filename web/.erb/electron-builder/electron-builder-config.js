@@ -20,7 +20,11 @@ const basicBuilderConfig = {
 const buildExtraPortPathList = [
     {
         "from": "./port.json",
-        "to": "./server/port.json"
+        "to": "./oasis-server/port.json"
+    },
+    {
+        "from": "./config.yaml",
+        "to": "./oasis-server/config.yaml"
     },
 ];
 

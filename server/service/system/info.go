@@ -122,8 +122,17 @@ func (s *InfoService) TranslateInfoPrompt(infoParams system.Info) error {
 				return err
 			}
 		}
-		return nil
+		return err
 	} else if currentSettings.TranslateType == "ollama" {
+		//var message []openai.ChatCompletionMessage
+		//_, openPromptError := os.ReadFile("/Users/hyouka/Desktop/代码/stable-diffusion-go/server/prompt.txt")
+		//if openPromptError != nil {
+		//	return openPromptError
+		//}
+		//message = append(message, openai.ChatCompletionMessage{
+		//	Role:    openai.ChatMessageRoleSystem,
+		//	Content: string(promptByte),
+		//})
 		for _, info := range infoList {
 			lorasText := ""
 			for _, lora := range loras {

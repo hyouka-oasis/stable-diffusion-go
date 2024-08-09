@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
+	"gorm.io/gorm"
 	"path/filepath"
 )
 
@@ -27,11 +28,22 @@ func (s *SettingsService) CreateSettings(config system.Settings) (err error) {
 // UpdateSettings 修改配置
 func (s *SettingsService) UpdateSettings(config system.Settings) (err error) {
 	config.SavePath = filepath.ToSlash(config.SavePath)
-	err = global.DB.Model(&config).Updates(&config).Error
-	if err != nil {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
+		err = tx.Model(&config).Updates(&config).Error
+		if err != nil {
+			return err
+		}
+		if config.OllamaConfig != (system.SettingsOllamaConfig{}) {
+			err = tx.Model(&system.SettingsOllamaConfig{}).Where("settings_id = ?", config.Id).Updates(&config.OllamaConfig).Error
+		}
+		if err != nil {
+			return err
+		}
+		if config.AliyunConfig != (system.SettingsAliyunConfig{}) {
+			err = tx.Model(&system.SettingsAliyunConfig{}).Where("settings_id = ?", config.Id).Updates(&config.AliyunConfig).Error
+		}
 		return err
-	}
-	return err
+	})
 }
 
 // GetSettings 获取项目列表

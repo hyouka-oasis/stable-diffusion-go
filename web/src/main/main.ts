@@ -7,10 +7,14 @@ import { ElectronBrowserWindowDefaultConfig } from "./shared/browserWindowConfig
 import browserWindowHelp from "./shared/browserWindowHelp";
 import { BROWSER_WINDOW_KEY } from "./shared/ipcConst";
 import { BasicIpc } from "./ipc/basicIpc";
-import { error } from "./shared/debugLog";
+import { error, log } from "./shared/debugLog";
 import { system } from "systeminformation";
 import GoServiceController from "./controllers/goServiceController";
 import { ProcessHelper } from "./shared/processHelper";
+import { BUILDER_NAME } from "../../.erb/electron-builder/system-config";
+
+const additionalData = { myKey: BUILDER_NAME };
+const gotTheLock = app.requestSingleInstanceLock(additionalData);
 
 let mainWindow: BrowserWindow | null = null;
 let ipcHandler: BasicIpc | null = null;
@@ -71,7 +75,21 @@ const createWindow = async () => {
         return { action: 'deny' };
     });
 };
-
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on("second-instance", (event, commandLine, workingDirectory, additionalData) => {
+        // 输出从第二个实例中接收到的数据
+        log(additionalData, "拿到上一个electron锁了");
+        // 有人试图运行第二个实例，我们应该关注我们的窗口
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) {
+                mainWindow.restore();
+            }
+            mainWindow.focus();
+        }
+    });
+}
 app.on("quit", () => {
     if (goServiceController) {
         goServiceController.endGoProgram();

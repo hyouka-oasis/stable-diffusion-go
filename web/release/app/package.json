@@ -1,6 +1,6 @@
 {
   "name": "stable-diffusion-client",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "main": "./dist/main/main.js",
   "scripts": {
@@ -9,5 +9,5 @@
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
   "dependencies": {},
-  "description": "客户端打包时间: 2024/8/8 21:40:26"
+  "description": "客户端打包时间: 2024/8/9 14:59:2"
 }
