@@ -19,6 +19,7 @@ import { FileResponse } from "renderer/api/response/fileResponse";
 import { RcFile } from "antd/lib/upload";
 import { navBarHeight } from "renderer/shared";
 import { ReactSmoothScrollbar } from "renderer/components/smooth-scroll/SmoothScroll";
+import { ipcApi } from "renderer/ipc/BasicRendererIpcAdapter";
 
 const ProjectDetailPageWrap = styled.div`
 `;
@@ -79,6 +80,7 @@ const ProjectDetailPage = () => {
     const state = location.state;
     const mp3Ref = useRef<HTMLAudioElement | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    // const [ fontColor, setFontColor ] = useState<string>();
 
     /**
      * 获取项目
@@ -131,17 +133,17 @@ const ProjectDetailPage = () => {
                 const data = (content as TextContent).text;
                 if (!percentageRegex.test(values?.audioConfig?.rate ?? "0")) {
                     openMessageBox({ type: "error", message: "请输入正确的语速值!" });
-                    resolve(true);
+                    resolve(false);
                     return;
                 }
                 if (!percentageRegex.test(values?.audioConfig?.volume ?? "0")) {
                     openMessageBox({ type: "error", message: "请输入正确的音量值!" });
-                    resolve(true);
+                    resolve(false);
                     return;
                 }
                 if (!pitchRegex.test(values?.audioConfig?.pitch ?? "0")) {
                     openMessageBox({ type: "error", message: "请输入正确的分贝值!" });
-                    resolve(true);
+                    resolve(false);
                     return;
                 }
                 projectApi.updateProjectDetail({
@@ -390,6 +392,22 @@ const ProjectDetailPage = () => {
     const getDocumentHeight = () => {
         const documentHeight = document.body.clientHeight;
         setTableHeight(documentHeight - navBarHeight() - 200);
+    };
+
+    const onFilePathSelect = async () => {
+        const folderValues = await ipcApi.fileAdapter.onFolderSelect({
+            properties: [ "openFile" ],
+            filters: [
+                {
+                    name: "font",
+                    extensions: [ "ttf" ]
+                },
+            ]
+        });
+        if (!folderValues.data.canceled) {
+            const selectPath = folderValues.data.filePaths[0];
+            form.setFieldValue([ "videoConfig", "fontFile" ], selectPath);
+        }
     };
 
     const columns: ProColumns<Info>[] = [
@@ -729,7 +747,7 @@ const ProjectDetailPage = () => {
                                 rules={[ { required: true, message: '请上传文本' } ]}
                             />
                         </ModalForm>,
-                        <Tooltip title={"当前版本没有开放分词词典,所以并不准确"}>
+                        <Tooltip key={"role"} title={"当前版本没有开放分词词典,所以并不准确"}>
                             <Button key={"extract"} disabled={!projectDetail?.infoList?.length} onClick={extractTheRole}>
                                 角色提取
                             </Button>
@@ -743,9 +761,11 @@ const ProjectDetailPage = () => {
                         <Button key={"stable-diffusion"} disabled={!projectDetail?.infoList?.length} onClick={() => text2imageBatchHandler()}>
                             生成图片
                         </Button>,
-                        <Button key={"video"} disabled={!projectDetail?.infoList?.length} onClick={() => createInfoVideo()}>
-                            生成视频
-                        </Button>,
+                        <Tooltip key={"video"} title={"公开版本不添加视频合并之间的过渡动画"}>
+                            <Button disabled={!projectDetail?.infoList?.length} onClick={() => createInfoVideo()}>
+                                生成视频
+                            </Button>
+                        </Tooltip>,
                         <ModalForm
                             key={"settings"}
                             title="配置参数"
@@ -948,108 +968,90 @@ const ProjectDetailPage = () => {
                                         }}
                                     />
                                 </ProForm.Group>
-                                <ProForm.Group title={"视频配置"} tooltip={"当前版本暂且都不生效"}>
+                                <ProForm.Group title={"视频配置"}>
                                     <ProFormDigit
                                         width="md"
                                         name={[ "videoConfig", "fontSize" ]}
                                         label="字幕大小"
                                         min={1}
                                         placeholder="请填写字幕大小"
-                                        rules={[ { required: false, message: '请填写字幕大小' } ]}
+                                        rules={[ { required: true, message: '请填写字幕大小' } ]}
                                     />
-                                    {/*<ProFormSelect*/}
-                                    {/*    width="md"*/}
-                                    {/*    name={"breakVideo"}*/}
-                                    {/*    label="是否跳过存在的视频"*/}
-                                    {/*    placeholder="请选择是否跳过存在的视频"*/}
-                                    {/*    rules={[ { required: false, message: '请选择是否跳过存在的视频' } ]}*/}
-                                    {/*    options={[*/}
-                                    {/*        {*/}
-                                    {/*            label: "是",*/}
-                                    {/*            // @ts-ignore*/}
-                                    {/*            value: true,*/}
-                                    {/*        },*/}
-                                    {/*        {*/}
-                                    {/*            label: "否",*/}
-                                    {/*            // @ts-ignore*/}
-                                    {/*            value: false,*/}
-                                    {/*        }*/}
-                                    {/*    ]}*/}
-                                    {/*/>*/}
-                                    {/*<ProFormSelect*/}
-                                    {/*    width="md"*/}
-                                    {/*    name={"concatAudio"}*/}
-                                    {/*    label="合并音频"*/}
-                                    {/*    placeholder="请选择是否合并音频"*/}
-                                    {/*    rules={[ { required: false, message: '请选择是否合并音频' } ]}*/}
-                                    {/*    options={[*/}
-                                    {/*        {*/}
-                                    {/*            label: "是",*/}
-                                    {/*            // @ts-ignore*/}
-                                    {/*            value: true,*/}
-                                    {/*        },*/}
-                                    {/*        {*/}
-                                    {/*            label: "否",*/}
-                                    {/*            // @ts-ignore*/}
-                                    {/*            value: false,*/}
-                                    {/*        }*/}
-                                    {/*    ]}*/}
-                                    {/*/>*/}
-                                    {/*<ProFormSelect*/}
-                                    {/*    width="md"*/}
-                                    {/*    name={"concatVideo"}*/}
-                                    {/*    label="合并视频"*/}
-                                    {/*    placeholder="请选择是否合并视频"*/}
-                                    {/*    rules={[ { required: false, message: '请选择是否合并视频' } ]}*/}
-                                    {/*    options={[*/}
-                                    {/*        {*/}
-                                    {/*            label: "是",*/}
-                                    {/*            // @ts-ignore*/}
-                                    {/*            value: true,*/}
-                                    {/*        },*/}
-                                    {/*        {*/}
-                                    {/*            label: "否",*/}
-                                    {/*            // @ts-ignore*/}
-                                    {/*            value: false,*/}
-                                    {/*        }*/}
-                                    {/*    ]}*/}
-                                    {/*/>*/}
-                                    {/*<ProFormSelect*/}
-                                    {/*    width="md"*/}
-                                    {/*    name={"openSubtitles"}*/}
-                                    {/*    label="开启字幕"*/}
-                                    {/*    placeholder="请选择是否开启字幕"*/}
-                                    {/*    rules={[ { required: false, message: '请选择是否开启字幕' } ]}*/}
-                                    {/*    options={[*/}
-                                    {/*        {*/}
-                                    {/*            label: "是",*/}
-                                    {/*            // @ts-ignore*/}
-                                    {/*            value: true,*/}
-                                    {/*        },*/}
-                                    {/*        {*/}
-                                    {/*            label: "否",*/}
-                                    {/*            // @ts-ignore*/}
-                                    {/*            value: false,*/}
-                                    {/*        }*/}
-                                    {/*    ]}*/}
-                                    {/*/>*/}
-                                    {/*<ProFormSelect*/}
-                                    {/*    width="md"*/}
-                                    {/*    name={"language"}*/}
-                                    {/*    label="语言设置"*/}
-                                    {/*    placeholder="请选择语言"*/}
-                                    {/*    options={[*/}
-                                    {/*        {*/}
-                                    {/*            value: "zh",*/}
-                                    {/*            label: "中文"*/}
-                                    {/*        },*/}
-                                    {/*        {*/}
-                                    {/*            value: "en",*/}
-                                    {/*            label: "英语"*/}
-                                    {/*        }*/}
-                                    {/*    ]}*/}
-                                    {/*    rules={[ { required: false, message: '请选择语言' } ]}*/}
-                                    {/*/>*/}
+                                    <ProFormSelect
+                                        width="md"
+                                        name={[ "videoConfig", "fontColor" ]}
+                                        tooltip={"公开版只支持白色,想自己改的话修改yaml文件"}
+                                        label="字幕颜色"
+                                        placeholder="请选择字幕颜色"
+                                        rules={[ { required: true, message: '请选择字幕颜色' } ]}
+                                        options={[
+                                            {
+                                                label: "白色",
+                                                value: "FFFFFF"
+                                            }
+                                        ]}
+                                    />
+                                    {/*<Form.Item label={"字幕颜色"} name={[ "videoConfig", "fontColor" ]}>*/}
+                                    {/*    <ColorPicker*/}
+                                    {/*        format={"hex"} onChange={(color) => {*/}
+                                    {/*            setFontColor(color.toHex());*/}
+                                    {/*        }}*/}
+                                    {/*    />*/}
+                                    {/*</Form.Item>*/}
+                                    <ProFormDigit
+                                        width="md"
+                                        name={[ "videoConfig", "animationSpeed" ]}
+                                        tooltip={"最佳1.2"}
+                                        label="动画浮动比例"
+                                        placeholder="请填写动画浮动比例"
+                                        rules={[ { required: true, message: '请填写动画浮动比例' } ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={[ "videoConfig", "position" ]}
+                                        label="字幕位置"
+                                        placeholder="请选择字幕位置"
+                                        rules={[ { required: true, message: '请选择字幕位置' } ]}
+                                        options={[
+                                            {
+                                                label: "上",
+                                                value: 6
+                                            },
+                                            {
+                                                label: "中",
+                                                value: 10
+                                            },
+                                            {
+                                                label: "下",
+                                                value: 2
+                                            }
+                                        ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={[ "videoConfig", "animationName" ]}
+                                        tooltip={"精力有限,公开版只做全局随机效果"}
+                                        label="动画效果"
+                                        placeholder="请选择动画效果"
+                                        rules={[ { required: true, message: '请选择动画效果' } ]}
+                                        options={[
+                                            {
+                                                label: "随机动画",
+                                                value: "random"
+                                            }
+                                        ]}
+                                    />
+                                    <Form.Item noStyle={true} shouldUpdate={true}>
+                                        {
+                                            (({ getFieldValue }) => {
+                                                return <Form.Item tooltip={"不支持"} label={"字幕字体"} name={[ "videoConfig", "fontFile" ]} shouldUpdate={true}>
+                                                    <Button onClick={onFilePathSelect} disabled={true}>
+                                                        字幕选择,当前字体路径:{getFieldValue([ "videoConfig", "fontFile" ])}
+                                                    </Button>
+                                                </Form.Item>;
+                                            })
+                                        }
+                                    </Form.Item>
                                 </ProForm.Group>
                                 <Divider orientation="left">stable-diffusion配置</Divider>
                                 <VanillaUploadJson

@@ -48,4 +48,11 @@ export interface ProjectDetailResponse extends BasicResponse {
         volume: string;
         pitch: string;
     };
+    videoConfig: {
+        fontSize: number;
+        fontColor?: string;
+        animationSpeed: number;
+        animation: string;
+        fontFile: string;
+    };
 }
