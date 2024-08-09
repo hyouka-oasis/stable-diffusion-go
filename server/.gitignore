@@ -1,0 +1,15 @@
+.idea/
+./**/images/**
+server/go.sum
+participle
+video
+images
+.air.toml
+tmp
+*.txt
+*.png
+*.mp4
+*.db
+log
+*.exe
+uploads/
