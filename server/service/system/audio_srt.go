@@ -3,6 +3,7 @@ package system
 import (
 	"errors"
 	"fmt"
+	"github/stable-diffusion-go/server/config"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
 	systemRequest "github/stable-diffusion-go/server/model/system/request"
@@ -11,6 +12,7 @@ import (
 	"github/stable-diffusion-go/server/utils"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -19,7 +21,7 @@ type AudioSrtService struct{}
 
 // CreateAudioAndSrt 批量文字转图片
 func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequestParams) error {
-	tmpFile, err := os.Create("voice-caption.py")
+	tmpFile, err := os.Create(filepath.Join(config.ExecutePath, "voice-caption.py"))
 	if err != nil {
 		fmt.Println("创建python文件失败:", err)
 		return err

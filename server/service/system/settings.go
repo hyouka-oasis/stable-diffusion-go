@@ -33,6 +33,12 @@ func (s *SettingsService) UpdateSettings(config system.Settings) (err error) {
 		if err != nil {
 			return err
 		}
+		if config.StableDiffusionConfig != (system.SettingsStableDiffusionConfig{}) {
+			err = tx.Model(&system.SettingsStableDiffusionConfig{}).Where("settings_id = ?", config.Id).Updates(&config.StableDiffusionConfig).Error
+		}
+		if err != nil {
+			return err
+		}
 		if config.OllamaConfig != (system.SettingsOllamaConfig{}) {
 			err = tx.Model(&system.SettingsOllamaConfig{}).Where("settings_id = ?", config.Id).Updates(&config.OllamaConfig).Error
 		}

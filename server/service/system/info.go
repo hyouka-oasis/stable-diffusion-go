@@ -2,6 +2,7 @@ package system
 
 import (
 	"errors"
+	"github.com/sashabaranov/go-openai"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/system"
 	"github/stable-diffusion-go/server/model/system/request"
@@ -124,8 +125,8 @@ func (s *InfoService) TranslateInfoPrompt(infoParams system.Info) error {
 		}
 		return err
 	} else if currentSettings.TranslateType == "ollama" {
-		//var message []openai.ChatCompletionMessage
-		//_, openPromptError := os.ReadFile("/Users/hyouka/Desktop/代码/stable-diffusion-go/server/prompt.txt")
+		var message []openai.ChatCompletionMessage
+		//promptByte, openPromptError := os.ReadFile("F:\\stable-diffusion-go\\server\\sd-prompt.txt")
 		//if openPromptError != nil {
 		//	return openPromptError
 		//}
@@ -143,7 +144,7 @@ func (s *InfoService) TranslateInfoPrompt(infoParams system.Info) error {
 					lorasText += lora.Name + ","
 				}
 			}
-			prompt, _ := source.ChatgptOllama(info.Text, currentSettings.OllamaConfig)
+			prompt, _ := source.ChatgptOllama(info.Text, currentSettings.OllamaConfig, &message)
 			if lorasText != "" {
 				info.Prompt = prompt + "," + lorasText
 			} else {

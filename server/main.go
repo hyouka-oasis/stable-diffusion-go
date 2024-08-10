@@ -2,7 +2,9 @@ package main
 
 import (
 	_ "embed"
+	"flag"
 	"fmt"
+	"github/stable-diffusion-go/server/config"
 	"github/stable-diffusion-go/server/core"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/initialize"
@@ -34,6 +36,19 @@ func startGinServer() {
 }
 
 func main() {
+	var executePath string
+	flag.StringVar(&executePath, "execute_path", "", "环境路径") // 定义一个字符串类型的参数name
+	flag.Parse()
+	// 解析命令行参数
+	if executePath == "" {
+		config.ExecutePath = "./"
+	} else {
+		config.ExecutePath = executePath
+		err := utils.EnsureDirectory(executePath)
+		if err != nil {
+			panic(err)
+		}
+	}
 	// 1. 创建python所需依赖
 	_, err := os.Stat(python_core.PythonRequirementsName)
 	if err != nil {

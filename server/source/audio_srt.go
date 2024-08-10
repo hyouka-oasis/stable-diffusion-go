@@ -53,7 +53,6 @@ func CreateAudioAndSrt(config AudioAndSrtParams, pythonName string) error {
 		"--rate", rate, // 语速
 		"--volume", volume, // 音量
 		"--pitch", pitch, // 分贝
-		"--pitch", pitch, // 分贝
 		"--limit", strconv.Itoa(limit), // 分贝
 		"--language", config.Language, // 语言
 	}
