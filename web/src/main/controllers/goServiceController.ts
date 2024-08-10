@@ -29,7 +29,7 @@ class GoServiceController {
      */
     getOasisExecutePath = (isWindows?: boolean): string => {
         const userDataPath = BasicDirHelper.getUserDataPath();
-        const path = join(userDataPath.trim(), "oasis-server");
+        const path = join(userDataPath.trim(), "server");
         if (isWindows) {
             return BasicDirHelper.transformWindowPath(path);
         }
@@ -42,13 +42,14 @@ class GoServiceController {
      * @param isWindows
      */
     spawnEncapsulation(cmd, isWindows?: boolean) {
+        const oasis_execute_path = this.getOasisExecutePath(isWindows);
         const spawnCmd = BasicDirHelper.transformMacWindowPath(cmd, isWindows);
         const upperLayerPath = join(spawnCmd, "..");
         let spawnShell;
         if (isWindows) {
-            spawnShell = `cd ${upperLayerPath}&& ${PlatformHelper.getGoServerName()}`;
+            spawnShell = `cd ${upperLayerPath}&& ${PlatformHelper.getGoServerName()} -execute_path=${oasis_execute_path}`;
         } else {
-            spawnShell = `${spawnCmd}`;
+            spawnShell = `${spawnCmd} -execute_path=${oasis_execute_path}`;
         }
         log({
             "最终启动的命令": spawnShell,
