@@ -118,7 +118,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 
 // GetProjectDetail 获取项目详情
 func (s *ProjectDetailService) GetProjectDetail(config system.ProjectDetail) (detail system.ProjectDetail, err error) {
-	err = global.DB.Preload("VideoConfig").Preload("ParticipleConfig").Preload("AudioConfig").Preload("InfoList").Preload("InfoList.StableDiffusionImages").Preload("InfoList.AudioConfig").Model(&system.ProjectDetail{}).Where("project_id = ?", config.ProjectId).First(&detail).Error
+	err = global.DB.Preload("VideoConfig").Preload("ParticipleConfig").Preload("AudioConfig").Preload("InfoList").Preload("InfoList.StableDiffusionImages").Preload("InfoList.AudioConfig").Model(&system.ProjectDetail{}).Where("id = ?", config.Id).First(&detail).Error
 	return
 }
 
@@ -153,6 +153,77 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 			if err != nil {
 				return err
 			}
+			return err
+		}
+		return err
+	})
+}
+
+// DeleteProjectDetail 删除项目详情
+func (s *ProjectDetailService) DeleteProjectDetail(projectDetailId uint) (err error) {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
+		err = tx.Delete(&system.ProjectDetail{}, "id = ?", projectDetailId).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Where("project_detail_id = ?", projectDetailId).Delete(&system.VideoConfig{}).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Where("project_detail_id = ?", projectDetailId).Delete(&system.ParticipleConfig{}).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Where("project_detail_id = ?", projectDetailId).Delete(&system.AudioConfig{}).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Where("project_detail_id = ?", projectDetailId).Delete(&system.Info{}).Error
+		if err != nil {
+			return err
+		}
+		err = tx.Where("project_detail_id = ?", projectDetailId).Delete(&system.StableDiffusionImages{}).Error
+		if err != nil {
+			return err
+		}
+		// 返回 nil 提交事务
+		return err
+	})
+}
+
+// CreateProjectDetail 创建项目详情
+func (s *ProjectDetailService) CreateProjectDetail(projectId uint) (projectDetail system.ProjectDetail, err error) {
+	return projectDetail, global.DB.Transaction(func(tx *gorm.DB) error {
+		projectDetail = system.ProjectDetail{
+			ProjectId: projectId,
+		}
+		// 同时创建项目详情
+		err = tx.Create(&projectDetail).Error
+		if err != nil {
+			return err
+		}
+		participleConfig := system.ParticipleConfig{
+			ProjectDetailId: projectDetail.Id,
+		}
+		// 同时创建项目音频设置
+		err = tx.Create(&participleConfig).Error
+		if err != nil {
+			return err
+		}
+		audioConfig := system.AudioConfig{
+			ProjectDetailId: projectDetail.Id,
+		}
+		// 同时创建项目详情分词
+		err = tx.Create(&audioConfig).Error
+		if err != nil {
+			return err
+		}
+		videoConfig := system.VideoConfig{
+			ProjectDetailId: projectDetail.Id,
+		}
+		// 同时创建项目详情分词
+		err = tx.Create(&videoConfig).Error
+		if err != nil {
 			return err
 		}
 		return err

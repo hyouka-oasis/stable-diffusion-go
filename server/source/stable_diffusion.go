@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	systemResponse "github/stable-diffusion-go/server/model/system/response"
 	"io"
 	"net/http"
@@ -12,7 +11,6 @@ import (
 
 // StableDiffusionGenerateImage 生成图片函数
 func StableDiffusionGenerateImage(url string, request map[string]interface{}) (images []string, err error) {
-	fmt.Println(request, "request")
 	// 发送请求并获取图片数据
 	jsonData, err := json.Marshal(request)
 	if err != nil {

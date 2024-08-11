@@ -19,6 +19,7 @@ type ProjectDetail struct {
 	BreakVideo            bool             `json:"breakVideo" gorm:"default:true"`                                                               // 是否跳过存在的视频
 	ConcatAudio           bool             `json:"concatAudio" gorm:"default:false"`                                                             // 是否合并音频
 	ConcatVideo           bool             `json:"concatVideo" gorm:"default:false"`                                                             // 是否合并视频
+	OpenContext           bool             `json:"openContext" gorm:"default:true"`                                                              //是否开启上下文模式
 }
 
 func (ProjectDetail) TableName() string {

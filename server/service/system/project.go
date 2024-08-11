@@ -15,42 +15,10 @@ func (s *ProjectService) CreateProject(config system.Project) (err error) {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		var project system.Project
 		err = tx.Model(&system.Project{}).Where("name = ?", config.Name).First(&project).Error
-		if project != (system.Project{}) {
+		if err == nil {
 			return errors.New("存在相同名称项目")
 		}
 		err = tx.Create(&config).Error
-		if err != nil {
-			return err
-		}
-		projectDetail := system.ProjectDetail{
-			ProjectId: config.Id,
-		}
-		// 同时创建项目详情
-		err = tx.Create(&projectDetail).Error
-		if err != nil {
-			return err
-		}
-		participleConfig := system.ParticipleConfig{
-			ProjectDetailId: projectDetail.Id,
-		}
-		// 同时创建项目音频设置
-		err = tx.Create(&participleConfig).Error
-		if err != nil {
-			return err
-		}
-		audioConfig := system.AudioConfig{
-			ProjectDetailId: projectDetail.Id,
-		}
-		// 同时创建项目详情分词
-		err = tx.Create(&audioConfig).Error
-		if err != nil {
-			return err
-		}
-		videoConfig := system.VideoConfig{
-			ProjectDetailId: projectDetail.Id,
-		}
-		// 同时创建项目详情分词
-		err = tx.Create(&videoConfig).Error
 		if err != nil {
 			return err
 		}
@@ -58,39 +26,55 @@ func (s *ProjectService) CreateProject(config system.Project) (err error) {
 	})
 }
 
-// DeleteProject 删除项目
-func (s *ProjectService) DeleteProject(config system.Project) (err error) {
-	var entity system.Project
-	err = global.DB.Transaction(func(tx *gorm.DB) error {
-		err = tx.First(&entity, "id = ?", config.Id).Error // 根据id查询api记录
-		if errors.Is(err, gorm.ErrRecordNotFound) {        // 记录不存在
-			return err
-		}
-		err = tx.Delete(&entity).Error
-		if err != nil {
-			return err
-		}
-		var projectDetail system.ProjectDetail
-		err = tx.Model(&system.ProjectDetail{}).Where("project_id = ?", config.Id).First(&projectDetail).Error
-		if err != nil {
-			return err
-		}
-		err = tx.Where("project_id = ?", config.Id).Delete(&system.ProjectDetail{}).Error
-		if err != nil {
-			return err
-		}
-		err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.Info{}).Error
-		if err != nil {
-			return err
-		}
-		err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.StableDiffusionImages{}).Error
-		if err != nil {
-			return err
-		}
-		// 返回 nil 提交事务
-		return nil
-	})
+// UpdateProject 更新项目
+func (s *ProjectService) UpdateProject(project system.Project) (err error) {
+	err = global.DB.Model(&system.Project{}).Where("id = ?", project.Id).Update("name", project.Name).Error
+	if err != nil {
+		return err
+	}
 	return err
+}
+
+// DeleteProject 删除项目
+func (s *ProjectService) DeleteProject(projectId uint) (err error) {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
+		err = tx.Delete(&system.Project{}, "id = ?", projectId).Error
+		if err != nil {
+			return err
+		}
+		var projectDetailList []system.ProjectDetail
+		err = tx.Model(&system.ProjectDetail{}).Where("project_id = ?", projectId).Find(&projectDetailList).Error
+		if err != nil {
+			return err
+		}
+		for _, projectDetail := range projectDetailList {
+			err = tx.Delete(&system.ProjectDetail{}, "id = ?", projectDetail.Id).Error
+			if err != nil {
+				return err
+			}
+			err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.VideoConfig{}).Error
+			if err != nil {
+				return err
+			}
+			err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.ParticipleConfig{}).Error
+			if err != nil {
+				return err
+			}
+			err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.AudioConfig{}).Error
+			if err != nil {
+				return err
+			}
+			err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.Info{}).Error
+			if err != nil {
+				return err
+			}
+			err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.StableDiffusionImages{}).Error
+			if err != nil {
+				return err
+			}
+		}
+		return err
+	})
 }
 
 // GetProjectList 获取项目列表
@@ -124,6 +108,6 @@ func (s *ProjectService) GetProjectList(project system.Project, info request.Pag
 	//		OrderStr = order + " desc"
 	//	}
 	//}
-	err = db.Order(OrderStr).Find(&projectList).Error
+	err = db.Preload("List").Order(OrderStr).Find(&projectList).Error
 	return projectList, total, err
 }

@@ -14,6 +14,7 @@ func (s *ProjectRouter) InitProjectRouter(Router *gin.RouterGroup) (R gin.IRoute
 		projectRouter.GET("list", projectApi.GetProjectList)
 	}
 	{
+		projectRouter.POST("update", projectApi.UpdateProject)
 		projectRouter.POST("create", projectApi.CreateProject)
 		projectRouter.DELETE("delete", projectApi.DeleteProject)
 	}

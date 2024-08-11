@@ -58,7 +58,7 @@ func (s *ProjectDetailApi) GetProjectDetail(c *gin.Context) {
 		response.FailWithMessage("请传入参数", c)
 		return
 	}
-	err = utils.Verify(config, utils.ProjectDetailVerify)
+	err = utils.Verify(config, utils.IdVerify)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -70,4 +70,48 @@ func (s *ProjectDetailApi) GetProjectDetail(c *gin.Context) {
 		return
 	}
 	response.OkWithDetailed(detail, "获取成功", c)
+}
+
+// DeleteProjectDetail 删除详情
+func (s *ProjectDetailApi) DeleteProjectDetail(c *gin.Context) {
+	var config system.ProjectDetail
+	err := c.ShouldBindJSON(&config)
+	if err != nil {
+		response.FailWithMessage("请传入参数", c)
+		return
+	}
+	err = utils.Verify(config, utils.IdVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = projectDetailService.DeleteProjectDetail(config.Id)
+	if err != nil {
+		global.Log.Error("删除失败!", zap.Error(err))
+		response.FailWithMessage("删除失败", c)
+		return
+	}
+	response.OkWithMessage("删除成功", c)
+}
+
+// CreateProjectDetail 创建项目详情
+func (s *ProjectDetailApi) CreateProjectDetail(c *gin.Context) {
+	var config system.ProjectDetail
+	err := c.ShouldBindJSON(&config)
+	if err != nil {
+		response.FailWithMessage("请传入参数", c)
+		return
+	}
+	err = utils.Verify(config, utils.ProjectDetailVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	projectDetail, err := projectDetailService.CreateProjectDetail(config.ProjectId)
+	if err != nil {
+		global.Log.Error("创建失败!", zap.Error(err))
+		response.FailWithMessage("创建失败", c)
+		return
+	}
+	response.OkWithDetailed(&projectDetail, "创建成功", c)
 }

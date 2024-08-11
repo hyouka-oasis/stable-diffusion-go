@@ -116,7 +116,7 @@ func (s *InfoApi) ExtractTheInfoRole(c *gin.Context) {
 	err = infoService.ExtractTheInfoRole(projectDetail.Id)
 	if err != nil {
 		global.Log.Error("角色提取失败!", zap.Error(err))
-		response.FailWithMessage("角色提取失败", c)
+		response.FailWithMessage("角色提取失败:"+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("角色提取成功", c)
@@ -124,24 +124,26 @@ func (s *InfoApi) ExtractTheInfoRole(c *gin.Context) {
 
 // TranslateInfoPrompt 进行翻译
 func (s *InfoApi) TranslateInfoPrompt(c *gin.Context) {
-	var infoParams system.Info
+	var infoParams request.InfoTranslateRequest
 	err := c.ShouldBindJSON(&infoParams)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
 		return
 	}
-	if infoParams.ProjectDetailId == 0 && infoParams.Id == 0 {
-		response.FailWithMessage("projectDetailId和Id必须传一个", c)
+	if infoParams.ProjectDetailId == 0 {
+		response.FailWithMessage("请传入项目详情Id", c)
 		return
 	}
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = infoService.TranslateInfoPrompt(system.Info{
-		ProjectDetailId: infoParams.ProjectDetailId,
-		Model: global.Model{
-			Id: infoParams.Id,
+	err = infoService.TranslateInfoPrompt(request.InfoTranslateRequest{
+		Info: system.Info{
+			ProjectDetailId: infoParams.ProjectDetailId,
+			Model: global.Model{
+				Id: infoParams.Id,
+			},
 		},
 	})
 	if err != nil {
@@ -150,4 +152,26 @@ func (s *InfoApi) TranslateInfoPrompt(c *gin.Context) {
 		return
 	}
 	response.OkWithMessage("翻译成功", c)
+}
+
+// KeywordExtractionInfo 进行关键词提取
+func (s *InfoApi) KeywordExtractionInfo(c *gin.Context) {
+	var projectDetail system.ProjectDetail
+	err := c.ShouldBindJSON(&projectDetail)
+	if err != nil {
+		response.FailWithMessage("请传入参数", c)
+		return
+	}
+	err = utils.Verify(projectDetail, utils.IdVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = infoService.KeywordExtractionInfo(projectDetail.Id)
+	if err != nil {
+		global.Log.Error("关键词提取失败!", zap.Error(err))
+		response.FailWithMessage("关键词提取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("关键词提取成功", c)
 }

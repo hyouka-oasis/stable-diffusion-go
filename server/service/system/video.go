@@ -95,6 +95,9 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 			OpenSubtitles:            projectDetail.OpenSubtitles,
 			VideoConfig:              projectDetail.VideoConfig,
 		}
+		if len(infoParams.Ids) != 0 {
+			params.BreakVideo = false
+		}
 		params.Name = filename + "-" + strconv.Itoa(int(info.Id))
 		params.VideoPath = filepath.Join(savePath, params.Name+".mp4")
 		params.VideoSubtitlePath = filepath.Join(params.SavePath, params.Name+"subtitle.mp4")

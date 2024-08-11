@@ -14,8 +14,10 @@ func (s *ProjectDetailRouter) InitProjectDetailRouter(Router *gin.RouterGroup) (
 		projectDetailRouter.GET("get", projectDetailApi.GetProjectDetail)
 	}
 	{
+		projectDetailRouter.POST("create", projectDetailApi.CreateProjectDetail)
 		projectDetailRouter.POST("upload", projectDetailApi.UploadProjectDetailFile)
 		projectDetailRouter.POST("update", projectDetailApi.UpdateProjectDetail)
+		projectDetailRouter.DELETE("delete", projectDetailApi.DeleteProjectDetail)
 	}
 	return projectDetailRouter
 }

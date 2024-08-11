@@ -47,7 +47,7 @@ func (s *ProjectApi) DeleteProject(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = projectService.DeleteProject(project)
+	err = projectService.DeleteProject(project.Id)
 	if err != nil {
 		global.Log.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败", c)
@@ -81,4 +81,26 @@ func (s *ProjectApi) GetProjectList(c *gin.Context) {
 		Page:     pageInfo.Page,
 		PageSize: pageInfo.PageSize,
 	}, "获取成功", c)
+}
+
+// UpdateProject 更新
+func (s *ProjectApi) UpdateProject(c *gin.Context) {
+	var project system.Project
+	err := c.ShouldBindJSON(&project)
+	if err != nil {
+		response.FailWithMessage("请传入参数", c)
+		return
+	}
+	err = utils.Verify(project, utils.ProjectVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = projectService.UpdateProject(project)
+	if err != nil {
+		global.Log.Error("更新失败!", zap.Error(err))
+		response.FailWithMessage("更新失败", c)
+		return
+	}
+	response.OkWithMessage("更新成功", c)
 }

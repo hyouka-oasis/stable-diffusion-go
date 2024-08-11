@@ -11,5 +11,7 @@ var (
 	PythonParticiplePythonPath string
 	//go:embed voice_caption.py
 	PythonVoiceCaptionPath string
-	PythonRequirementsName = "requirements.txt"
+	//go:embed keyword_extraction.py
+	PythonKeywordExtractionPath string
+	PythonRequirementsName      = "requirements.txt"
 )
