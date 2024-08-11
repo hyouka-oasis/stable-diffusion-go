@@ -13,7 +13,7 @@ import { createAudioSrt } from "renderer/api/audioSrtApi";
 import { host } from "renderer/request/request";
 import { audioList } from "renderer/utils/audio-list";
 import VanillaUploadJson from "renderer/components/json-edit/VanillaUploadJson";
-import { projectApi, stableDiffusionApi } from "renderer/api";
+import { infoApi, projectDetailApi, stableDiffusionApi, videoApi } from "renderer/api";
 import { AppGlobalContext } from "renderer/shared/context/appGlobalContext";
 import { FileResponse } from "renderer/api/response/fileResponse";
 import { RcFile } from "antd/lib/upload";
@@ -88,8 +88,8 @@ const ProjectDetailPage = () => {
      */
     const getProjectDetailConfig = async (id: number) => {
         setTableLoading(true);
-        const detail = await projectApi.getProjectDetail({
-            projectId: id
+        const detail = await projectDetailApi.getProjectDetail({
+            id: id
         });
         setProjectDetail(detail);
         form.setFieldsValue({
@@ -146,7 +146,7 @@ const ProjectDetailPage = () => {
                     resolve(false);
                     return;
                 }
-                projectApi.updateProjectDetail({
+                projectDetailApi.updateProjectDetail({
                     id: projectDetail.id,
                     stableDiffusionConfig: data,
                     ...values,
@@ -168,7 +168,7 @@ const ProjectDetailPage = () => {
                 resolve(true);
                 return;
             }
-            projectApi.uploadProjectDetail({
+            projectDetailApi.uploadProjectDetail({
                 id: projectDetail.id,
                 file: values.files?.[0]?.originFileObj as RcFile,
                 saveType: values?.saveType,
@@ -185,7 +185,17 @@ const ProjectDetailPage = () => {
      */
     const extractTheRole = async () => {
         if (!projectDetail) return;
-        await projectApi.extractTheCharacterProjectDetailParticipleList({
+        await infoApi.extractTheCharacterProjectDetailParticipleList({
+            id: projectDetail?.id
+        });
+        await getProjectDetailConfig(state.id);
+    };
+    /**
+     * 进行人物提取
+     */
+    const keywordsExtract = async () => {
+        if (!projectDetail) return;
+        await infoApi.keywordsExtractInfoList({
             id: projectDetail?.id
         });
         await getProjectDetailConfig(state.id);
@@ -200,7 +210,7 @@ const ProjectDetailPage = () => {
     }) => {
         if (!projectDetail) return;
         setRenderLoading(true);
-        await projectApi.translateProjectDetailParticipleList(data);
+        await infoApi.translateProjectDetailParticipleList(data);
         setRenderLoading(false);
         openMessageBox({ type: "success", message: "翻译成功" });
         await getProjectDetailConfig(state.id);
@@ -274,7 +284,7 @@ const ProjectDetailPage = () => {
                         fileId: upload.id,
                     });
                 }
-                await projectApi.updateProjectDetailInfo(Object.assign({
+                await infoApi.updateProjectDetailInfo(Object.assign({
                     id: info.id,
                     stableDiffusionImages,
                 }, (selectedId && !info.stableDiffusionImageId) ? {
@@ -309,7 +319,7 @@ const ProjectDetailPage = () => {
         };
         await stableDiffusionApi.addImage(data);
         if (!info.stableDiffusionImageId) {
-            await projectApi.updateProjectDetailInfo({
+            await infoApi.updateProjectDetailInfo({
                 id: info.id,
                 stableDiffusionImageId: upload.id
             });
@@ -326,7 +336,7 @@ const ProjectDetailPage = () => {
         const ids = id ? [ id ] : [];
         if (projectDetail) {
             setRenderLoading(true);
-            await projectApi.createInfoVideo({
+            await videoApi.createInfoVideo({
                 ids,
                 projectDetailId: projectDetail?.id,
             });
@@ -340,7 +350,7 @@ const ProjectDetailPage = () => {
      * @param infoId
      */
     const onStableDiffusionImagesOnChange = async (selectedId: number, infoId: number) => {
-        await projectApi.updateProjectDetailInfo(Object.assign({
+        await infoApi.updateProjectDetailInfo(Object.assign({
             id: infoId,
             stableDiffusionImageId: selectedId
         }));
@@ -361,7 +371,7 @@ const ProjectDetailPage = () => {
     };
 
     const onDetailProjectInfo = async (id: number) => {
-        await projectApi.deleteInfo({ id });
+        await infoApi.deleteInfo({ id });
         await getProjectDetailConfig(state.id);
     };
 
@@ -378,7 +388,7 @@ const ProjectDetailPage = () => {
             openMessageBox({ type: "error", message: "请输入正确的分贝值!" });
             return;
         }
-        await projectApi.updateProjectDetailInfo({
+        await infoApi.updateProjectDetailInfo({
             id: id,
             audioConfig: {
                 ...values,
@@ -419,6 +429,12 @@ const ProjectDetailPage = () => {
             fixed: "left",
         },
         {
+            dataIndex: "keywordsText",
+            title: "中文关键词",
+            valueType: "textarea",
+            width: 300
+        },
+        {
             dataIndex: "prompt",
             title: "正向提示词",
             valueType: "textarea",
@@ -450,7 +466,7 @@ const ProjectDetailPage = () => {
                                 {
                                     (values as FileResponse[]).map(file => {
                                         return (
-                                            <Radio key={file.id} value={file.id}>
+                                            <Radio key={file.id} value={file.fileId}>
                                                 <span
                                                     className={"action-delete"} onClick={async (e) => {
                                                         e.preventDefault();
@@ -483,7 +499,7 @@ const ProjectDetailPage = () => {
                         <Button
                             type={"link"} onClick={async () => {
                                 setRenderLoading(true);
-                                await projectApi.updateAudio({ projectDetailId: projectDetail?.id });
+                                await infoApi.updateAudio({ projectDetailId: projectDetail?.id });
                                 openMessageBox({ type: "success", message: "一键设置成功" });
                                 await getProjectDetailConfig(state.id);
                                 setRenderLoading(false);
@@ -663,7 +679,7 @@ const ProjectDetailPage = () => {
                             await onDetailProjectInfo(data.id);
                         },
                         onSave: async (_, data) => {
-                            await projectApi.updateProjectDetailInfo({
+                            await infoApi.updateProjectDetailInfo({
                                 ...data
                             });
                             openMessageBox({ type: "success", message: "保存成功" });
@@ -713,7 +729,7 @@ const ProjectDetailPage = () => {
                                     },
                                     {
                                         value: "update",
-                                        label: "覆盖"
+                                        label: "追加"
                                     }
                                 ]}
                                 rules={[ { required: true, message: '请选择添加类型' } ]}
@@ -747,6 +763,9 @@ const ProjectDetailPage = () => {
                                 rules={[ { required: true, message: '请上传文本' } ]}
                             />
                         </ModalForm>,
+                        <Button key={"keywords"} disabled={!projectDetail?.infoList?.length} onClick={keywordsExtract}>
+                            关键字提取
+                        </Button>,
                         <Tooltip key={"role"} title={"当前版本没有开放分词词典,所以并不准确"}>
                             <Button key={"extract"} disabled={!projectDetail?.infoList?.length} onClick={extractTheRole}>
                                 角色提取
@@ -890,6 +909,25 @@ const ProjectDetailPage = () => {
                                             }
                                         ]}
                                         rules={[ { required: true, message: '请选择语言' } ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={"openContext"}
+                                        label="开启上下文"
+                                        placeholder="请选择是否开启上下文"
+                                        options={[
+                                            {
+                                                // @ts-ignore
+                                                value: true,
+                                                label: "是"
+                                            },
+                                            {
+                                                // @ts-ignore
+                                                value: false,
+                                                label: "否"
+                                            }
+                                        ]}
+                                        rules={[ { required: true, message: '请选择是否开启上下文' } ]}
                                     />
                                 </ProForm.Group>
                                 <ProForm.Group title={"分词配置"}>

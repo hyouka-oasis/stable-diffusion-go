@@ -1,7 +1,7 @@
-import { deleteApi, getApi, postApi, postFormApi } from "renderer/request/request";
+import { deleteApi, getApi, postApi } from "renderer/request/request";
 import { BasicPageInfoRequest } from "renderer/api/request/basicPageInfoRequest";
-import { Info, ProjectDetailResponse, ProjectResponse } from "renderer/api/response/projectResponse";
-import { BasicArrayResponses, BasicResponse } from "renderer/api/response/basicPageInfoResponse";
+import { ProjectResponse } from "renderer/api/response/projectResponse";
+import { BasicArrayResponses } from "renderer/api/response/basicPageInfoResponse";
 
 interface ProjectApiProps {
     name: string;
@@ -28,92 +28,11 @@ export const deleteProject = (data: { id: number }) => {
     });
 };
 
-export const uploadProjectDetail = (data: any): Promise<ProjectResponse> => {
-    return postFormApi({
-        url: "/projectDetail/upload",
+export const updateProject = (data: any) => {
+    return postApi({
+        url: "/project/update",
         data
     });
 };
 
-export const getProjectDetail = (data: any): Promise<ProjectDetailResponse> => {
-    return getApi({
-        url: "/projectDetail/get",
-        data
-    });
-};
-/**
- * 更新数据
- * @param data
- */
-export const updateProjectDetail = (data: Partial<ProjectDetailResponse & {
-    batch?: boolean
-}>): Promise<ProjectDetailResponse> => {
-    return postApi({
-        url: "/projectDetail/update",
-        data
-    });
-};
-/**
- * 进行角色提取
- * @param data
- */
-export const extractTheCharacterProjectDetailParticipleList = (data: Pick<BasicResponse, "id">): Promise<ProjectDetailResponse> => {
-    return postApi({
-        url: "/info/extractRole",
-        data
-    });
-};
-/**
- * 转换
- * @param data
- */
-export const translateProjectDetailParticipleList = (data: Pick<Partial<BasicResponse>, "id"> & Pick<Info, "projectDetailId">): Promise<ProjectDetailResponse> => {
-    return postApi({
-        url: "/info/translate",
-        data
-    });
-};
-/**
- * 更新数据
- * @param data
- */
-export const updateProjectDetailInfo = (data: any): Promise<void> => {
-    return postApi({
-        url: "/info/update",
-        data
-    });
-};
-
-/**
- * 获取数据
- * @param data
- */
-export const getProjectDetailInfo = (data: {
-    id: number;
-}): Promise<Info> => {
-    return getApi({
-        url: "/info/get",
-        data
-    });
-};
-
-export const deleteInfo = (data: { id: number }) => {
-    return deleteApi({
-        url: "/info/delete",
-        data
-    });
-};
-export const updateAudio = (data: { projectDetailId?: number }) => {
-    return postApi({
-        url: "/info/updateAudio",
-        data
-    });
-};
-
-export const createInfoVideo = (data: { ids?: number[], projectDetailId: number }) => {
-    return postApi({
-        url: "/video/create",
-        data
-    });
-};
 

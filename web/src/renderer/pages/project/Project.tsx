@@ -1,10 +1,12 @@
 import styled from "styled-components";
-import { Button, Col, Input, Modal, Row, Table, TableProps } from "antd";
-import { useEffect, useState } from "react";
+import { Button, Col, Input, Modal, Row, Table, TableColumnsType } from "antd";
+import { useContext, useEffect, useState } from "react";
 import useMessage from "antd/es/message/useMessage";
 import { useNavigate } from "react-router-dom";
 import { ProjectResponse } from "renderer/api/response/projectResponse";
-import { createProject, deleteProject, getProjectList } from "renderer/api/projectApi";
+import { projectApi, projectDetailApi } from "renderer/api";
+import { EditableProTable, ProColumns } from "@ant-design/pro-components";
+import { AppGlobalContext } from "renderer/shared/context/appGlobalContext";
 
 const ProjectWrap = styled.div`
     .action {
@@ -12,6 +14,10 @@ const ProjectWrap = styled.div`
         align-items: center;
         justify-content: end;
         padding-bottom: 24px;
+    }
+
+    .ant-pro-card-body {
+        padding: 0;
     }
 `;
 
@@ -25,6 +31,7 @@ const ProjectPage = () => {
     const [ messageApi, messageContext ] = useMessage();
     const [ projectList, setProjectList ] = useState<ProjectResponse[]>([]);
     const navigate = useNavigate();
+    const { openMessageBox } = useContext(AppGlobalContext);
 
     const onOkHandler = async () => {
         if (!name) {
@@ -33,31 +40,48 @@ const ProjectPage = () => {
             });
             return;
         }
-        await createProject({ name });
+        await projectApi.createProject({ name });
         messageApi.success({
             content: "创建成功"
         });
         setOpen(false);
         await getProjectListApi();
     };
-
+    /**
+     * 获取列表
+     */
     const getProjectListApi = async () => {
-        const data = await getProjectList({
+        const data = await projectApi.getProjectList({
             page: 1,
             pageSize: -1,
         });
         setProjectList(data.list);
     };
-
+    /**
+     * 删除项目
+     * @param id
+     */
     const onDeleteProject = async (id: number) => {
-        await deleteProject({ id });
+        await projectApi.deleteProject({ id });
+        messageApi.success({
+            content: "删除成功"
+        });
+        await getProjectListApi();
+    };
+    /**
+     * 删除详情
+     * @param id
+     */
+    const onDeleteProjectDetail = async (id: number) => {
+        await projectDetailApi.deleteProjectDetail({ id });
         messageApi.success({
             content: "删除成功"
         });
         await getProjectListApi();
     };
 
-    const columns: TableProps<ProjectResponse>["columns"] = [
+
+    const columns: ProColumns<ProjectResponse>[] = [
         {
             title: "项目名称",
             dataIndex: "name",
@@ -66,20 +90,30 @@ const ProjectPage = () => {
         },
         {
             title: "操作",
-            dataIndex: "description",
-            width: 180,
-            render(_, record) {
+            valueType: 'option',
+            align: "center",
+            width: 220,
+            render(text, record, _, action) {
                 return (
                     <TableActionWrap>
                         <Button
                             type={"link"} onClick={() => {
+                                action?.startEditable?.(record.id);
+                            }}>
+                            编辑
+                        </Button>
+                        <Button
+                            type={"link"} onClick={async () => {
+                                const projectDetail = await projectDetailApi.createProjectDetail({
+                                    projectId: record.id
+                                });
                                 navigate("/detail", {
                                     state: {
-                                        id: record.id
+                                        id: projectDetail.id
                                     }
                                 });
                             }}>
-                            编辑
+                            新增
                         </Button>
                         <Button type={"link"} danger onClick={() => onDeleteProject(record.id)}>
                             删除
@@ -89,6 +123,37 @@ const ProjectPage = () => {
             }
         }
     ];
+
+    const expandedRowRender = (recode: any) => {
+        const columns: TableColumnsType<ProjectResponse> = [
+            { title: '书本名称', dataIndex: 'fileName', key: 'fileName' },
+            {
+                title: "操作",
+                dataIndex: "description",
+                width: 180,
+                render(_, record) {
+                    return (
+                        <TableActionWrap>
+                            <Button
+                                type={"link"} onClick={() => {
+                                    navigate("/detail", {
+                                        state: {
+                                            id: record.id
+                                        }
+                                    });
+                                }}>
+                                编辑
+                            </Button>
+                            <Button type={"link"} danger onClick={() => onDeleteProjectDetail(record.id)}>
+                                删除
+                            </Button>
+                        </TableActionWrap>
+                    );
+                }
+            }
+        ];
+        return <Table columns={columns} dataSource={recode.list} pagination={false}/>;
+    };
 
     useEffect(() => {
         getProjectListApi();
@@ -102,7 +167,27 @@ const ProjectPage = () => {
                     新增项目
                 </Button>
             </div>
-            <Table columns={columns} rowKey={"id"} dataSource={projectList}/>
+            <EditableProTable
+                recordCreatorProps={false}
+                columns={columns}
+                rowKey={"id"}
+                value={projectList}
+                editable={{
+                    onDelete: async (_, record) => {
+                        await onDeleteProject(record.id);
+                    },
+                    onSave: async (_, data) => {
+                        await projectApi.updateProject({
+                            ...data
+                        });
+                        openMessageBox({ type: "success", message: "保存成功" });
+                        await getProjectListApi();
+                    },
+                }}
+                expandable={{
+                    expandedRowRender: expandedRowRender,
+                }}
+            />
             <Modal open={open} title={"新增项目"} onOk={onOkHandler} onCancel={() => setOpen(false)}>
                 <Row justify="center" align="middle">
                     <Col span={6}>
