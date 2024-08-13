@@ -134,6 +134,11 @@ export default function App() {
                                     label: '项目管理',
                                 },
                                 {
+                                    key: '/stableDiffusionSettings',
+                                    icon: <SignatureOutlined/>,
+                                    label: '通用stable-diffusion配置',
+                                },
+                                {
                                     key: '/loras',
                                     icon: <TagOutlined/>,
                                     label: 'loras管理',

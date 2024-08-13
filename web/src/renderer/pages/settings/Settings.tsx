@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button, Form, Input, message, Select } from "antd";
 import styled from "styled-components";
-import { settingsApi } from "renderer/api";
+import { ollamaApi, settingsApi } from "renderer/api";
 import FileSvg from "renderer/assets/svg-com/file.svg";
 import { ipcApi } from "renderer/ipc/BasicRendererIpcAdapter";
+import { DefaultOptionType } from "rc-select/lib/Select";
 
 const translateConfigs = [
     {
@@ -40,6 +41,7 @@ const SettingsPage = () => {
     const [ form ] = Form.useForm();
     const [ settingsId, setSettingsId ] = useState<number>();
     const [ messageApi, messageContext ] = message.useMessage();
+    const [ modelList, setModelList ] = useState<DefaultOptionType[]>([]);
     const getSettingsConfig = async () => {
         const config = await settingsApi.getSettings();
         setSettingsId(config.id);
@@ -74,6 +76,18 @@ const SettingsPage = () => {
         }
     };
 
+    const getOllamaModelList = async (open) => {
+        if (open) {
+            const data = await ollamaApi.getOllamaModelList();
+            setModelList(() => {
+                return data?.list?.map(item => ({
+                    label: item.name,
+                    value: item.model
+                }));
+            });
+        }
+    };
+
     useEffect(() => {
         getSettingsConfig();
     }, []);
@@ -103,7 +117,7 @@ const SettingsPage = () => {
                                             <Input/>
                                         </Form.Item>
                                         <Form.Item rules={[ { required: true, message: '请输入ollama模型名称' } ]} name={[ "ollamaConfig", "modelName" ]} label={"ollama模型名称"}>
-                                            <Input/>
+                                            <Select options={modelList} onDropdownVisibleChange={getOllamaModelList}/>
                                         </Form.Item>
                                     </>
                                 );

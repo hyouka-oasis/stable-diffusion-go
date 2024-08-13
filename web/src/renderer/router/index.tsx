@@ -8,6 +8,7 @@ const FilesPage = lazy(() => import("renderer/pages/file/File"));
 const SettingsPage = lazy(() => import("renderer/pages/settings/Settings"));
 const NegativePromptsPage = lazy(() => import("renderer/pages/negative-prompts/NegativePrompts"));
 const HelpPage = lazy(() => import("renderer/pages/help/Help"));
+const StableDiffusionSettingsPage = lazy(() => import("renderer/pages/stable-diffusion-settings/StableDiffusionSettings"));
 
 
 export const routeRender = (routeList: any[]) => {
@@ -34,6 +35,10 @@ const routers = [
     {
         path: "/detail",
         element: <ProjectDetailPage/>,
+    },
+    {
+        path: "/stableDiffusionSettings",
+        element: <StableDiffusionSettingsPage/>,
     },
     {
         path: "/loras",

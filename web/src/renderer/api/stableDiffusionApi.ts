@@ -4,12 +4,50 @@ import { LorasResponse } from "renderer/api/response/lorasResponse";
 import { BasicArrayResponses } from "renderer/api/response/basicPageInfoResponse";
 import { StableDiffusionNegativePromptResponse } from "renderer/api/response/stableDiffusionResponse";
 
-export const getStableDiffusionList = () => {
+/**
+ * 获取配置列表
+ * @param data
+ */
+export const getStableDiffusionSettingsList = (data: BasicPageInfoRequest<Partial<StableDiffusionNegativePromptResponse>>): Promise<BasicArrayResponses<StableDiffusionNegativePromptResponse>> => {
     return getApi({
-        url: "/stableDiffusion/getConfig"
+        url: "/stableDiffusion/settings/get",
+        data
+    });
+};
+/**
+ * 创建配置
+ * @param data
+ */
+export const createStableDiffusionSettings = (data: Partial<StableDiffusionNegativePromptResponse>): Promise<void> => {
+    return postApi({
+        url: "/stableDiffusion/settings/create",
+        data
     });
 };
 
+/**
+ * 更新
+ * @param data
+ */
+export const updateStableDiffusionSettings = (data: Partial<StableDiffusionNegativePromptResponse>): Promise<void> => {
+    return postApi({
+        url: "/stableDiffusion/settings/update",
+        data
+    });
+};
+
+/**
+ * 删除
+ * @param data
+ */
+export const deleteStableDiffusionSettings = (data: {
+    ids: number[];
+}): Promise<void> => {
+    return deleteApi({
+        url: "/stableDiffusion/settings/delete",
+        data
+    });
+};
 
 export const getStableDiffusionLorasList = (data: BasicPageInfoRequest<Partial<LorasResponse>>): Promise<BasicArrayResponses<LorasResponse>> => {
     return getApi({
@@ -17,7 +55,6 @@ export const getStableDiffusionLorasList = (data: BasicPageInfoRequest<Partial<L
         data
     });
 };
-
 
 export const createStableDiffusionLoras = (data: any) => {
     return postApi({
@@ -44,7 +81,6 @@ export const stableDiffusionDeleteImage = (data: {
         data
     });
 };
-
 
 export const getNegativePromptList = (data: BasicPageInfoRequest): Promise<BasicArrayResponses<StableDiffusionNegativePromptResponse>> => {
     return getApi({
@@ -73,7 +109,6 @@ export const deleteNegativePrompt = (data: Partial<StableDiffusionNegativePrompt
         data
     });
 };
-
 
 export const addImage = (data: Partial<any>): Promise<void> => {
     return postApi({

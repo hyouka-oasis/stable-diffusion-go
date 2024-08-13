@@ -5,9 +5,11 @@ import * as infoApi from "./infoApi";
 import * as settingsApi from "./settingsApi";
 import * as videoApi from "./videoApi";
 import * as stableDiffusionApi from "./stableDiffusionApi";
+import * as ollamaApi from "./ollamaApi";
 
 
 export {
+    ollamaApi,
     videoApi,
     infoApi,
     projectDetailApi,

@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router";
 import styled from "styled-components";
-import { Button, Divider, Form, Radio, Space, Spin, Tooltip, Upload, UploadProps } from "antd";
+import { Button, Divider, Form, Input, Radio, Space, Spin, Tooltip, Upload, UploadProps } from "antd";
 import { useContext, useEffect, useRef, useState } from "react";
 import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect, ProFormText, ProFormUploadButton } from "@ant-design/pro-components";
 import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
@@ -20,6 +20,7 @@ import { RcFile } from "antd/lib/upload";
 import { navBarHeight } from "renderer/shared";
 import { ReactSmoothScrollbar } from "renderer/components/smooth-scroll/SmoothScroll";
 import { ipcApi } from "renderer/ipc/BasicRendererIpcAdapter";
+import FileSvg from "renderer/assets/svg-com/file.svg";
 
 const ProjectDetailPageWrap = styled.div`
 `;
@@ -261,8 +262,11 @@ const ProjectDetailPage = () => {
             const images = await stableDiffusionText2Image({
                 ids: [ info.id ],
                 projectDetailId: projectDetail?.id,
+            }).catch(() => {
+                setRenderLoading(false);
+                return;
             });
-            if (images.length) {
+            if (images?.length) {
                 for (let i = 0; i < images.length; i++) {
                     const image = images[i];
                     const blob = dataURLtoBlob(`data:image/png;base64,${image}`);
@@ -290,8 +294,8 @@ const ProjectDetailPage = () => {
                 }, (selectedId && !info.stableDiffusionImageId) ? {
                     stableDiffusionImageId: selectedId
                 } : {}));
+                await getProjectDetailConfig(state.id);
             }
-            await getProjectDetailConfig(state.id);
             setRenderLoading(false);
         };
         if (infoDetail) {
@@ -402,6 +406,22 @@ const ProjectDetailPage = () => {
     const getDocumentHeight = () => {
         const documentHeight = document.body.clientHeight;
         setTableHeight(documentHeight - navBarHeight() - 200);
+    };
+
+    const onPromptUrlPathSelect = async () => {
+        const folderValues = await ipcApi.fileAdapter.onFolderSelect({
+            properties: [ "openFile" ],
+            filters: [
+                {
+                    name: "promptUrl",
+                    extensions: [ "txt" ]
+                },
+            ]
+        });
+        if (!folderValues.data.canceled) {
+            const selectPath = folderValues.data.filePaths[0];
+            form.setFieldValue("promptUrl", selectPath);
+        }
     };
 
     const onFilePathSelect = async () => {
@@ -929,6 +949,9 @@ const ProjectDetailPage = () => {
                                         ]}
                                         rules={[ { required: true, message: '请选择是否开启上下文' } ]}
                                     />
+                                    <Form.Item rules={[ { required: false, message: '自定义prompt路径' } ]} label={"自定义prompt路径"} name={"promptUrl"}>
+                                        <Input className={"sava-path"} addonAfter={<div className={"file-svg"} onClick={onPromptUrlPathSelect}><FileSvg/></div>}/>
+                                    </Form.Item>
                                 </ProForm.Group>
                                 <ProForm.Group title={"分词配置"}>
                                     <ProFormDigit
