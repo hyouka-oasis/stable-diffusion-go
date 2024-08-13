@@ -136,15 +136,26 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 		}
 		return err
 	} else if currentSettings.TranslateType == "ollama" {
-		var message []openai.ChatCompletionMessage
-		promptByte, openPromptError := os.ReadFile("F:\\stable-diffusion-go\\server\\sd-prompt.txt")
-		if openPromptError != nil {
-			return openPromptError
+		var messageList []openai.ChatCompletionMessage
+		if projectDetail.PromptUrl != "" {
+			promptByte, openPromptError := os.ReadFile(projectDetail.PromptUrl)
+			if openPromptError != nil {
+				promptByte = []byte{}
+			}
+			messageList = append(messageList, openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleSystem,
+				Content: string(promptByte),
+			})
+			// 这边先走一遍上下文初始化
+			content, err := source.OpenaiClient(currentSettings.OllamaConfig, &messageList)
+			if err != nil {
+				return errors.New("初始化上下文失败")
+			}
+			messageList = append(messageList, openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleAssistant,
+				Content: content,
+			})
 		}
-		message = append(message, openai.ChatCompletionMessage{
-			Role:    openai.ChatMessageRoleSystem,
-			Content: string(promptByte),
-		})
 		for _, info := range infoList {
 			lorasText := ""
 			for _, lora := range loras {
@@ -161,7 +172,7 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 			} else {
 				infoText = info.KeywordsText
 			}
-			prompt, _ := source.ChatgptOllama(infoText, currentSettings.OllamaConfig, projectDetail.OpenContext, &message)
+			prompt, _ := source.ChatgptOllama(infoText, currentSettings.OllamaConfig, projectDetail.OpenContext, &messageList)
 			if lorasText != "" {
 				info.Prompt = prompt + "," + lorasText
 			} else {

@@ -54,8 +54,10 @@ func Routers() *gin.Engine {
 		systemRouter.InitStableDiffusionRouter(PublicGroup)               // stableDiffusionLoras接口
 		systemRouter.InitStableDiffusionNegativePromptRouter(PublicGroup) // 通用反向提示词接口
 		systemRouter.InitAudioSrtRouter(PublicGroup)                      // 音频字幕生成接口
-		systemRouter.InitVideoRouter(PublicGroup)                         // 音频字幕生成接口
-		systemRouter.InitBasicRouter(PublicGroup)                         // 音频字幕生成接口
+		systemRouter.InitVideoRouter(PublicGroup)                         // 视频生成接口
+		systemRouter.InitStableDiffusionSettingsRouter(PublicGroup)       // stable-diffusion通用配置
+		systemRouter.InitBasicRouter(PublicGroup)                         // 通用系统接口
+		systemRouter.InitOllamaRouter(PublicGroup)                        // 通用系统接口
 	}
 	{
 		exampleRouter.InitFileUploadAndDownloadRouter(PublicGroup)

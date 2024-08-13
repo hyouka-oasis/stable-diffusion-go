@@ -4,10 +4,15 @@ type ServiceGroup struct {
 	ProjectService
 	ProjectDetailService
 	InfoService
-	SettingsService
+
+	AudioSrtService
+	VideoService
+	OllamaService
+
+	StableDiffusionSettingsService
 	StableDiffusionLorasService
 	StableDiffusionService
 	StableDiffusionNegativePromptService
-	AudioSrtService
-	VideoService
+
+	SettingsService
 }

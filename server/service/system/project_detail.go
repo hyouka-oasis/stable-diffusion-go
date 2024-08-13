@@ -129,7 +129,7 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 		if err != nil {
 			return err
 		}
-		err = tx.Model(&system.ProjectDetail{}).Where("id = ?", config.Id).Update("open_subtitles", config.OpenSubtitles).Update("break_audio", config.BreakAudio).Update("break_video", config.BreakVideo).Update("concat_audio", config.ConcatAudio).Update("concat_video", config.ConcatVideo).Error
+		err = tx.Model(&system.ProjectDetail{}).Where("id = ?", config.Id).Update("open_context", config.OpenContext).Update("open_subtitles", config.OpenSubtitles).Update("break_audio", config.BreakAudio).Update("break_video", config.BreakVideo).Update("concat_audio", config.ConcatAudio).Update("concat_video", config.ConcatVideo).Error
 		if err != nil {
 			return err
 		}

@@ -15,4 +15,5 @@ var (
 	StableDiffusionNegativePromptParamsVerify = Rules{"Text": {NotEmpty()}, "Name": {NotEmpty()}}
 	PageInfoVerify                            = Rules{"Page": {NotEmpty()}, "PageSize": {NotEmpty()}}
 	AddStableDiffusionImageVerify             = Rules{"InfoId": {NotEmpty()}, "ProjectDetailId": {NotEmpty()}, "Name": {NotEmpty()}, "Url": {NotEmpty()}, "Tag": {NotEmpty()}, "Key": {NotEmpty()}, "FileId": {NotEmpty()}}
+	StableDiffusionSettingsVerify             = Rules{"Text": {NotEmpty()}, "Name": {NotEmpty()}}
 )

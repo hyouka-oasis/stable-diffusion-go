@@ -8,13 +8,18 @@ type ApiGroup struct {
 	ProjectApi
 	ProjectDetailApi
 	InfoApi
-	SettingsApi
+
+	AudioSrtApi
+	VideoApi
+	OllamaApi
+	BasicApi
+
+	StableDiffusionSettingsApi
 	StableDiffusionLorasApi
 	StableDiffusionApi
 	StableDiffusionNegativePromptApi
-	AudioSrtApi
-	VideoApi
-	BasicApi
+
+	SettingsApi
 }
 
 var (
@@ -27,4 +32,6 @@ var (
 	stableDiffusionNegativePromptService = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionNegativePromptService
 	audioSrtService                      = service.ServiceGroupApp.SystemServiceGroup.AudioSrtService
 	videoService                         = service.ServiceGroupApp.SystemServiceGroup.VideoService
+	stableDiffusionSettingsService       = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionSettingsService
+	ollamaService                        = service.ServiceGroupApp.SystemServiceGroup.OllamaService
 )

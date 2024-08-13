@@ -16,9 +16,6 @@ func Gorm() *gorm.DB {
 func RegisterTables() {
 	db := global.DB
 	err := db.AutoMigrate(
-		system.StableDiffusionLoras{},
-		system.StableDiffusionImages{},
-		system.StableDiffusionNegativePrompt{},
 		system.Project{},
 		system.ProjectDetail{},
 		system.ParticipleConfig{},
@@ -30,6 +27,11 @@ func RegisterTables() {
 		system.SettingsStableDiffusionConfig{},
 		system.SettingsOllamaConfig{},
 		system.SettingsAliyunConfig{},
+
+		system.StableDiffusionLoras{},
+		system.StableDiffusionImages{},
+		system.StableDiffusionNegativePrompt{},
+		system.StableDiffusionSettings{},
 
 		example.ExaFile{},
 		example.ExaFileChunk{},

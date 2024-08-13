@@ -37,7 +37,7 @@ func startGinServer() {
 
 func main() {
 	var executePath string
-	flag.StringVar(&executePath, "execute_path", "", "环境路径") // 定义一个字符串类型的参数name
+	flag.StringVar(&executePath, "execute_path", "", "环境路径")
 	flag.Parse()
 	// 解析命令行参数
 	if executePath == "" {

@@ -4,11 +4,16 @@ type RouterGroup struct {
 	ProjectRouter
 	ProjectDetailRouter
 	InfoRouter
-	SettingsRouter
+	BasicRouter
+
+	AudioSrtRouter
+	VideoRouter
+	OllamaRouter
+
 	StableDiffusionLorasRouter
 	StableDiffusionRouter
 	StableDiffusionNegativePromptRouter
-	AudioSrtRouter
-	VideoRouter
-	BasicRouter
+	StableDiffusionSettingsRouter
+
+	SettingsRouter
 }

@@ -11,7 +11,7 @@ type ProjectDetail struct {
 	ParticipleConfig      ParticipleConfig `json:"participleConfig" form:"participleConfig"`
 	InfoList              []Info           `json:"infoList"`
 	StableDiffusionConfig string           `json:"stableDiffusionConfig" gorm:"type:json;default:\"{\n  \"width\":512,\n  \"height\": 512\n}\""` // api调用参数
-	Language              string           `json:"language" gorm:"default:zh"`                                                                   //语言
+	Language              string           `json:"language" gorm:"default:zh"`                                                                   // 语言
 	AudioConfig           AudioConfig      `json:"audioConfig"`                                                                                  // 音频配置
 	VideoConfig           VideoConfig      `json:"videoConfig"`                                                                                  // 视频配置
 	OpenSubtitles         bool             `json:"openSubtitles" gorm:"default:true"`                                                            // 是否开启字幕
@@ -19,7 +19,8 @@ type ProjectDetail struct {
 	BreakVideo            bool             `json:"breakVideo" gorm:"default:true"`                                                               // 是否跳过存在的视频
 	ConcatAudio           bool             `json:"concatAudio" gorm:"default:false"`                                                             // 是否合并音频
 	ConcatVideo           bool             `json:"concatVideo" gorm:"default:false"`                                                             // 是否合并视频
-	OpenContext           bool             `json:"openContext" gorm:"default:true"`                                                              //是否开启上下文模式
+	OpenContext           bool             `json:"openContext" gorm:"default:true"`                                                              // 是否开启上下文模式
+	PromptUrl             string           `json:"promptUrl"`                                                                                    // 自定义训练prompt地址
 }
 
 func (ProjectDetail) TableName() string {
