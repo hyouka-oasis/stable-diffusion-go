@@ -1,9 +1,9 @@
-import VanillaJson from "./VanillaJson.tsx";
 import { Button, Upload, UploadProps } from "antd";
 import { ExportOutlined, ImportOutlined } from "@ant-design/icons";
 import { JSONEditorPropsOptional } from "vanilla-jsoneditor";
 import { FC } from "react";
 import styled from "styled-components";
+import VanillaJson from "renderer/components/json-edit/VanillaJson";
 
 const VanillaUploadJsonActionWrap = styled.div`
     margin-top: 24px;
