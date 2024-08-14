@@ -1,7 +1,6 @@
 package system
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github/stable-diffusion-go/server/global"
@@ -26,7 +25,7 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 		return errors.New("请先初始化配置")
 	}
 	var projectDetail system.ProjectDetail
-	err = global.DB.Model(&system.ProjectDetail{}).Preload("VideoConfig").First(&projectDetail, "id = ?", infoParams.ProjectDetailId).Error
+	err = global.DB.Model(&system.ProjectDetail{}).Preload("StableDiffusionConfig").Preload("VideoConfig").First(&projectDetail, "id = ?", infoParams.ProjectDetailId).Error
 	if err != nil {
 		return errors.New("查找项目详情失败:" + err.Error())
 	}
@@ -73,18 +72,8 @@ func (s *VideoService) CreateVideo(infoParams request.InfoCreateVideoRequest) (e
 		if err != nil {
 			continue
 		}
-		stableDiffusionParams := map[string]interface{}{}
-		stableDiffusionRequest := map[string]interface{}{}
-		err = json.Unmarshal([]byte(projectDetail.StableDiffusionConfig), &stableDiffusionParams)
-		if err != nil {
-			continue
-		}
-		// 如果json解析成功则合并 Stable Diffusion 配置参数
-		for key, value := range stableDiffusionParams {
-			stableDiffusionRequest[key] = value
-		}
-		width := utils.GetInterfaceToInt(stableDiffusionRequest["width"])
-		height := utils.GetInterfaceToInt(stableDiffusionRequest["height"])
+		width := projectDetail.StableDiffusionConfig.Width
+		height := projectDetail.StableDiffusionConfig.Height
 		params := source.DisposableSynthesisVideoParams{
 			SavePath:                 savePath,
 			Info:                     info,

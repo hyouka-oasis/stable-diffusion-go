@@ -1,7 +1,6 @@
 package system
 
 import (
-	"encoding/json"
 	"errors"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/common/request"
@@ -28,15 +27,6 @@ func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest
 	if err != nil {
 		return images, errors.New("获取项目详情失败")
 	}
-	stableDiffusionParams := map[string]interface{}{}
-	stableDiffusionRequest := map[string]interface{}{}
-	err = json.Unmarshal([]byte(projectDetail.StableDiffusionConfig), &stableDiffusionParams)
-	if err == nil {
-		// 如果json解析成功则合并 Stable Diffusion 配置参数
-		for key, value := range stableDiffusionParams {
-			stableDiffusionRequest[key] = value
-		}
-	}
 	for _, infoId := range params.Ids {
 		if err != nil {
 			continue
@@ -49,15 +39,15 @@ func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest
 			continue
 		}
 		if info.Prompt == "" {
-			stableDiffusionRequest["prompt"] = info.Text
+			projectDetail.StableDiffusionConfig.Prompt = info.Text
 		} else {
-			stableDiffusionRequest["prompt"] = info.Prompt
+			projectDetail.StableDiffusionConfig.Prompt = info.Prompt
 		}
 		if info.NegativePrompt != "" {
-			stableDiffusionRequest["negative_prompt"] = info.NegativePrompt
+			projectDetail.StableDiffusionConfig.NegativePrompt = info.NegativePrompt
 		}
 		apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/txt2img"
-		stableDiffusionImages, generateError := source.StableDiffusionGenerateImage(apiUrl, stableDiffusionRequest)
+		stableDiffusionImages, generateError := source.StableDiffusionGenerateImage(apiUrl, projectDetail.StableDiffusionConfig)
 		if generateError != nil {
 			err = generateError
 			continue

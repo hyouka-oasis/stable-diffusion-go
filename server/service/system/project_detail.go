@@ -118,7 +118,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 
 // GetProjectDetail 获取项目详情
 func (s *ProjectDetailService) GetProjectDetail(config system.ProjectDetail) (detail system.ProjectDetail, err error) {
-	err = global.DB.Preload("VideoConfig").Preload("ParticipleConfig").Preload("AudioConfig").Preload("InfoList").Preload("InfoList.StableDiffusionImages").Preload("InfoList.AudioConfig").Model(&system.ProjectDetail{}).Where("id = ?", config.Id).First(&detail).Error
+	err = global.DB.Preload("StableDiffusionConfig").Preload("VideoConfig").Preload("ParticipleConfig").Preload("AudioConfig").Preload("InfoList").Preload("InfoList.StableDiffusionImages").Preload("InfoList.AudioConfig").Preload("InfoList.VideoConfig").Model(&system.ProjectDetail{}).Where("id = ?", config.Id).First(&detail).Error
 	return
 }
 
@@ -150,6 +150,14 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 		// 更新视频配置
 		if config.VideoConfig != (system.VideoConfig{}) {
 			err = tx.Model(&system.VideoConfig{}).Where("project_detail_id = ?", config.Id).Updates(&config.VideoConfig).Error
+			if err != nil {
+				return err
+			}
+			return err
+		}
+		// 更新stable-diffusion配置
+		if config.StableDiffusionConfig != (system.StableDiffusionSettings{}) {
+			err = tx.Model(&system.StableDiffusionSettings{}).Where("project_detail_id = ?", config.Id).Updates(&config.StableDiffusionConfig).Error
 			if err != nil {
 				return err
 			}
@@ -205,7 +213,7 @@ func (s *ProjectDetailService) CreateProjectDetail(projectId uint) (projectDetai
 		participleConfig := system.ParticipleConfig{
 			ProjectDetailId: projectDetail.Id,
 		}
-		// 同时创建项目音频设置
+		// 同时创建项目详情分词配置
 		err = tx.Create(&participleConfig).Error
 		if err != nil {
 			return err
@@ -213,7 +221,7 @@ func (s *ProjectDetailService) CreateProjectDetail(projectId uint) (projectDetai
 		audioConfig := system.AudioConfig{
 			ProjectDetailId: projectDetail.Id,
 		}
-		// 同时创建项目详情分词
+		// 同时创建项目详情音频配置
 		err = tx.Create(&audioConfig).Error
 		if err != nil {
 			return err
@@ -221,8 +229,16 @@ func (s *ProjectDetailService) CreateProjectDetail(projectId uint) (projectDetai
 		videoConfig := system.VideoConfig{
 			ProjectDetailId: projectDetail.Id,
 		}
-		// 同时创建项目详情分词
+		// 同时创建项目详情视频配置
 		err = tx.Create(&videoConfig).Error
+		if err != nil {
+			return err
+		}
+		stableDiffusionSettings := system.StableDiffusionSettings{
+			ProjectDetailId: projectDetail.Id,
+		}
+		// 同时创建项目stable-diffusion配置
+		err = tx.Create(&stableDiffusionSettings).Error
 		if err != nil {
 			return err
 		}

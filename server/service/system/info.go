@@ -137,14 +137,10 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 		return err
 	} else if currentSettings.TranslateType == "ollama" {
 		var messageList []openai.ChatCompletionMessage
-		if projectDetail.PromptUrl != "" {
-			promptByte, openPromptError := os.ReadFile(projectDetail.PromptUrl)
-			if openPromptError != nil {
-				promptByte = []byte{}
-			}
+		if projectDetail.PromptText != "" {
 			messageList = append(messageList, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleSystem,
-				Content: string(promptByte),
+				Content: projectDetail.PromptText,
 			})
 			// 这边先走一遍上下文初始化
 			content, err := source.OpenaiClient(currentSettings.OllamaConfig, &messageList)
@@ -172,6 +168,7 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 			} else {
 				infoText = info.KeywordsText
 			}
+			fmt.Println(messageList, "messageList")
 			prompt, _ := source.ChatgptOllama(infoText, currentSettings.OllamaConfig, projectDetail.OpenContext, &messageList)
 			if lorasText != "" {
 				info.Prompt = prompt + "," + lorasText

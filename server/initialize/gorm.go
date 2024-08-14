@@ -32,6 +32,7 @@ func RegisterTables() {
 		system.StableDiffusionImages{},
 		system.StableDiffusionNegativePrompt{},
 		system.StableDiffusionSettings{},
+		system.StableDiffusionOverrideSettings{},
 
 		example.ExaFile{},
 		example.ExaFileChunk{},
