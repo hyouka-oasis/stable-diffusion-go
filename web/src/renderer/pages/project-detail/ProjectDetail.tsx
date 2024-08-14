@@ -1,9 +1,8 @@
 import { useLocation, useNavigate } from "react-router";
 import styled from "styled-components";
-import { Button, Divider, Form, Input, Radio, Space, Spin, Tooltip, Upload, UploadProps } from "antd";
+import { Button, Divider, Form, Radio, Space, Spin, Tooltip, Upload } from "antd";
 import { useContext, useEffect, useRef, useState } from "react";
-import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect, ProFormText, ProFormUploadButton } from "@ant-design/pro-components";
-import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
+import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect, ProFormText, ProFormTextArea, ProFormUploadButton } from "@ant-design/pro-components";
 import { CloseOutlined, ExclamationOutlined, LoadingOutlined, NotificationOutlined, SettingOutlined } from "@ant-design/icons";
 import { Info, ProjectDetailResponse } from "renderer/api/response/projectResponse";
 import { stableDiffusionText2Image } from "renderer/api/stableDiffusionApi";
@@ -12,7 +11,6 @@ import { uploadFile } from "renderer/api/fileApi";
 import { createAudioSrt } from "renderer/api/audioSrtApi";
 import { host } from "renderer/request/request";
 import { audioList } from "renderer/utils/audio-list";
-import VanillaUploadJson from "renderer/components/json-edit/VanillaUploadJson";
 import { infoApi, projectDetailApi, stableDiffusionApi, videoApi } from "renderer/api";
 import { AppGlobalContext } from "renderer/shared/context/appGlobalContext";
 import { FileResponse } from "renderer/api/response/fileResponse";
@@ -20,7 +18,7 @@ import { RcFile } from "antd/lib/upload";
 import { navBarHeight } from "renderer/shared";
 import { ReactSmoothScrollbar } from "renderer/components/smooth-scroll/SmoothScroll";
 import { ipcApi } from "renderer/ipc/BasicRendererIpcAdapter";
-import FileSvg from "renderer/assets/svg-com/file.svg";
+import { DefaultOptionType } from "rc-select/lib/Select";
 
 const ProjectDetailPageWrap = styled.div`
 `;
@@ -69,11 +67,6 @@ const ProjectDetailPage = () => {
     const [ currentAudioForm ] = Form.useForm();
     const [ uploadForm ] = Form.useForm();
     const [ projectDetail, setProjectDetail ] = useState<ProjectDetailResponse>();
-    const [ content, setContent ] = useState<Content>({
-        json: JSON.stringify({}),
-        text: undefined
-    });
-    const [ editThemeFormatRight, setEditThemeFormatRight ] = useState<boolean>(true);
     const [ tableHeight, setTableHeight ] = useState<number>(350);
     const [ tableLoading, setTableLoading ] = useState<boolean>(true);
     const [ renderLoading, setRenderLoading ] = useState<boolean>(false);
@@ -81,6 +74,7 @@ const ProjectDetailPage = () => {
     const state = location.state;
     const mp3Ref = useRef<HTMLAudioElement | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const [ stableDiffusionSettings, setStableDiffusionSettings ] = useState<DefaultOptionType[]>([]);
     // const [ fontColor, setFontColor ] = useState<string>();
 
     /**
@@ -127,11 +121,6 @@ const ProjectDetailPage = () => {
     const onSettingsOkHandler = (values: Partial<ProjectDetailResponse>): Promise<boolean> => {
         return new Promise(resolve => {
             if (projectDetail) {
-                if (!editThemeFormatRight) {
-                    openMessageBox({ type: "error", message: "json错误!" });
-                    return;
-                }
-                const data = (content as TextContent).text;
                 if (!percentageRegex.test(values?.audioConfig?.rate ?? "0")) {
                     openMessageBox({ type: "error", message: "请输入正确的语速值!" });
                     resolve(false);
@@ -149,7 +138,6 @@ const ProjectDetailPage = () => {
                 }
                 projectDetailApi.updateProjectDetail({
                     id: projectDetail.id,
-                    stableDiffusionConfig: data,
                     ...values,
                 }).then(res => {
                     openMessageBox({ type: "success", message: "更新配置成功" });
@@ -215,41 +203,6 @@ const ProjectDetailPage = () => {
         setRenderLoading(false);
         openMessageBox({ type: "success", message: "翻译成功" });
         await getProjectDetailConfig(state.id);
-    };
-
-    const setStableDiffusionJson = () => {
-        setContent({ json: JSON.parse(!projectDetail?.stableDiffusionConfig ? "{}" : projectDetail?.stableDiffusionConfig) });
-    };
-
-    const handleChange: OnChange = (newContent, _, status) => {
-        setContent(newContent as { text: string });
-        if (status?.contentErrors && Object.keys(status.contentErrors).length > 0) {
-            setEditThemeFormatRight(false);
-        } else {
-            setEditThemeFormatRight(true);
-        }
-    };
-
-    const handleUpload: UploadProps["onChange"] = async ({ fileList }) => {
-        const [ file ] = fileList;
-        const json = await file.originFileObj?.text();
-        setContent({ json: JSON.parse(json!) });
-    };
-
-    const handleDownload = () => {
-        const file = new File([ `${JSON.stringify((content as any)?.json)}` ], "stable-diffusion-api.json", {
-            type: "text/json; charset=utf-8;",
-        });
-        const tmpLink = document.createElement("a");
-        const objectUrl = URL.createObjectURL(file);
-
-        tmpLink.href = objectUrl;
-        tmpLink.download = file.name;
-        document.body.appendChild(tmpLink);
-        tmpLink.click();
-
-        document.body.removeChild(tmpLink);
-        URL.revokeObjectURL(objectUrl);
     };
     /**
      * 进行文本转图片
@@ -437,6 +390,21 @@ const ProjectDetailPage = () => {
         if (!folderValues.data.canceled) {
             const selectPath = folderValues.data.filePaths[0];
             form.setFieldValue([ "videoConfig", "fontFile" ], selectPath);
+        }
+    };
+
+    const getStableDiffusionSettingsList = async (open: boolean) => {
+        if (open) {
+            const data = await stableDiffusionApi.getStableDiffusionSettingsList({
+                page: 1,
+                pageSize: -1,
+            });
+            setStableDiffusionSettings(() => {
+                return data?.list?.map(item => ({
+                    label: item.name,
+                    value: item.text
+                }));
+            });
         }
     };
 
@@ -809,8 +777,8 @@ const ProjectDetailPage = () => {
                             key={"settings"}
                             title="配置参数"
                             trigger={
-                                <Tooltip title={"配置stable-diffusion请求参数"}>
-                                    <SettingOutlined onClick={setStableDiffusionJson}/>
+                                <Tooltip title={"配置参数"}>
+                                    <SettingOutlined/>
                                 </Tooltip>
                             }
                             form={form}
@@ -949,9 +917,12 @@ const ProjectDetailPage = () => {
                                         ]}
                                         rules={[ { required: true, message: '请选择是否开启上下文' } ]}
                                     />
-                                    <Form.Item rules={[ { required: false, message: '自定义prompt路径' } ]} label={"自定义prompt路径"} name={"promptUrl"}>
-                                        <Input className={"sava-path"} addonAfter={<div className={"file-svg"} onClick={onPromptUrlPathSelect}><FileSvg/></div>}/>
-                                    </Form.Item>
+                                    <ProFormTextArea
+                                        width="md"
+                                        label={"自定义prompt"}
+                                        name={"promptText"}
+                                        placeholder="填写prompt内容"
+                                    />
                                 </ProForm.Group>
                                 <ProForm.Group title={"分词配置"}>
                                     <ProFormDigit
@@ -1114,13 +1085,83 @@ const ProjectDetailPage = () => {
                                         }
                                     </Form.Item>
                                 </ProForm.Group>
-                                <Divider orientation="left">stable-diffusion配置</Divider>
-                                <VanillaUploadJson
-                                    content={content}
-                                    onChange={handleChange}
-                                    onImportHandler={handleUpload}
-                                    onExportHandler={handleDownload}
-                                />
+                                <Divider orientation="center">stable-diffusion配置</Divider>
+                                <ProForm.Group>
+                                    <ProFormDigit
+                                        width="md"
+                                        name={[ "stableDiffusionConfig", "width" ]}
+                                        label="图片宽度"
+                                        placeholder="请填写图片宽度"
+                                        rules={[ { required: true, message: '请填写图片宽度' } ]}
+                                    />
+                                    <ProFormDigit
+                                        width="md"
+                                        name={[ "stableDiffusionConfig", "height" ]}
+                                        label="图片高度"
+                                        placeholder="请填写图片高度"
+                                        rules={[ { required: true, message: '请填写图片高度' } ]}
+                                    />
+                                    <ProFormDigit
+                                        width="md"
+                                        name={[ "stableDiffusionConfig", "speed" ]}
+                                        label="随机数种子"
+                                        placeholder="随机数种子"
+                                    />
+                                    <ProFormDigit
+                                        width="md"
+                                        name={[ "videoConfig", "animationSpeed" ]}
+                                        tooltip={"最佳1.2"}
+                                        label="动画浮动比例"
+                                        placeholder="请填写动画浮动比例"
+                                        rules={[ { required: true, message: '请填写动画浮动比例' } ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={[ "videoConfig", "position" ]}
+                                        label="字幕位置"
+                                        placeholder="请选择字幕位置"
+                                        rules={[ { required: true, message: '请选择字幕位置' } ]}
+                                        options={[
+                                            {
+                                                label: "上",
+                                                value: 6
+                                            },
+                                            {
+                                                label: "中",
+                                                value: 10
+                                            },
+                                            {
+                                                label: "下",
+                                                value: 2
+                                            }
+                                        ]}
+                                    />
+                                    <ProFormSelect
+                                        width="md"
+                                        name={[ "videoConfig", "animationName" ]}
+                                        tooltip={"精力有限,公开版只做全局随机效果"}
+                                        label="动画效果"
+                                        placeholder="请选择动画效果"
+                                        rules={[ { required: true, message: '请选择动画效果' } ]}
+                                        options={[
+                                            {
+                                                label: "随机动画",
+                                                value: "random"
+                                            }
+                                        ]}
+                                    />
+                                    <Form.Item noStyle={true} shouldUpdate={true}>
+                                        {
+                                            (({ getFieldValue }) => {
+                                                return <Form.Item tooltip={"不支持"} label={"字幕字体"} name={[ "videoConfig", "fontFile" ]} shouldUpdate={true}>
+                                                    <Button onClick={onFilePathSelect} disabled={true}>
+                                                        字幕选择,当前字体路径:{getFieldValue([ "videoConfig", "fontFile" ])}
+                                                    </Button>
+                                                </Form.Item>;
+                                            })
+                                        }
+                                    </Form.Item>
+                                </ProForm.Group>
                             </ReactSmoothScrollbar>
                         </ModalForm>
                     ]}

@@ -1,6 +1,6 @@
 import { FC, useEffect, useRef } from "react";
 import { JSONEditor, JSONEditorPropsOptional, Mode } from "vanilla-jsoneditor";
-import { ReactSmoothScrollbar } from "../smooth-scroll/SmoothScroll.tsx";
+import { ReactSmoothScrollbar } from "renderer/components/smooth-scroll/SmoothScroll";
 
 const VanillaJson: FC<JSONEditorPropsOptional> = (props) => {
     const refContainer = useRef<HTMLDivElement | null>(null);
