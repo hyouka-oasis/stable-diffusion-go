@@ -1086,7 +1086,7 @@ const ProjectDetailPage = () => {
                                     </Form.Item>
                                 </ProForm.Group>
                                 <Divider orientation="center">stable-diffusion配置</Divider>
-                                <ProForm.Group>
+                                <ProForm.Group title={"基础配置项"}>
                                     <ProFormDigit
                                         width="md"
                                         name={[ "stableDiffusionConfig", "width" ]}
@@ -1101,66 +1101,47 @@ const ProjectDetailPage = () => {
                                         placeholder="请填写图片高度"
                                         rules={[ { required: true, message: '请填写图片高度' } ]}
                                     />
-                                    <ProFormDigit
+                                    <ProFormTextArea
                                         width="md"
-                                        name={[ "stableDiffusionConfig", "speed" ]}
-                                        label="随机数种子"
-                                        placeholder="随机数种子"
+                                        name={[ "stableDiffusionConfig", "prompt" ]}
+                                        label="正向提示词/prompt"
+                                        placeholder="请填写正向提示词"
+                                    />
+                                    <ProFormTextArea
+                                        width="md"
+                                        name={[ "stableDiffusionConfig", "negative_prompt" ]}
+                                        label="反向提示词/negative_prompt"
+                                        placeholder="请填写反向提示词"
                                     />
                                     <ProFormDigit
                                         width="md"
-                                        name={[ "videoConfig", "animationSpeed" ]}
-                                        tooltip={"最佳1.2"}
-                                        label="动画浮动比例"
-                                        placeholder="请填写动画浮动比例"
-                                        rules={[ { required: true, message: '请填写动画浮动比例' } ]}
+                                        name={[ "stableDiffusionConfig", "seed" ]}
+                                        label="随机数种子/seed"
+                                        placeholder="请填写随机数种子"
+                                        rules={[ { required: true, message: '请填写随机数种子' } ]}
                                     />
-                                    <ProFormSelect
+                                    <ProFormDigit
                                         width="md"
-                                        name={[ "videoConfig", "position" ]}
-                                        label="字幕位置"
-                                        placeholder="请选择字幕位置"
-                                        rules={[ { required: true, message: '请选择字幕位置' } ]}
-                                        options={[
-                                            {
-                                                label: "上",
-                                                value: 6
-                                            },
-                                            {
-                                                label: "中",
-                                                value: 10
-                                            },
-                                            {
-                                                label: "下",
-                                                value: 2
-                                            }
-                                        ]}
+                                        name={[ "stableDiffusionConfig", "batch_size" ]}
+                                        label="生成数量/batch_size"
+                                        min={1}
+                                        placeholder="请填写生成数量"
+                                        rules={[ { required: true, message: '请填写生成数量' } ]}
                                     />
-                                    <ProFormSelect
+                                    <ProFormDigit
                                         width="md"
-                                        name={[ "videoConfig", "animationName" ]}
-                                        tooltip={"精力有限,公开版只做全局随机效果"}
-                                        label="动画效果"
-                                        placeholder="请选择动画效果"
-                                        rules={[ { required: true, message: '请选择动画效果' } ]}
-                                        options={[
-                                            {
-                                                label: "随机动画",
-                                                value: "random"
-                                            }
-                                        ]}
+                                        name={[ "stableDiffusionConfig", "steps" ]}
+                                        label="迭代步数/steps"
+                                        placeholder="请填写迭代步数"
+                                        rules={[ { required: true, message: '请填写迭代步数' } ]}
                                     />
-                                    <Form.Item noStyle={true} shouldUpdate={true}>
-                                        {
-                                            (({ getFieldValue }) => {
-                                                return <Form.Item tooltip={"不支持"} label={"字幕字体"} name={[ "videoConfig", "fontFile" ]} shouldUpdate={true}>
-                                                    <Button onClick={onFilePathSelect} disabled={true}>
-                                                        字幕选择,当前字体路径:{getFieldValue([ "videoConfig", "fontFile" ])}
-                                                    </Button>
-                                                </Form.Item>;
-                                            })
-                                        }
-                                    </Form.Item>
+                                    <ProFormDigit
+                                        width="md"
+                                        name={[ "stableDiffusionConfig", "cfg_scale" ]}
+                                        label="提示词引导系数/cfg_scale"
+                                        placeholder="请填写提示词引导系数"
+                                        rules={[ { required: true, message: '请填写提示词引导系数' } ]}
+                                    />
                                 </ProForm.Group>
                             </ReactSmoothScrollbar>
                         </ModalForm>
