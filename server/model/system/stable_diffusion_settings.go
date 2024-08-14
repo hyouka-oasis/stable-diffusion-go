@@ -6,17 +6,17 @@ import (
 
 type StableDiffusionSettings struct {
 	global.Model
-	ProjectDetailId   uint                            `json:"infoId" gorm:"项目详情Id"`                   // 项目详情Id
-	Name              string                          `json:"name" gorm:"comment:文件名"`                // 文件名
-	Speed             int                             `json:"speed" gorm:"comment:随机数种子;default:-1"`  // 随机数种子
-	Width             int                             `json:"width" gorm:"comment:图片宽度;default:512"`  // 图片宽度
-	Height            int                             `json:"height" gorm:"comment:图片高度;default:512"` // 图片高度
-	Prompt            string                          `json:"prompt" gorm:"comment:正向提示词"`            // 正向提示词
-	NegativePrompt    string                          `json:"negative_prompt" gorm:"comment:反向提示词"`   // 反向提示词
-	BatchSize         string                          `json:"batch_size" gorm:"comment:生成数量"`         // 生成数量
-	Steps             string                          `json:"steps" gorm:"comment:迭代步数"`              // 迭代步数
-	CfgScale          string                          `json:"cfg_scale" gorm:"comment:提示词引导系数"`       // 提示词引导系数
-	SamplerName       string                          `json:"sampler_name" gorm:"comment:取样器"`        // 取样器
+	ProjectDetailId   uint                            `json:"infoId" gorm:"项目详情Id"`                       // 项目详情Id
+	Name              string                          `json:"name" gorm:"comment:文件名"`                    // 文件名
+	Seed              int                             `json:"seed" gorm:"comment:随机数种子;default:-1"`       // 随机数种子
+	Width             int                             `json:"width" gorm:"comment:图片宽度;default:512"`      // 图片宽度
+	Height            int                             `json:"height" gorm:"comment:图片高度;default:512"`     // 图片高度
+	Prompt            string                          `json:"prompt" gorm:"comment:正向提示词"`                // 正向提示词
+	NegativePrompt    string                          `json:"negative_prompt" gorm:"comment:反向提示词"`       // 反向提示词
+	BatchSize         string                          `json:"batch_size" gorm:"comment:生成数量;default:1"`   // 生成数量
+	Steps             string                          `json:"steps" gorm:"comment:迭代步数;default:20"`       // 迭代步数
+	CfgScale          string                          `json:"cfg_scale" gorm:"comment:提示词引导系数;default:7"` // 提示词引导系数
+	SamplerName       string                          `json:"sampler_name" gorm:"comment:取样器"`            // 取样器
 	OverrideSettings  StableDiffusionOverrideSettings `json:"overrideSettings"`
 	EnableHr          bool                            `json:"enable_hr" gorm:"comment:是否开启高清修复;default:false"`                             // 是否开启高清修复
 	HrUpscaler        string                          `json:"hr_upscaler" gorm:"comment:高清算法,Upscaler"`                                    // 高清算法
