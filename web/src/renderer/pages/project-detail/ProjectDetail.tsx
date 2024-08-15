@@ -1089,7 +1089,7 @@ const ProjectDetailPage = () => {
                                 <ProForm.Group title={"模型配置"}>
                                     <ProFormSelect
                                         width="sm"
-                                        name={[ "stableDiffusionConfig", "overrideSettings", "sd_model_checkpoint" ]}
+                                        name={[ "stableDiffusionConfig", "override_settings", "sd_model_checkpoint" ]}
                                         label="模型/ckpt"
                                         placeholder="请选择模型/ckpt"
                                         rules={[ { required: true, message: '请选择模型/ckpt' } ]}
@@ -1100,7 +1100,7 @@ const ProjectDetailPage = () => {
                                     />
                                     <ProFormSelect
                                         width="sm"
-                                        name={[ "stableDiffusionConfig", "overrideSettings", "sd_vae" ]}
+                                        name={[ "stableDiffusionConfig", "override_settings", "sd_vae" ]}
                                         label="模型VAE"
                                         placeholder="请选择模型VAE"
                                         rules={[ { required: true, message: '请选择模型VAE' } ]}
