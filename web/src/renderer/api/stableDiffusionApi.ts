@@ -10,7 +10,7 @@ import { StableDiffusionNegativePromptResponse } from "renderer/api/response/sta
  */
 export const getStableDiffusionSettingsList = (data: BasicPageInfoRequest<Partial<StableDiffusionNegativePromptResponse>>): Promise<BasicArrayResponses<StableDiffusionNegativePromptResponse>> => {
     return getApi({
-        url: "/stableDiffusion/settings/get",
+        url: "/sdapi/settings/get",
         data
     });
 };
@@ -20,7 +20,7 @@ export const getStableDiffusionSettingsList = (data: BasicPageInfoRequest<Partia
  */
 export const createStableDiffusionSettings = (data: Partial<StableDiffusionNegativePromptResponse>): Promise<void> => {
     return postApi({
-        url: "/stableDiffusion/settings/create",
+        url: "/sdapi/settings/create",
         data
     });
 };
@@ -31,7 +31,7 @@ export const createStableDiffusionSettings = (data: Partial<StableDiffusionNegat
  */
 export const updateStableDiffusionSettings = (data: Partial<StableDiffusionNegativePromptResponse>): Promise<void> => {
     return postApi({
-        url: "/stableDiffusion/settings/update",
+        url: "/sdapi/settings/update",
         data
     });
 };
@@ -44,21 +44,21 @@ export const deleteStableDiffusionSettings = (data: {
     ids: number[];
 }): Promise<void> => {
     return deleteApi({
-        url: "/stableDiffusion/settings/delete",
+        url: "/sdapi/settings/delete",
         data
     });
 };
 
 export const getStableDiffusionLorasList = (data: BasicPageInfoRequest<Partial<LorasResponse>>): Promise<BasicArrayResponses<LorasResponse>> => {
     return getApi({
-        url: "/stableDiffusion/getLoras",
+        url: "/sdapi/loras/get",
         data
     });
 };
 
 export const createStableDiffusionLoras = (data: any) => {
     return postApi({
-        url: "/stableDiffusion/createLoras",
+        url: "/sdapi/loras/create",
         data
     });
 };
@@ -68,7 +68,7 @@ export const stableDiffusionText2Image = (data: {
     projectDetailId?: number;
 }): Promise<string[]> => {
     return postApi({
-        url: "/stableDiffusion/text2image",
+        url: "/sdapi/images/text2image",
         data
     });
 };
@@ -77,42 +77,69 @@ export const stableDiffusionDeleteImage = (data: {
     ids: number[];
 }): Promise<void> => {
     return deleteApi({
-        url: "/stableDiffusion/deleteImage",
+        url: "/sdapi/images/deleteImage",
         data
     });
 };
 
 export const getNegativePromptList = (data: BasicPageInfoRequest): Promise<BasicArrayResponses<StableDiffusionNegativePromptResponse>> => {
     return getApi({
-        url: "/stableDiffusion/negativePromptList",
+        url: "/sdapi/negativePromptList",
         data
     });
 };
 
 export const createNegativePrompt = (data: Partial<StableDiffusionNegativePromptResponse>): Promise<void> => {
     return postApi({
-        url: "/stableDiffusion/createNegativePrompt",
+        url: "/sdapi/createNegativePrompt",
         data
     });
 };
 
 export const updateNegativePrompt = (data: Partial<StableDiffusionNegativePromptResponse>): Promise<void> => {
     return postApi({
-        url: "/stableDiffusion/updateNegativePrompt",
+        url: "/sdapi/updateNegativePrompt",
         data
     });
 };
 
 export const deleteNegativePrompt = (data: Partial<StableDiffusionNegativePromptResponse>): Promise<void> => {
     return deleteApi({
-        url: "/stableDiffusion/deleteNegativePrompt",
+        url: "/sdapi/deleteNegativePrompt",
         data
     });
 };
 
 export const addImage = (data: Partial<any>): Promise<void> => {
     return postApi({
-        url: "/stableDiffusion/addImage",
+        url: "/sdapi/images/addImage",
         data
+    });
+};
+
+
+export const getSdModels = (): Promise<BasicArrayResponses<any>> => {
+    return getApi({
+        url: "/sdapi/v1/sd-models",
+    });
+};
+
+
+export const getSdVae = (): Promise<BasicArrayResponses<any>> => {
+    return getApi({
+        url: "/sdapi/v1/sd-vae",
+    });
+};
+
+
+export const getSamplers = (): Promise<BasicArrayResponses<any>> => {
+    return getApi({
+        url: "/sdapi/v1/samplers",
+    });
+};
+
+export const getSchedulers = (): Promise<BasicArrayResponses<any>> => {
+    return getApi({
+        url: "/sdapi/v1/schedulers",
     });
 };

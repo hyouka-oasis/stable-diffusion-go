@@ -1086,7 +1086,83 @@ const ProjectDetailPage = () => {
                                     </Form.Item>
                                 </ProForm.Group>
                                 <Divider orientation="center">stable-diffusion配置</Divider>
-                                <ProForm.Group title={"基础配置项"}>
+                                <ProForm.Group title={"模型配置"}>
+                                    <ProFormSelect
+                                        width="sm"
+                                        name={[ "stableDiffusionConfig", "overrideSettings", "sd_model_checkpoint" ]}
+                                        label="模型/ckpt"
+                                        placeholder="请选择模型/ckpt"
+                                        rules={[ { required: true, message: '请选择模型/ckpt' } ]}
+                                        request={async () => {
+                                            const data = await stableDiffusionApi.getSdModels();
+                                            return data.list?.map(item => ({ label: item.title, value: item.model_name }));
+                                        }}
+                                    />
+                                    <ProFormSelect
+                                        width="sm"
+                                        name={[ "stableDiffusionConfig", "overrideSettings", "sd_vae" ]}
+                                        label="模型VAE"
+                                        placeholder="请选择模型VAE"
+                                        rules={[ { required: true, message: '请选择模型VAE' } ]}
+                                        request={async () => {
+                                            const data = await stableDiffusionApi.getSdVae();
+                                            return data.list?.map(item => ({ label: item.model_name, value: item.model_name }));
+                                        }}
+                                    />
+                                    <ProFormDigit
+                                        width="sm"
+                                        name={[ "stableDiffusionConfig", "clip_skip" ]}
+                                        label="Clip 跳过层"
+                                        placeholder="请填写Clip 跳过层"
+                                        min={1}
+                                        rules={[ { required: true, message: '请填写Clip 跳过层' } ]}
+                                    />
+                                </ProForm.Group>
+                                <ProForm.Group title={"提示词配置"}>
+                                    <ProFormTextArea
+                                        width="md"
+                                        name={[ "stableDiffusionConfig", "prompt" ]}
+                                        label="正向提示词/prompt"
+                                        placeholder="请填写正向提示词"
+                                    />
+                                    <ProFormTextArea
+                                        width="md"
+                                        name={[ "stableDiffusionConfig", "negative_prompt" ]}
+                                        label="反向提示词/negative_prompt"
+                                        placeholder="请填写反向提示词"
+                                    />
+                                </ProForm.Group>
+                                <ProForm.Group title={"生成参数配置"}>
+                                    <ProFormSelect
+                                        width="sm"
+                                        name={[ "stableDiffusionConfig", "sampler_name" ]}
+                                        label="采样器/Sampling method"
+                                        placeholder="请选择采样器/Sampling method"
+                                        rules={[ { required: true, message: '请选择采样器/Sampling method' } ]}
+                                        request={async () => {
+                                            const data = await stableDiffusionApi.getSamplers();
+                                            return data.list?.map(item => ({ label: item.name, value: item.name }));
+                                        }}
+                                    />
+                                    <ProFormSelect
+                                        width="sm"
+                                        name={[ "stableDiffusionConfig", "scheduler" ]}
+                                        label="调度类型/Schedule type"
+                                        placeholder="请选择调度类型/Schedule type"
+                                        rules={[ { required: true, message: '请选择调度类型/Schedule type' } ]}
+                                        request={async () => {
+                                            const data = await stableDiffusionApi.getSchedulers();
+                                            return data.list?.map(item => ({ label: item.label, value: item.name }));
+                                        }}
+                                    />
+                                    <ProFormDigit
+                                        width="sm"
+                                        name={[ "stableDiffusionConfig", "steps" ]}
+                                        label="迭代步数/steps"
+                                        placeholder="请填写迭代步数"
+                                        min={1}
+                                        rules={[ { required: true, message: '请填写迭代步数' } ]}
+                                    />
                                     <ProFormDigit
                                         width="md"
                                         name={[ "stableDiffusionConfig", "width" ]}
@@ -1101,23 +1177,12 @@ const ProjectDetailPage = () => {
                                         placeholder="请填写图片高度"
                                         rules={[ { required: true, message: '请填写图片高度' } ]}
                                     />
-                                    <ProFormTextArea
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "prompt" ]}
-                                        label="正向提示词/prompt"
-                                        placeholder="请填写正向提示词"
-                                    />
-                                    <ProFormTextArea
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "negative_prompt" ]}
-                                        label="反向提示词/negative_prompt"
-                                        placeholder="请填写反向提示词"
-                                    />
                                     <ProFormDigit
                                         width="md"
                                         name={[ "stableDiffusionConfig", "seed" ]}
                                         label="随机数种子/seed"
                                         placeholder="请填写随机数种子"
+                                        min={-99}
                                         rules={[ { required: true, message: '请填写随机数种子' } ]}
                                     />
                                     <ProFormDigit
@@ -1130,16 +1195,10 @@ const ProjectDetailPage = () => {
                                     />
                                     <ProFormDigit
                                         width="md"
-                                        name={[ "stableDiffusionConfig", "steps" ]}
-                                        label="迭代步数/steps"
-                                        placeholder="请填写迭代步数"
-                                        rules={[ { required: true, message: '请填写迭代步数' } ]}
-                                    />
-                                    <ProFormDigit
-                                        width="md"
                                         name={[ "stableDiffusionConfig", "cfg_scale" ]}
                                         label="提示词引导系数/cfg_scale"
                                         placeholder="请填写提示词引导系数"
+                                        min={1}
                                         rules={[ { required: true, message: '请填写提示词引导系数' } ]}
                                     />
                                 </ProForm.Group>
