@@ -1,6 +1,7 @@
 package system
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/common/response"
@@ -32,8 +33,9 @@ func (s *ProjectDetailApi) UploadProjectDetailFile(c *gin.Context) {
 func (s *ProjectDetailApi) UpdateProjectDetail(c *gin.Context) {
 	var config request.UpdateProjectDetailRequestParams
 	err := c.ShouldBindJSON(&config)
+	fmt.Println(&config)
 	if err != nil {
-		response.FailWithMessage("请传入参数", c)
+		response.FailWithMessage("请传入参数:"+err.Error(), c)
 		return
 	}
 	err = utils.Verify(config.Model, utils.IdVerify)

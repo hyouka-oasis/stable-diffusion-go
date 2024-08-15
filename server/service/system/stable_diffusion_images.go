@@ -23,7 +23,7 @@ func (s *StableDiffusionImagesService) StableDiffusionTextToImage(params systemR
 		return images, errors.New("stable-diffusion-url不能为空")
 	}
 	var projectDetail system.ProjectDetail
-	err = global.DB.Model(&system.ProjectDetail{}).Where("id = ?", params.ProjectDetailId).First(&projectDetail).Error
+	err = global.DB.Preload("StableDiffusionConfig").Preload("StableDiffusionConfig.OverrideSettings").Model(&system.ProjectDetail{}).Where("id = ?", params.ProjectDetailId).First(&projectDetail).Error
 	if err != nil {
 		return images, errors.New("获取项目详情失败")
 	}

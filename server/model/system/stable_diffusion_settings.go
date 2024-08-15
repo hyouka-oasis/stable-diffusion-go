@@ -8,7 +8,7 @@ type StableDiffusionSettings struct {
 	global.Model
 	ProjectDetailId uint `json:"infoId" gorm:"项目详情Id"` // 项目详情Id
 	// 模型配置
-	OverrideSettings StableDiffusionOverrideSettings `json:"overrideSettings"`                            // 模型配置
+	OverrideSettings StableDiffusionOverrideSettings `json:"override_settings"`                           // 模型配置
 	ClipSkip         int                             `json:"clip_skip" gorm:"comment:Clip 跳过层;default:1"` // Clip 跳过层
 	// 提示词配置
 	Prompt         string `json:"prompt" gorm:"comment:正向提示词"`          // 正向提示词
@@ -16,12 +16,12 @@ type StableDiffusionSettings struct {
 	// 生成配置
 	SamplerName string `json:"sampler_name" gorm:"comment:采样器"`                 // 采样器
 	Scheduler   string `json:"scheduler" gorm:"comment:调度类型;default:Automatic"` // 调度类型
-	Steps       string `json:"steps" gorm:"comment:迭代步数;default:20"`            // 迭代步数
+	Steps       int    `json:"steps" gorm:"comment:迭代步数;default:20"`            // 迭代步数
 	Width       int    `json:"width" gorm:"comment:图片宽度;default:512"`           // 图片宽度
 	Height      int    `json:"height" gorm:"comment:图片高度;default:512"`          // 图片高度
 	Niter       int    `json:"n_iter" gorm:"comment:生成批次;default:1"`            // 生成批次
-	BatchSize   string `json:"batch_size" gorm:"comment:生成数量;default:1"`        // 生成数量
-	CfgScale    string `json:"cfg_scale" gorm:"comment:提示词引导系数;default:7"`      // 提示词引导系数
+	BatchSize   int    `json:"batch_size" gorm:"comment:生成数量;default:1"`        // 生成数量
+	CfgScale    int    `json:"cfg_scale" gorm:"comment:提示词引导系数;default:7"`      // 提示词引导系数
 	Seed        int    `json:"seed" gorm:"comment:随机数种子;default:-1"`            // 随机数种子
 	// 高清修复配置
 	EnableHr          bool    `json:"enable_hr" gorm:"comment:是否开启高清修复;default:false"`           // 是否开启高清修复
