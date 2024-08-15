@@ -10,10 +10,10 @@ import (
 	"github/stable-diffusion-go/server/source"
 )
 
-type StableDiffusionService struct{}
+type StableDiffusionImagesService struct{}
 
 // StableDiffusionTextToImage 批量文字转图片
-func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest.StableDiffusionRequestParams) (images []string, err error) {
+func (s *StableDiffusionImagesService) StableDiffusionTextToImage(params systemRequest.StableDiffusionRequestParams) (images []string, err error) {
 	var settings system.Settings
 	err = global.DB.Model(&system.Settings{}).Preload("StableDiffusionConfig").First(&settings).Error
 	if err != nil {
@@ -58,7 +58,7 @@ func (s *StableDiffusionService) StableDiffusionTextToImage(params systemRequest
 }
 
 // DeleteStableDiffusionImage 批量删除图片
-func (s *StableDiffusionService) DeleteStableDiffusionImage(params request.IdsReq) error {
+func (s *StableDiffusionImagesService) DeleteStableDiffusionImage(params request.IdsReq) error {
 	err := global.DB.Model(&system.StableDiffusionImages{}).Error
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (s *StableDiffusionService) DeleteStableDiffusionImage(params request.IdsRe
 }
 
 // AddStableDiffusionImage 添加图片
-func (s *StableDiffusionService) AddStableDiffusionImage(params system.StableDiffusionImages) error {
+func (s *StableDiffusionImagesService) AddStableDiffusionImage(params system.StableDiffusionImages) error {
 	err := global.DB.Model(&system.StableDiffusionImages{}).Create(&params).Error
 	return err
 }

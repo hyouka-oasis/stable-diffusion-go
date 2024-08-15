@@ -8,7 +8,7 @@ import (
 type StableDiffusionNegativePromptRouter struct{}
 
 func (s *StableDiffusionNegativePromptRouter) InitStableDiffusionNegativePromptRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
-	stableDiffusionNegativePromptRouter := Router.Group("stableDiffusion")
+	stableDiffusionNegativePromptRouter := Router.Group("sdapi/prompt")
 	stableDiffusionNegativePromptApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionNegativePromptApi
 	{
 		stableDiffusionNegativePromptRouter.GET("negativePromptList", stableDiffusionNegativePromptApi.GetStableDiffusionNegativePromptList)

@@ -118,7 +118,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 
 // GetProjectDetail 获取项目详情
 func (s *ProjectDetailService) GetProjectDetail(config system.ProjectDetail) (detail system.ProjectDetail, err error) {
-	err = global.DB.Preload("StableDiffusionConfig").Preload("VideoConfig").Preload("ParticipleConfig").Preload("AudioConfig").Preload("InfoList").Preload("InfoList.StableDiffusionImages").Preload("InfoList.AudioConfig").Preload("InfoList.VideoConfig").Model(&system.ProjectDetail{}).Where("id = ?", config.Id).First(&detail).Error
+	err = global.DB.Preload("StableDiffusionConfig").Preload("StableDiffusionConfig.OverrideSettings").Preload("VideoConfig").Preload("ParticipleConfig").Preload("AudioConfig").Preload("InfoList").Preload("InfoList.StableDiffusionImages").Preload("InfoList.AudioConfig").Preload("InfoList.VideoConfig").Model(&system.ProjectDetail{}).Where("id = ?", config.Id).First(&detail).Error
 	return
 }
 
@@ -153,7 +153,6 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 			if err != nil {
 				return err
 			}
-			return err
 		}
 		// 更新stable-diffusion配置
 		if config.StableDiffusionConfig != (system.StableDiffusionSettings{}) {
@@ -161,7 +160,13 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 			if err != nil {
 				return err
 			}
-			return err
+		}
+		// 更新stable-diffusion配置
+		if config.StableDiffusionConfig.OverrideSettings != (system.StableDiffusionOverrideSettings{}) {
+			err = tx.Model(&system.StableDiffusionOverrideSettings{}).Where("project_detail_id = ?", config.Id).Updates(&config.StableDiffusionConfig.OverrideSettings).Error
+			if err != nil {
+				return err
+			}
 		}
 		return err
 	})
@@ -239,6 +244,15 @@ func (s *ProjectDetailService) CreateProjectDetail(projectId uint) (projectDetai
 		}
 		// 同时创建项目stable-diffusion配置
 		err = tx.Create(&stableDiffusionSettings).Error
+		if err != nil {
+			return err
+		}
+		stableDiffusionOverrideSettings := system.StableDiffusionOverrideSettings{
+			ProjectDetailId:           projectDetail.Id,
+			StableDiffusionSettingsId: stableDiffusionSettings.Id,
+		}
+		// 同时创建项目stable-diffusion配置
+		err = tx.Create(&stableDiffusionOverrideSettings).Error
 		if err != nil {
 			return err
 		}

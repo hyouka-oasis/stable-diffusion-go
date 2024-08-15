@@ -2,7 +2,6 @@ package system
 
 import (
 	"context"
-	"fmt"
 	"github.com/ollama/ollama/api"
 )
 
@@ -19,6 +18,5 @@ func (s *OllamaService) GetOllamaModelList() (list *api.ListResponse, err error)
 	if err != nil {
 		return
 	}
-	fmt.Println(list, "模型列表")
 	return
 }

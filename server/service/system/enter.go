@@ -9,9 +9,10 @@ type ServiceGroup struct {
 	VideoService
 	OllamaService
 
+	StableDiffusionService
 	StableDiffusionSettingsService
 	StableDiffusionLorasService
-	StableDiffusionService
+	StableDiffusionImagesService
 	StableDiffusionNegativePromptService
 
 	SettingsService

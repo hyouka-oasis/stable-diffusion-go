@@ -8,7 +8,7 @@ import (
 type StableDiffusionSettingsRouter struct{}
 
 func (s *StableDiffusionSettingsRouter) InitStableDiffusionSettingsRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
-	stableDiffusionSettingsRouter := Router.Group("stableDiffusion/settings")
+	stableDiffusionSettingsRouter := Router.Group("sdapi/settings")
 	stableDiffusionSettingsApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionSettingsApi
 	{
 		stableDiffusionSettingsRouter.GET("get", stableDiffusionSettingsApi.GetStableDiffusionSettingsList)

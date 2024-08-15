@@ -10,8 +10,9 @@ type RouterGroup struct {
 	VideoRouter
 	OllamaRouter
 
-	StableDiffusionLorasRouter
 	StableDiffusionRouter
+	StableDiffusionLorasRouter
+	StableDiffusionImagesRouter
 	StableDiffusionNegativePromptRouter
 	StableDiffusionSettingsRouter
 

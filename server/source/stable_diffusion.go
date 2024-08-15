@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github/stable-diffusion-go/server/model/system"
 	systemResponse "github/stable-diffusion-go/server/model/system/response"
 	"io"
@@ -15,7 +14,6 @@ import (
 func StableDiffusionGenerateImage(url string, request system.StableDiffusionSettings) (images []string, err error) {
 	// 发送请求并获取图片数据
 	jsonData, err := json.Marshal(request)
-	fmt.Println(string(jsonData), "给的内容")
 	if err != nil {
 		return images, errors.New("转换请求参数失败")
 	}

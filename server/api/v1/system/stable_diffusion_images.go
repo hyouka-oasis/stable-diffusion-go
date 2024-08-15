@@ -11,10 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
-type StableDiffusionApi struct{}
+type StableDiffusionImagesApi struct{}
 
 // StableDiffusionTextToImage 批量文件转图片
-func (s *StableDiffusionApi) StableDiffusionTextToImage(c *gin.Context) {
+func (s *StableDiffusionImagesApi) StableDiffusionTextToImage(c *gin.Context) {
 	var params systemRequest.StableDiffusionRequestParams
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
@@ -26,7 +26,7 @@ func (s *StableDiffusionApi) StableDiffusionTextToImage(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	images, err := stableDiffusionService.StableDiffusionTextToImage(params)
+	images, err := stableDiffusionImagesService.StableDiffusionTextToImage(params)
 	if err != nil {
 		global.Log.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败:"+err.Error(), c)
@@ -36,7 +36,7 @@ func (s *StableDiffusionApi) StableDiffusionTextToImage(c *gin.Context) {
 }
 
 // DeleteStableDiffusionImage 删除图片
-func (s *StableDiffusionApi) DeleteStableDiffusionImage(c *gin.Context) {
+func (s *StableDiffusionImagesApi) DeleteStableDiffusionImage(c *gin.Context) {
 	var params request.IdsReq
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
@@ -48,7 +48,7 @@ func (s *StableDiffusionApi) DeleteStableDiffusionImage(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = stableDiffusionService.DeleteStableDiffusionImage(params)
+	err = stableDiffusionImagesService.DeleteStableDiffusionImage(params)
 	if err != nil {
 		global.Log.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败:"+err.Error(), c)
@@ -58,7 +58,7 @@ func (s *StableDiffusionApi) DeleteStableDiffusionImage(c *gin.Context) {
 }
 
 // AddStableDiffusionImage 添加图片
-func (s *StableDiffusionApi) AddStableDiffusionImage(c *gin.Context) {
+func (s *StableDiffusionImagesApi) AddStableDiffusionImage(c *gin.Context) {
 	var params system.StableDiffusionImages
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *StableDiffusionApi) AddStableDiffusionImage(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = stableDiffusionService.AddStableDiffusionImage(params)
+	err = stableDiffusionImagesService.AddStableDiffusionImage(params)
 	if err != nil {
 		global.Log.Error("添加失败!", zap.Error(err))
 		response.FailWithMessage("添加失败:"+err.Error(), c)

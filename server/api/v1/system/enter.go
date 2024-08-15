@@ -14,24 +14,29 @@ type ApiGroup struct {
 	OllamaApi
 	BasicApi
 
+	StableDiffusionApi
 	StableDiffusionSettingsApi
 	StableDiffusionLorasApi
-	StableDiffusionApi
+	StableDiffusionImagesApi
 	StableDiffusionNegativePromptApi
 
 	SettingsApi
 }
 
 var (
-	projectService                       = service.ServiceGroupApp.SystemServiceGroup.ProjectService
-	projectDetailService                 = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailService
-	infoService                          = service.ServiceGroupApp.SystemServiceGroup.InfoService
-	settingsService                      = service.ServiceGroupApp.SystemServiceGroup.SettingsService
-	stableDiffusionLorasService          = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
+	projectService       = service.ServiceGroupApp.SystemServiceGroup.ProjectService
+	projectDetailService = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailService
+	infoService          = service.ServiceGroupApp.SystemServiceGroup.InfoService
+
+	audioSrtService = service.ServiceGroupApp.SystemServiceGroup.AudioSrtService
+	videoService    = service.ServiceGroupApp.SystemServiceGroup.VideoService
+	ollamaService   = service.ServiceGroupApp.SystemServiceGroup.OllamaService
+
 	stableDiffusionService               = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
-	stableDiffusionNegativePromptService = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionNegativePromptService
-	audioSrtService                      = service.ServiceGroupApp.SystemServiceGroup.AudioSrtService
-	videoService                         = service.ServiceGroupApp.SystemServiceGroup.VideoService
 	stableDiffusionSettingsService       = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionSettingsService
-	ollamaService                        = service.ServiceGroupApp.SystemServiceGroup.OllamaService
+	stableDiffusionLorasService          = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
+	stableDiffusionImagesService         = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionImagesService
+	stableDiffusionNegativePromptService = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionNegativePromptService
+
+	settingsService = service.ServiceGroupApp.SystemServiceGroup.SettingsService
 )

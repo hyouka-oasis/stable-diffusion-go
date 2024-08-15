@@ -72,6 +72,14 @@ func (s *ProjectService) DeleteProject(projectId uint) (err error) {
 			if err != nil {
 				return err
 			}
+			err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.StableDiffusionSettings{}).Error
+			if err != nil {
+				return err
+			}
+			err = tx.Where("project_detail_id = ?", projectDetail.Id).Delete(&system.StableDiffusionOverrideSettings{}).Error
+			if err != nil {
+				return err
+			}
 		}
 		return err
 	})

@@ -8,13 +8,13 @@ import (
 type StableDiffusionLorasRouter struct{}
 
 func (s *StableDiffusionLorasRouter) InitStableDiffusionLorasRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
-	stableDiffusionLorasRouter := Router.Group("stableDiffusion")
+	stableDiffusionLorasRouter := Router.Group("sdapi/loras")
 	stableDiffusionLorasApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionLorasApi
 	{
-		stableDiffusionLorasRouter.GET("getLoras", stableDiffusionLorasApi.GetStableDiffusionLorasList)
+		stableDiffusionLorasRouter.GET("get", stableDiffusionLorasApi.GetStableDiffusionLorasList)
 	}
 	{
-		stableDiffusionLorasRouter.POST("createLoras", stableDiffusionLorasApi.CreateStableDiffusionLora)
+		stableDiffusionLorasRouter.POST("create", stableDiffusionLorasApi.CreateStableDiffusionLora)
 	}
 	return stableDiffusionLorasRouter
 }

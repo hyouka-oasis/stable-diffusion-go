@@ -36,7 +36,7 @@ func (s *ProjectDetailApi) UpdateProjectDetail(c *gin.Context) {
 		response.FailWithMessage("请传入参数", c)
 		return
 	}
-	err = utils.Verify(config, utils.IdVerify)
+	err = utils.Verify(config.Model, utils.IdVerify)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return

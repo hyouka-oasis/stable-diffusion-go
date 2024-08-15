@@ -5,15 +5,15 @@ import (
 	api "github/stable-diffusion-go/server/api/v1"
 )
 
-type StableDiffusionRouter struct{}
+type StableDiffusionImagesRouter struct{}
 
-func (s *StableDiffusionRouter) InitStableDiffusionRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
-	stableDiffusionRouter := Router.Group("stableDiffusion")
-	stableDiffusionApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionApi
+func (s *StableDiffusionImagesRouter) InitStableDiffusionImagesRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
+	stableDiffusionImagesRouter := Router.Group("sdapi/images")
+	stableDiffusionImagesApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionImagesApi
 	{
-		stableDiffusionRouter.POST("text2image", stableDiffusionApi.StableDiffusionTextToImage)
-		stableDiffusionRouter.POST("addImage", stableDiffusionApi.AddStableDiffusionImage)
-		stableDiffusionRouter.DELETE("deleteImage", stableDiffusionApi.DeleteStableDiffusionImage)
+		stableDiffusionImagesRouter.POST("text2image", stableDiffusionImagesApi.StableDiffusionTextToImage)
+		stableDiffusionImagesRouter.POST("addImage", stableDiffusionImagesApi.AddStableDiffusionImage)
+		stableDiffusionImagesRouter.DELETE("deleteImage", stableDiffusionImagesApi.DeleteStableDiffusionImage)
 	}
-	return stableDiffusionRouter
+	return stableDiffusionImagesRouter
 }
