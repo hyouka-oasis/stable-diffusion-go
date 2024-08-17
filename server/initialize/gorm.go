@@ -30,7 +30,6 @@ func RegisterTables() {
 
 		system.StableDiffusionLoras{},
 		system.StableDiffusionImages{},
-		system.StableDiffusionNegativePrompt{},
 		system.StableDiffusionSettings{},
 		system.StableDiffusionOverrideSettings{},
 

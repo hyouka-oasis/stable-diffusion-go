@@ -55,11 +55,10 @@ func Routers() *gin.Engine {
 		systemRouter.InitBasicRouter(PublicGroup)    // 通用系统接口
 		systemRouter.InitOllamaRouter(PublicGroup)   // 通用系统接口
 
-		systemRouter.InitStableDiffusionRouter(PublicGroup)               // stableDiffusionLoras接口
-		systemRouter.InitStableDiffusionImagesRouter(PublicGroup)         // stableDiffusionLoras接口
-		systemRouter.InitStableDiffusionSettingsRouter(PublicGroup)       // stable-diffusion通用配置
-		systemRouter.InitStableDiffusionLorasRouter(PublicGroup)          // stableDiffusionLoras接口
-		systemRouter.InitStableDiffusionNegativePromptRouter(PublicGroup) // 通用反向提示词接口
+		systemRouter.InitStableDiffusionRouter(PublicGroup)         // stableDiffusionLoras接口
+		systemRouter.InitStableDiffusionImagesRouter(PublicGroup)   // stableDiffusionLoras接口
+		systemRouter.InitStableDiffusionSettingsRouter(PublicGroup) // stable-diffusion通用配置
+		systemRouter.InitStableDiffusionLorasRouter(PublicGroup)    // stableDiffusionLoras接口
 
 		systemRouter.InitSettingsRouter(PublicGroup) // 基础设置接口
 	}

@@ -5,8 +5,8 @@ import (
 	"github/stable-diffusion-go/server/global"
 	"github/stable-diffusion-go/server/model/common/request"
 	"github/stable-diffusion-go/server/model/common/response"
-	"github/stable-diffusion-go/server/model/system"
 	systemRequest "github/stable-diffusion-go/server/model/system/request"
+	systemResponse "github/stable-diffusion-go/server/model/system/response"
 	"github/stable-diffusion-go/server/utils"
 	"go.uber.org/zap"
 )
@@ -15,15 +15,14 @@ type StableDiffusionSettingsApi struct{}
 
 // CreateStableDiffusionSettings 创建stabled-diffusion通用配置
 func (s *StableDiffusionSettingsApi) CreateStableDiffusionSettings(c *gin.Context) {
-	var params system.StableDiffusionSettings
+	var params systemResponse.StableDiffusionSettingsResponse
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
 		return
 	}
-	err = utils.Verify(params, utils.StableDiffusionSettingsVerify)
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+	if params.Name == "" {
+		response.FailWithMessage("名称不能为空", c)
 		return
 	}
 	err = stableDiffusionSettingsService.CreateStableDiffusionSettings(params)
@@ -37,7 +36,7 @@ func (s *StableDiffusionSettingsApi) CreateStableDiffusionSettings(c *gin.Contex
 
 // UpdateStableDiffusionSettings 更新stabled-diffusion通用配置
 func (s *StableDiffusionSettingsApi) UpdateStableDiffusionSettings(c *gin.Context) {
-	var params system.StableDiffusionSettings
+	var params systemResponse.StableDiffusionSettingsResponse
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)
@@ -104,4 +103,26 @@ func (s *StableDiffusionSettingsApi) GetStableDiffusionSettingsList(c *gin.Conte
 		Page:     pageInfo.Page,
 		PageSize: pageInfo.PageSize,
 	}, "获取成功", c)
+}
+
+// GetStableDiffusionSettings 获取stable-diffusion-settings
+func (s *StableDiffusionSettingsApi) GetStableDiffusionSettings(c *gin.Context) {
+	var params request.GetById
+	err := c.ShouldBindJSON(&params)
+	if err != nil {
+		response.FailWithMessage("请传入参数", c)
+		return
+	}
+	err = utils.Verify(params, utils.IdVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	settings, err := stableDiffusionSettingsService.GetStableDiffusionSettings(params.Id)
+	if err != nil {
+		global.Log.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败", c)
+		return
+	}
+	response.OkWithDetailed(settings, "获取成功", c)
 }

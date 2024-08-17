@@ -22,13 +22,8 @@ func getSettingsConfig() (settings system.Settings, err error) {
 	return settings, nil
 }
 
-// GetStableDiffusionSdModels 获取stable-diffusion模型列表
-func (s *StableDiffusionService) GetStableDiffusionSdModels() (list []interface{}, err error) {
-	settings, err := getSettingsConfig()
-	if err != nil {
-		return
-	}
-	apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/sd-models"
+// 统一分装请求
+func getStableResponse(apiUrl string) (list []interface{}, err error) {
 	client := &http.Client{
 		Timeout: 0, // 设置超时时间为60秒
 	}
@@ -46,6 +41,20 @@ func (s *StableDiffusionService) GetStableDiffusionSdModels() (list []interface{
 		return list, err
 	}
 	return respData, err
+}
+
+// GetStableDiffusionSdModels 获取stable-diffusion模型列表
+func (s *StableDiffusionService) GetStableDiffusionSdModels() (list []interface{}, err error) {
+	settings, err := getSettingsConfig()
+	if err != nil {
+		return
+	}
+	apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/sd-models"
+	list, err = getStableResponse(apiUrl)
+	if err != nil {
+		return list, err
+	}
+	return list, err
 }
 
 // GetStableDiffusionSdVae 获取stable-diffusion-vae
@@ -55,23 +64,11 @@ func (s *StableDiffusionService) GetStableDiffusionSdVae() (list []interface{}, 
 		return
 	}
 	apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/sd-vae"
-	client := &http.Client{
-		Timeout: 0, // 设置超时时间为60秒
-	}
-	// 发送POST请求
-	resp, err := client.Get(apiUrl)
-	if err != nil {
-		return list, errors.New("请检查当前stable-diffusion是否正确开启")
-	}
-	defer resp.Body.Close()
-	// 读取响应体
-	body, err := io.ReadAll(resp.Body)
-	var respData []interface{}
-	err = json.Unmarshal(body, &respData)
+	list, err = getStableResponse(apiUrl)
 	if err != nil {
 		return list, err
 	}
-	return respData, err
+	return list, err
 }
 
 // GetStableDiffusionSamplers 获取stable-diffusion采样器
@@ -81,23 +78,11 @@ func (s *StableDiffusionService) GetStableDiffusionSamplers() (list []interface{
 		return
 	}
 	apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/samplers"
-	client := &http.Client{
-		Timeout: 0, // 设置超时时间为60秒
-	}
-	// 发送POST请求
-	resp, err := client.Get(apiUrl)
-	if err != nil {
-		return list, errors.New("请检查当前stable-diffusion是否正确开启")
-	}
-	defer resp.Body.Close()
-	// 读取响应体
-	body, err := io.ReadAll(resp.Body)
-	var respData []interface{}
-	err = json.Unmarshal(body, &respData)
+	list, err = getStableResponse(apiUrl)
 	if err != nil {
 		return list, err
 	}
-	return respData, err
+	return list, err
 }
 
 // GetStableDiffusionSchedulers 获取stable-diffusion调度类型
@@ -107,21 +92,23 @@ func (s *StableDiffusionService) GetStableDiffusionSchedulers() (list []interfac
 		return
 	}
 	apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/schedulers"
-	client := &http.Client{
-		Timeout: 0, // 设置超时时间为60秒
-	}
-	// 发送POST请求
-	resp, err := client.Get(apiUrl)
-	if err != nil {
-		return list, errors.New("请检查当前stable-diffusion是否正确开启")
-	}
-	defer resp.Body.Close()
-	// 读取响应体
-	body, err := io.ReadAll(resp.Body)
-	var respData []interface{}
-	err = json.Unmarshal(body, &respData)
+	list, err = getStableResponse(apiUrl)
 	if err != nil {
 		return list, err
 	}
-	return respData, err
+	return list, err
+}
+
+// GetStableDiffusionUpscalers 获取stable-diffusion高清算法
+func (s *StableDiffusionService) GetStableDiffusionUpscalers() (list []interface{}, err error) {
+	settings, err := getSettingsConfig()
+	if err != nil {
+		return
+	}
+	apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/upscalers"
+	list, err = getStableResponse(apiUrl)
+	if err != nil {
+		return list, err
+	}
+	return list, err
 }

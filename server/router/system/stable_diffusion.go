@@ -15,6 +15,7 @@ func (s *StableDiffusionRouter) InitStableDiffusionRouter(Router *gin.RouterGrou
 		stableDiffusionRouter.GET("sd-vae", stableDiffusionApi.GetStableDiffusionSdVae)
 		stableDiffusionRouter.GET("samplers", stableDiffusionApi.GetStableDiffusionSamplers)
 		stableDiffusionRouter.GET("schedulers", stableDiffusionApi.GetStableDiffusionSchedulers)
+		stableDiffusionRouter.GET("upscalers", stableDiffusionApi.GetStableDiffusionUpscalers)
 	}
 	return stableDiffusionRouter
 }

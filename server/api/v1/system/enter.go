@@ -18,7 +18,6 @@ type ApiGroup struct {
 	StableDiffusionSettingsApi
 	StableDiffusionLorasApi
 	StableDiffusionImagesApi
-	StableDiffusionNegativePromptApi
 
 	SettingsApi
 }
@@ -32,11 +31,10 @@ var (
 	videoService    = service.ServiceGroupApp.SystemServiceGroup.VideoService
 	ollamaService   = service.ServiceGroupApp.SystemServiceGroup.OllamaService
 
-	stableDiffusionService               = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
-	stableDiffusionSettingsService       = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionSettingsService
-	stableDiffusionLorasService          = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
-	stableDiffusionImagesService         = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionImagesService
-	stableDiffusionNegativePromptService = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionNegativePromptService
+	stableDiffusionService         = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionService
+	stableDiffusionSettingsService = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionSettingsService
+	stableDiffusionLorasService    = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionLorasService
+	stableDiffusionImagesService   = service.ServiceGroupApp.SystemServiceGroup.StableDiffusionImagesService
 
 	settingsService = service.ServiceGroupApp.SystemServiceGroup.SettingsService
 )

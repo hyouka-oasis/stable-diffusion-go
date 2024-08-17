@@ -72,3 +72,19 @@ func (s *StableDiffusionApi) GetStableDiffusionSchedulers(c *gin.Context) {
 		PageSize: 10,
 	}, "获取成功", c)
 }
+
+// GetStableDiffusionUpscalers 获取stable-diffusion高清算法
+func (s *StableDiffusionApi) GetStableDiffusionUpscalers(c *gin.Context) {
+	list, err := stableDiffusionService.GetStableDiffusionUpscalers()
+	if err != nil {
+		global.Log.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败", c)
+		return
+	}
+	response.OkWithDetailed(response.PageResult{
+		List:     list,
+		Total:    int64(len(list)),
+		Page:     -1,
+		PageSize: 10,
+	}, "获取成功", c)
+}

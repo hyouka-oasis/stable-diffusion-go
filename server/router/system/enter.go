@@ -13,7 +13,6 @@ type RouterGroup struct {
 	StableDiffusionRouter
 	StableDiffusionLorasRouter
 	StableDiffusionImagesRouter
-	StableDiffusionNegativePromptRouter
 	StableDiffusionSettingsRouter
 
 	SettingsRouter

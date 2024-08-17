@@ -31,7 +31,7 @@ func StableDiffusionGenerateImage(url string, request system.StableDiffusionSett
 	if err != nil {
 		return images, errors.New("响应失败")
 	}
-	var respData systemResponse.StableDiffusionResponse
+	var respData systemResponse.StableDiffusionImagesResponse
 	err = json.Unmarshal(body, &respData)
 	if err != nil {
 		return images, errors.New("解析响应数据失败")

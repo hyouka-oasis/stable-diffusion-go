@@ -12,6 +12,9 @@ func (s *StableDiffusionSettingsRouter) InitStableDiffusionSettingsRouter(Router
 	stableDiffusionSettingsApi := api.ApiGroupApp.SystemApiGroup.StableDiffusionSettingsApi
 	{
 		stableDiffusionSettingsRouter.GET("get", stableDiffusionSettingsApi.GetStableDiffusionSettingsList)
+	}
+	{
+		stableDiffusionSettingsRouter.POST("detail", stableDiffusionSettingsApi.GetStableDiffusionSettings)
 		stableDiffusionSettingsRouter.POST("create", stableDiffusionSettingsApi.CreateStableDiffusionSettings)
 		stableDiffusionSettingsRouter.POST("update", stableDiffusionSettingsApi.UpdateStableDiffusionSettings)
 		stableDiffusionSettingsRouter.DELETE("delete", stableDiffusionSettingsApi.DeleteStableDiffusionSettings)

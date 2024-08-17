@@ -13,7 +13,6 @@ type ServiceGroup struct {
 	StableDiffusionSettingsService
 	StableDiffusionLorasService
 	StableDiffusionImagesService
-	StableDiffusionNegativePromptService
 
 	SettingsService
 }
