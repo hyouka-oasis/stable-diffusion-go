@@ -5,8 +5,8 @@ import { Button, Form, UploadFile } from "antd";
 import { RcFile } from "antd/lib/upload";
 import { LorasResponse } from "renderer/api/response/lorasResponse";
 import { uploadFile } from "renderer/api/fileApi";
-import { createStableDiffusionLoras, getStableDiffusionLorasList } from "renderer/api/stableDiffusionApi";
 import { host } from "renderer/request/request";
+import { stableDiffusionLorasApi } from "renderer/api";
 
 const LorasWrap = styled.div`
 `;
@@ -26,14 +26,14 @@ const LorasPage = () => {
                 fileType: "lora"
             });
             fileId = file.id;
-            await createStableDiffusionLoras({
+            await stableDiffusionLorasApi.createStableDiffusionLoras({
                 imageId: fileId,
                 ...args,
             });
             await getLorasList();
             return true;
         } else {
-            await createStableDiffusionLoras({
+            await stableDiffusionLorasApi.createStableDiffusionLoras({
                 ...args,
             });
             await getLorasList();
@@ -43,7 +43,7 @@ const LorasPage = () => {
 
 
     const getLorasList = async () => {
-        const list = await getStableDiffusionLorasList({
+        const list = await stableDiffusionLorasApi.getStableDiffusionLorasList({
             page: 1,
             pageSize: -1,
         });
@@ -96,6 +96,7 @@ const LorasPage = () => {
                 search={false}
                 toolBarRender={() => [
                     <ModalForm
+                        key={"loras"}
                         title="创建/修改lora"
                         trigger={
                             <Button type="primary">

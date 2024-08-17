@@ -1,17 +1,16 @@
 import { useLocation, useNavigate } from "react-router";
 import styled from "styled-components";
-import { Button, Divider, Form, Radio, Space, Spin, Tooltip, Upload } from "antd";
+import { Button, Divider, Form, Radio, Select, Space, Spin, Tooltip, Upload } from "antd";
 import { useContext, useEffect, useRef, useState } from "react";
 import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect, ProFormText, ProFormTextArea, ProFormUploadButton } from "@ant-design/pro-components";
 import { CloseOutlined, ExclamationOutlined, LoadingOutlined, NotificationOutlined, SettingOutlined } from "@ant-design/icons";
 import { Info, ProjectDetailResponse } from "renderer/api/response/projectResponse";
-import { stableDiffusionText2Image } from "renderer/api/stableDiffusionApi";
 import { blobToFile, dataURLtoBlob } from "renderer/utils/utils";
 import { uploadFile } from "renderer/api/fileApi";
 import { createAudioSrt } from "renderer/api/audioSrtApi";
 import { host } from "renderer/request/request";
 import { audioList } from "renderer/utils/audio-list";
-import { infoApi, projectDetailApi, stableDiffusionApi, videoApi } from "renderer/api";
+import { infoApi, projectDetailApi, stableDiffusionImagesApi, stableDiffusionSettingsApi, videoApi } from "renderer/api";
 import { AppGlobalContext } from "renderer/shared/context/appGlobalContext";
 import { FileResponse } from "renderer/api/response/fileResponse";
 import { RcFile } from "antd/lib/upload";
@@ -19,6 +18,7 @@ import { navBarHeight } from "renderer/shared";
 import { ReactSmoothScrollbar } from "renderer/components/smooth-scroll/SmoothScroll";
 import { ipcApi } from "renderer/ipc/BasicRendererIpcAdapter";
 import { DefaultOptionType } from "rc-select/lib/Select";
+import StableDiffusionForm from "renderer/components/stable-diffusion-form/StableDiffusionForm";
 
 const ProjectDetailPageWrap = styled.div`
 `;
@@ -212,7 +212,7 @@ const ProjectDetailPage = () => {
             setRenderLoading(true);
             let selectedId: null | number = null;
             const stableDiffusionImages: Info["stableDiffusionImages"] = [];
-            const images = await stableDiffusionText2Image({
+            const images = await stableDiffusionImagesApi.stableDiffusionText2Image({
                 ids: [ info.id ],
                 projectDetailId: projectDetail?.id,
             }).catch(() => {
@@ -274,7 +274,7 @@ const ProjectDetailPage = () => {
             tag: upload.tag,
             fileId: upload.id,
         };
-        await stableDiffusionApi.addImage(data);
+        await stableDiffusionImagesApi.addImage(data);
         if (!info.stableDiffusionImageId) {
             await infoApi.updateProjectDetailInfo({
                 id: info.id,
@@ -395,16 +395,23 @@ const ProjectDetailPage = () => {
 
     const getStableDiffusionSettingsList = async (open: boolean) => {
         if (open) {
-            const data = await stableDiffusionApi.getStableDiffusionSettingsList({
+            const data = await stableDiffusionSettingsApi.getStableDiffusionSettingsList({
                 page: 1,
                 pageSize: -1,
             });
             setStableDiffusionSettings(() => {
                 return data?.list?.map(item => ({
                     label: item.name,
-                    value: item.text
+                    value: item.id,
                 }));
             });
+        }
+    };
+
+    const onStableDiffusionSettingsSelect = async (value: number) => {
+        const settings = await stableDiffusionSettingsApi.getStableDiffusionSettings({ id: value });
+        if (settings) {
+            form.setFieldValue("stableDiffusionConfig", { ...settings });
         }
     };
 
@@ -459,7 +466,7 @@ const ProjectDetailPage = () => {
                                                     className={"action-delete"} onClick={async (e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        await stableDiffusionApi.stableDiffusionDeleteImage({ ids: [ file.id ] });
+                                                        await stableDiffusionImagesApi.stableDiffusionDeleteImage({ ids: [ file.id ] });
                                                         await getProjectDetailConfig(state.id);
                                                     }}>
                                                     <CloseOutlined/>
@@ -639,6 +646,7 @@ const ProjectDetailPage = () => {
             }
         },
     ];
+
 
     useEffect(() => {
         if (state.id) {
@@ -918,8 +926,8 @@ const ProjectDetailPage = () => {
                                         rules={[ { required: true, message: '请选择是否开启上下文' } ]}
                                     />
                                     <ProFormTextArea
-                                        width="md"
-                                        label={"自定义prompt"}
+                                        width="xl"
+                                        label={"自定义咒语"}
                                         name={"promptText"}
                                         placeholder="填写prompt内容"
                                     />
@@ -1085,123 +1093,16 @@ const ProjectDetailPage = () => {
                                         }
                                     </Form.Item>
                                 </ProForm.Group>
-                                <Divider orientation="center">stable-diffusion配置</Divider>
-                                <ProForm.Group title={"模型配置"}>
-                                    <ProFormSelect
-                                        width="sm"
-                                        name={[ "stableDiffusionConfig", "override_settings", "sd_model_checkpoint" ]}
-                                        label="模型/ckpt"
-                                        placeholder="请选择模型/ckpt"
-                                        rules={[ { required: true, message: '请选择模型/ckpt' } ]}
-                                        request={async () => {
-                                            const data = await stableDiffusionApi.getSdModels();
-                                            return data.list?.map(item => ({ label: item.title, value: item.model_name }));
-                                        }}
+                                <Divider orientation="center">
+                                    stable-diffusion配置
+                                    <Select
+                                        options={stableDiffusionSettings}
+                                        style={{ minWidth: "200px", marginLeft: "16px" }}
+                                        onDropdownVisibleChange={getStableDiffusionSettingsList}
+                                        onSelect={onStableDiffusionSettingsSelect}
                                     />
-                                    <ProFormSelect
-                                        width="sm"
-                                        name={[ "stableDiffusionConfig", "override_settings", "sd_vae" ]}
-                                        label="模型VAE"
-                                        placeholder="请选择模型VAE"
-                                        rules={[ { required: true, message: '请选择模型VAE' } ]}
-                                        request={async () => {
-                                            const data = await stableDiffusionApi.getSdVae();
-                                            return data.list?.map(item => ({ label: item.model_name, value: item.model_name }));
-                                        }}
-                                    />
-                                    <ProFormDigit
-                                        width="sm"
-                                        name={[ "stableDiffusionConfig", "clip_skip" ]}
-                                        label="Clip 跳过层"
-                                        placeholder="请填写Clip 跳过层"
-                                        min={1}
-                                        rules={[ { required: true, message: '请填写Clip 跳过层' } ]}
-                                    />
-                                </ProForm.Group>
-                                <ProForm.Group title={"提示词配置"}>
-                                    <ProFormTextArea
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "prompt" ]}
-                                        label="正向提示词/prompt"
-                                        placeholder="请填写正向提示词"
-                                    />
-                                    <ProFormTextArea
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "negative_prompt" ]}
-                                        label="反向提示词/negative_prompt"
-                                        placeholder="请填写反向提示词"
-                                    />
-                                </ProForm.Group>
-                                <ProForm.Group title={"生成参数配置"}>
-                                    <ProFormSelect
-                                        width="sm"
-                                        name={[ "stableDiffusionConfig", "sampler_name" ]}
-                                        label="采样器/Sampling method"
-                                        placeholder="请选择采样器/Sampling method"
-                                        rules={[ { required: true, message: '请选择采样器/Sampling method' } ]}
-                                        request={async () => {
-                                            const data = await stableDiffusionApi.getSamplers();
-                                            return data.list?.map(item => ({ label: item.name, value: item.name }));
-                                        }}
-                                    />
-                                    <ProFormSelect
-                                        width="sm"
-                                        name={[ "stableDiffusionConfig", "scheduler" ]}
-                                        label="调度类型/Schedule type"
-                                        placeholder="请选择调度类型/Schedule type"
-                                        rules={[ { required: true, message: '请选择调度类型/Schedule type' } ]}
-                                        request={async () => {
-                                            const data = await stableDiffusionApi.getSchedulers();
-                                            return data.list?.map(item => ({ label: item.label, value: item.name }));
-                                        }}
-                                    />
-                                    <ProFormDigit
-                                        width="sm"
-                                        name={[ "stableDiffusionConfig", "steps" ]}
-                                        label="迭代步数/steps"
-                                        placeholder="请填写迭代步数"
-                                        min={1}
-                                        rules={[ { required: true, message: '请填写迭代步数' } ]}
-                                    />
-                                    <ProFormDigit
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "width" ]}
-                                        label="图片宽度"
-                                        placeholder="请填写图片宽度"
-                                        rules={[ { required: true, message: '请填写图片宽度' } ]}
-                                    />
-                                    <ProFormDigit
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "height" ]}
-                                        label="图片高度"
-                                        placeholder="请填写图片高度"
-                                        rules={[ { required: true, message: '请填写图片高度' } ]}
-                                    />
-                                    <ProFormDigit
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "seed" ]}
-                                        label="随机数种子/seed"
-                                        placeholder="请填写随机数种子"
-                                        min={-99}
-                                        rules={[ { required: true, message: '请填写随机数种子' } ]}
-                                    />
-                                    <ProFormDigit
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "batch_size" ]}
-                                        label="生成数量/batch_size"
-                                        min={1}
-                                        placeholder="请填写生成数量"
-                                        rules={[ { required: true, message: '请填写生成数量' } ]}
-                                    />
-                                    <ProFormDigit
-                                        width="md"
-                                        name={[ "stableDiffusionConfig", "cfg_scale" ]}
-                                        label="提示词引导系数/cfg_scale"
-                                        placeholder="请填写提示词引导系数"
-                                        min={1}
-                                        rules={[ { required: true, message: '请填写提示词引导系数' } ]}
-                                    />
-                                </ProForm.Group>
+                                </Divider>
+                                <StableDiffusionForm/>
                             </ReactSmoothScrollbar>
                         </ModalForm>
                     ]}

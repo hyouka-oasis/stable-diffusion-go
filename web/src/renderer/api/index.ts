@@ -5,6 +5,9 @@ import * as infoApi from "./infoApi";
 import * as settingsApi from "./settingsApi";
 import * as videoApi from "./videoApi";
 import * as stableDiffusionApi from "./stableDiffusionApi";
+import * as stableDiffusionImagesApi from "./stableDiffusionImagesApi";
+import * as stableDiffusionSettingsApi from "./stableDiffusionSettingsApi";
+import * as stableDiffusionLorasApi from "./stableDiffusionLorasApi";
 import * as ollamaApi from "./ollamaApi";
 
 
@@ -16,5 +19,8 @@ export {
     audioSrtApi,
     projectApi,
     settingsApi,
-    stableDiffusionApi
+    stableDiffusionApi,
+    stableDiffusionImagesApi,
+    stableDiffusionSettingsApi,
+    stableDiffusionLorasApi
 };

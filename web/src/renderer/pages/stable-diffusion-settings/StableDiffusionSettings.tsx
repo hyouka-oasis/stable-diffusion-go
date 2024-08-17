@@ -1,14 +1,13 @@
 import styled from "styled-components";
 import { ModalForm, ProColumns, ProForm, ProFormText, ProTable } from "@ant-design/pro-components";
 import { useContext, useEffect, useState } from "react";
-import { Button, Form, UploadProps } from "antd";
+import { Button, Form } from "antd";
 import { StableDiffusionNegativePromptResponse } from "renderer/api/response/stableDiffusionResponse";
-import { stableDiffusionApi } from "renderer/api";
-import VanillaUploadJson from "renderer/components/json-edit/VanillaUploadJson";
-import { Content, OnChange, TextContent } from "vanilla-jsoneditor";
+import { stableDiffusionSettingsApi } from "renderer/api";
 import { ReactSmoothScrollbar } from "renderer/components/smooth-scroll/SmoothScroll";
 import { ProjectDetailResponse } from "renderer/api/response/projectResponse";
 import { AppGlobalContext } from "renderer/shared/context/appGlobalContext";
+import StableDiffusionForm from "renderer/components/stable-diffusion-form/StableDiffusionForm";
 
 const StableDiffusionSettingsWrap = styled.div`
 `;
@@ -16,64 +15,23 @@ const StableDiffusionSettingsWrap = styled.div`
 const StableDiffusionSettings = () => {
     const [ settingsList, setSettingsList ] = useState<StableDiffusionNegativePromptResponse[]>([]);
     const [ form ] = Form.useForm();
-    const [ content, setContent ] = useState<Content>({
-        json: {},
-        text: undefined
-    });
-    const [ editThemeFormatRight, setEditThemeFormatRight ] = useState<boolean>(true);
     const [ modalOpen, setModalOpen ] = useState<boolean>(false);
     const [ settingsDetail, setSettingsDetail ] = useState<StableDiffusionNegativePromptResponse>();
     const { openMessageBox } = useContext(AppGlobalContext);
 
-    const handleUpload: UploadProps["onChange"] = async ({ fileList }) => {
-        const [ file ] = fileList;
-        const json = await file.originFileObj?.text();
-        setContent({ json: JSON.parse(json!) });
-    };
-
-    const handleDownload = () => {
-        const file = new File([ `${JSON.stringify((content as any)?.json)}` ], "stable-diffusion-api.json", {
-            type: "text/json; charset=utf-8;",
-        });
-        const tmpLink = document.createElement("a");
-        const objectUrl = URL.createObjectURL(file);
-
-        tmpLink.href = objectUrl;
-        tmpLink.download = file.name;
-        document.body.appendChild(tmpLink);
-        tmpLink.click();
-
-        document.body.removeChild(tmpLink);
-        URL.revokeObjectURL(objectUrl);
-    };
 
     const getSettingsList = async () => {
-        const list = await stableDiffusionApi.getStableDiffusionSettingsList({
+        const list = await stableDiffusionSettingsApi.getStableDiffusionSettingsList({
             page: 1,
             pageSize: -1,
         });
         setSettingsList(list.list);
     };
 
-    const handleChange: OnChange = (newContent, _, status) => {
-        setContent(newContent as { text: string });
-        if (status?.contentErrors && Object.keys(status.contentErrors).length > 0) {
-            setEditThemeFormatRight(false);
-        } else {
-            setEditThemeFormatRight(true);
-        }
-    };
-
     const onSettingsOkHandler = (values: Partial<ProjectDetailResponse>): Promise<boolean> => {
         return new Promise(resolve => {
-            if (!editThemeFormatRight) {
-                openMessageBox({ type: "error", message: "json错误!" });
-                return;
-            }
-            const data = (content as TextContent).text;
-            (settingsDetail ? stableDiffusionApi.updateStableDiffusionSettings : stableDiffusionApi.createStableDiffusionSettings)(Object.assign({
-                text: data,
-                ...values,
+            (settingsDetail ? stableDiffusionSettingsApi.updateStableDiffusionSettings : stableDiffusionSettingsApi.createStableDiffusionSettings)(Object.assign({
+                ...(values.stableDiffusionConfig as any),
             }, settingsDetail ? {
                 id: settingsDetail?.id
             } : {})).then(res => {
@@ -101,11 +59,6 @@ const StableDiffusionSettings = () => {
             title: "名称",
         },
         {
-            dataIndex: "text",
-            title: "内容",
-            ellipsis: true,
-        },
-        {
             title: "操作",
             align: "center",
             valueType: 'index',
@@ -117,10 +70,10 @@ const StableDiffusionSettings = () => {
                             type={"link"}
                             onClick={() => {
                                 setSettingsDetail(record);
-                                form.setFieldsValue({ ...record });
-                                setContent({
-                                    json: JSON.parse(record.text ?? "{}"),
-                                    text: undefined,
+                                form.setFieldsValue({
+                                    stableDiffusionConfig: {
+                                        ...record
+                                    }
                                 });
                                 setModalOpen(true);
                             }}
@@ -131,7 +84,7 @@ const StableDiffusionSettings = () => {
                             type={"link"}
                             danger
                             onClick={async () => {
-                                await stableDiffusionApi.deleteStableDiffusionSettings({
+                                await stableDiffusionSettingsApi.deleteStableDiffusionSettings({
                                     ids: [ record.id ]
                                 });
                                 await getSettingsList();
@@ -165,6 +118,7 @@ const StableDiffusionSettings = () => {
                 search={false}
                 toolBarRender={() => [
                     <ModalForm
+                        key={"sd-settings"}
                         open={modalOpen}
                         title="创建/修改配置"
                         trigger={
@@ -177,21 +131,17 @@ const StableDiffusionSettings = () => {
                         onFinish={onSettingsOkHandler}
                     >
                         <ReactSmoothScrollbar style={{ maxHeight: "calc(100vh - 320px)" }}>
-                            <ProForm.Group>
+                            <ProForm.Group title={"基础配置"}>
                                 <ProFormText
-                                    width="md"
-                                    name="name"
-                                    label="配置名称"
-                                    placeholder="请输入配置名称"
-                                    rules={[ { required: true, message: '请输入配置名称' } ]}
+                                    width="xl"
+                                    name={[ "stableDiffusionConfig", "name" ]}
+                                    label="sd配置名称"
+                                    placeholder="请填写sd配置名称"
+                                    rules={[ { required: true, message: '请填写sd配置名称' } ]}
                                 />
                             </ProForm.Group>
-                            <VanillaUploadJson
-                                content={content}
-                                onChange={handleChange}
-                                onImportHandler={handleUpload}
-                                onExportHandler={handleDownload}
-                            />
+                            <span/>
+                            <StableDiffusionForm/>
                         </ReactSmoothScrollbar>
                     </ModalForm>,
                 ]}
