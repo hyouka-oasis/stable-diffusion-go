@@ -98,26 +98,52 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 	if err != nil {
 		return errors.New("请先初始化配置")
 	}
-	var projectDetail system.ProjectDetail
-	err = global.DB.Model(&system.ProjectDetail{}).Where("id = ?", infoParams.ProjectDetailId).First(&projectDetail).Error
-	if err != nil {
-		return err
-	}
 	if infoParams.Id != 0 {
 		err = global.DB.Model(&system.Info{}).Find(&infoList, "id = ?", infoParams.Id).Error
 	} else {
 		err = global.DB.Model(&system.Info{}).Find(&infoList, "project_detail_id = ?", infoParams.ProjectDetailId).Error
+	}
+	var projectDetail system.ProjectDetail
+	if len(infoList) > 0 {
+		firstInfo := infoList[0]
+		err = global.DB.Model(&system.ProjectDetail{}).Where("id = ?", firstInfo.ProjectDetailId).First(&projectDetail).Error
+		if err != nil {
+			return err
+		}
+	}
+	err = taskService.DeleteTaskWhereProjectDetailId(projectDetail.Id)
+	if err != nil {
+		return err
 	}
 	var loras []system.StableDiffusionLoras
 	err = global.DB.Model(&system.StableDiffusionLoras{}).Find(&loras).Error
 	if err != nil {
 		return err
 	}
+	var taskErrors []system.TaskErrors
+	// 创建任务
+	task := system.Task{
+		ProjectDetailId: projectDetail.Id,
+		Progress:        0,
+		Status:          system.START,
+		Errors:          taskErrors,
+	}
+	systemTask, err := taskService.CreateTask(task)
+	if err != nil {
+		return err
+	}
 	// 如果采用翻译模型
 	if currentSettings.TranslateType == "sd-prompt-translator" {
-		for _, info := range infoList {
+		for index, info := range infoList {
+			err = taskService.UpdateTask(system.Task{
+				Model: global.Model{
+					Id: systemTask.Id,
+				},
+				Progress: float64(index+1) / float64(len(infoList)),
+				Message:  strconv.Itoa(index+1) + "/" + strconv.Itoa(len(infoList)),
+			})
 			if err != nil {
-				return err
+				continue
 			}
 			lorasText := ""
 			for _, lora := range loras {
@@ -131,10 +157,9 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 			info.Prompt = lorasText
 			err = global.DB.Model(&info).Update("prompt", info.Prompt).Error
 			if err != nil {
-				return err
+				continue
 			}
 		}
-		return err
 	} else if currentSettings.TranslateType == "ollama" {
 		var messageList []openai.ChatCompletionMessage
 		if projectDetail.PromptText != "" {
@@ -152,7 +177,7 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 				Content: content,
 			})
 		}
-		for _, info := range infoList {
+		for index, info := range infoList {
 			lorasText := ""
 			for _, lora := range loras {
 				if info.Role == "" {
@@ -168,8 +193,20 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 			} else {
 				infoText = info.KeywordsText
 			}
-			fmt.Println(messageList, "messageList")
-			prompt, _ := source.ChatgptOllama(infoText, currentSettings.OllamaConfig, projectDetail.OpenContext, &messageList)
+			err = taskService.UpdateTask(system.Task{
+				Model: global.Model{
+					Id: systemTask.Id,
+				},
+				Progress: float64(index+1) / float64(len(infoList)),
+				Message:  strconv.Itoa(index+1) + "/" + strconv.Itoa(len(infoList)),
+			})
+			if err != nil {
+				return err
+			}
+			prompt, ollamaError := source.ChatgptOllama(infoText, currentSettings.OllamaConfig, projectDetail.OpenContext, &messageList)
+			if ollamaError != nil {
+				taskErrors = append(taskErrors, system.TaskErrors{Error: "翻译失败" + ollamaError.Error()})
+			}
 			if lorasText != "" {
 				info.Prompt = prompt + "," + lorasText
 			} else {
@@ -177,12 +214,11 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 			}
 			err = global.DB.Model(&info).Update("prompt", info.Prompt).Error
 			if err != nil {
-				return err
+				continue
 			}
 		}
-		return err
 	} else if currentSettings.TranslateType == "aliyun" {
-		for _, info := range infoList {
+		for index, info := range infoList {
 			lorasText := ""
 			for _, lora := range loras {
 				if info.Role == "" {
@@ -198,7 +234,20 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 			} else {
 				infoText = info.KeywordsText
 			}
-			prompt, _ := source.TranslateAliyun(infoText, currentSettings.AliyunConfig)
+			prompt, aliyunError := source.TranslateAliyun(infoText, currentSettings.AliyunConfig)
+			if aliyunError != nil {
+				taskErrors = append(taskErrors, system.TaskErrors{Error: "翻译失败" + aliyunError.Error()})
+			}
+			err = taskService.UpdateTask(system.Task{
+				Model: global.Model{
+					Id: systemTask.Id,
+				},
+				Progress: float64(index+1) / float64(len(infoList)),
+				Message:  strconv.Itoa(index+1) + "/" + strconv.Itoa(len(infoList)),
+			})
+			if err != nil {
+				continue
+			}
 			if lorasText != "" {
 				info.Prompt = prompt + "," + lorasText
 			} else {
@@ -206,11 +255,21 @@ func (s *InfoService) TranslateInfoPrompt(infoParams request.InfoTranslateReques
 			}
 			err = global.DB.Model(&info).Update("prompt", info.Prompt).Error
 			if err != nil {
-				return err
+				continue
 			}
 		}
 	} else {
 		return errors.New("请选择正确的翻译配置")
+	}
+	err = taskService.UpdateTask(system.Task{
+		Model: global.Model{
+			Id: systemTask.Id,
+		},
+		Status:   system.RESOLVED,
+		Progress: 1,
+	})
+	if err != nil {
+		return err
 	}
 	return err
 }

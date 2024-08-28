@@ -5,6 +5,7 @@ type RouterGroup struct {
 	ProjectDetailRouter
 	InfoRouter
 	BasicRouter
+	TaskRouter
 
 	AudioSrtRouter
 	VideoRouter

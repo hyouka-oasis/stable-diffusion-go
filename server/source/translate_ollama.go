@@ -3,7 +3,6 @@ package source
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/sashabaranov/go-openai"
 	"github/stable-diffusion-go/server/model/system"
 	"regexp"
@@ -24,7 +23,7 @@ func OpenaiClient(ollamaConfig system.SettingsOllamaConfig, message *[]openai.Ch
 		},
 	)
 	if err != nil {
-		return "", errors.New("调用OpenAI API失败")
+		return "", errors.New("调用OpenAI API失败" + err.Error())
 	}
 	return resp.Choices[0].Message.Content, nil
 }
@@ -35,10 +34,9 @@ func ChatgptOllama(text string, ollamaConfig system.SettingsOllamaConfig, openCo
 			Role:    openai.ChatMessageRoleUser,
 			Content: text,
 		})
-		fmt.Println(messageList, "开始进来的内容")
 		content, err := OpenaiClient(ollamaConfig, messageList)
 		if err != nil {
-			return "", errors.New("调用OpenAI API失败")
+			return "", errors.New(err.Error())
 		}
 		*messageList = append(*messageList, openai.ChatCompletionMessage{
 			Role:    openai.ChatMessageRoleAssistant,
@@ -53,7 +51,7 @@ func ChatgptOllama(text string, ollamaConfig system.SettingsOllamaConfig, openCo
 		})
 		content, err := OpenaiClient(ollamaConfig, &message)
 		if err != nil {
-			return "", errors.New("调用OpenAI API失败")
+			return "", errors.New(err.Error())
 		}
 		return content, nil
 	}

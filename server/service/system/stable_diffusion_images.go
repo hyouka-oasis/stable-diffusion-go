@@ -8,6 +8,7 @@ import (
 	"github/stable-diffusion-go/server/model/system"
 	systemRequest "github/stable-diffusion-go/server/model/system/request"
 	"github/stable-diffusion-go/server/source"
+	"strconv"
 )
 
 type StableDiffusionImagesService struct{}
@@ -27,8 +28,25 @@ func (s *StableDiffusionImagesService) StableDiffusionTextToImage(params systemR
 	if err != nil {
 		return images, errors.New("获取项目详情失败")
 	}
-	for _, infoId := range params.Ids {
+	err = taskService.DeleteTaskWhereProjectDetailId(projectDetail.Id)
+	if err != nil {
+		return
+	}
+	var taskErrors []system.TaskErrors
+	// 创建任务
+	task := system.Task{
+		ProjectDetailId: projectDetail.Id,
+		Progress:        0,
+		Status:          system.START,
+		Errors:          taskErrors,
+	}
+	systemTask, err := taskService.CreateTask(task)
+	if err != nil {
+		return
+	}
+	for index, infoId := range params.Ids {
 		if err != nil {
+			taskErrors = append(taskErrors, system.TaskErrors{Error: "生成图片错误" + err.Error()})
 			continue
 		}
 		// 异步处理翻译
@@ -36,6 +54,7 @@ func (s *StableDiffusionImagesService) StableDiffusionTextToImage(params systemR
 		// 查到单个的列表
 		err = global.DB.Model(&system.Info{}).Where("id = ?", infoId).Find(&info).Error
 		if err != nil {
+			taskErrors = append(taskErrors, system.TaskErrors{Error: "生成图片错误" + err.Error()})
 			continue
 		}
 		if info.Prompt == "" {
@@ -46,13 +65,35 @@ func (s *StableDiffusionImagesService) StableDiffusionTextToImage(params systemR
 		if info.NegativePrompt != "" {
 			projectDetail.StableDiffusionConfig.NegativePrompt = info.NegativePrompt
 		}
+		err = taskService.UpdateTask(system.Task{
+			Model: global.Model{
+				Id: systemTask.Id,
+			},
+			Progress: float64(index+1) / float64(len(params.Ids)),
+			Message:  strconv.Itoa(index+1) + "/" + strconv.Itoa(len(params.Ids)),
+		})
+		if err != nil {
+			continue
+		}
 		apiUrl := settings.StableDiffusionConfig.Url + "/sdapi/v1/txt2img"
 		stableDiffusionImages, generateError := source.StableDiffusionGenerateImage(apiUrl, projectDetail.StableDiffusionConfig)
 		if generateError != nil {
+			taskErrors = append(taskErrors, system.TaskErrors{Error: "生成图片错误" + generateError.Error()})
 			err = generateError
 			continue
 		}
 		images = stableDiffusionImages
+	}
+	err = taskService.UpdateTask(system.Task{
+		Model: global.Model{
+			Id: systemTask.Id,
+		},
+		Status:   system.RESOLVED,
+		Progress: 1,
+		Errors:   taskErrors,
+	})
+	if err != nil {
+		return
 	}
 	return images, err
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github/stable-diffusion-go/server/global"
+	commonRquest "github/stable-diffusion-go/server/model/common/request"
 	"github/stable-diffusion-go/server/model/common/response"
 	"github/stable-diffusion-go/server/model/system"
 	"github/stable-diffusion-go/server/model/system/request"
@@ -76,7 +77,7 @@ func (s *ProjectDetailApi) GetProjectDetail(c *gin.Context) {
 
 // DeleteProjectDetail 删除详情
 func (s *ProjectDetailApi) DeleteProjectDetail(c *gin.Context) {
-	var config system.ProjectDetail
+	var config commonRquest.GetById
 	err := c.ShouldBindJSON(&config)
 	if err != nil {
 		response.FailWithMessage("请传入参数", c)

@@ -21,33 +21,42 @@ type ProjectDetailService struct{}
 
 // UploadProjectDetailFile 上传文件并且处理分词
 func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.FileHeader, saveType string, whetherParticiple string) (err error) {
+	err = taskService.DeleteTaskWhereProjectDetailId(id)
+	if err != nil {
+		return err
+	}
+	var taskErrors []system.TaskErrors
+	if saveType != "create" && saveType != "update" {
+		return errors.New("请选择需要创建还是覆盖")
+	}
 	tmpFile, err := os.Create(filepath.Join(config.ExecutePath, "participle.py"))
 	if err != nil {
+		taskErrors = append(taskErrors, system.TaskErrors{Error: "创建python文件失败:" + err.Error()})
 		fmt.Println("创建python文件失败:", err)
 		return err
 	}
 	_, err = tmpFile.Write([]byte(python_core.PythonParticiplePythonPath))
 	if err != nil {
+		taskErrors = append(taskErrors, system.TaskErrors{Error: "写入python内容失败:" + err.Error()})
 		fmt.Println("写入python内容失败", err)
 		return err
 	}
 	defer tmpFile.Close()
 	defer os.Remove(tmpFile.Name())
-	if saveType != "create" && saveType != "update" {
-		return errors.New("请选择需要创建还是覆盖")
-	}
 	var projectDetail system.ProjectDetail
 	// 这里只更新name
 	err = global.DB.Model(&system.ProjectDetail{}).Where("id = ?", id).Updates(&system.ProjectDetail{
 		FileName: file.Filename,
 	}).Preload("ParticipleConfig").First(&projectDetail).Error
 	if err != nil {
+		taskErrors = append(taskErrors, system.TaskErrors{Error: "更新name失败:" + err.Error()})
 		return err
 	}
 	if saveType == "create" {
 		var infoList []system.Info
 		err = global.DB.Model(&system.Info{}).Where("project_detail_id = ?", id).Find(&infoList).Error
 		if err != nil {
+			taskErrors = append(taskErrors, system.TaskErrors{Error: "查找列表失败:" + err.Error()})
 			return errors.New("查找列表失败:" + err.Error())
 		}
 		for _, info := range infoList {
@@ -63,6 +72,7 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 		// 将原有的全部删除
 		err = global.DB.Delete(&system.Info{}, "project_detail_id = ?", id).Error
 		if err != nil {
+			taskErrors = append(taskErrors, system.TaskErrors{Error: "删除原有项目失败:" + err.Error()})
 			return errors.New("删除原有项目失败:" + err.Error())
 		}
 	}
@@ -70,16 +80,19 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 	outParticipleBookPathBookPath := global.Config.Local.Path + "/" + global.ParticipleBookName
 	err = utils.UploadFileToLocal(file, filePath)
 	if err != nil {
+		taskErrors = append(taskErrors, system.TaskErrors{Error: "处理文件失败:" + err.Error()})
 		return errors.New("处理文件失败:" + err.Error())
 	}
 	splitTextError := source.SplitText(projectDetail, whetherParticiple, tmpFile.Name())
 	if splitTextError != nil {
+		taskErrors = append(taskErrors, system.TaskErrors{Error: "进行分词失败:" + err.Error()})
 		return errors.New("进行分词失败:" + splitTextError.Error())
 	}
 	// 打开文件
 	var participleBook *os.File
 	participleBook, err = os.Open(outParticipleBookPathBookPath)
 	if err != nil {
+		taskErrors = append(taskErrors, system.TaskErrors{Error: "打开文件失败:" + err.Error()})
 		return errors.New("打开文件失败:" + err.Error())
 	}
 	defer participleBook.Close() // 确保文件在函数退出时被关闭
@@ -95,7 +108,22 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 	}
 	err = global.DB.Model(&system.Info{}).Create(&infoList).Error
 	if err != nil {
+		taskErrors = append(taskErrors, system.TaskErrors{Error: "写入列表失败:" + err.Error()})
 		return errors.New("写入列表失败:" + err.Error())
+	}
+	// 创建任务
+	task := system.Task{
+		ProjectDetailId: projectDetail.Id,
+		Progress:        0,
+		Status:          system.START,
+		Errors:          taskErrors,
+	}
+	if len(taskErrors) != 0 {
+		task.Status = system.REJECTED
+	}
+	_, err = taskService.CreateTask(task)
+	if err != nil {
+		return err
 	}
 	err = global.DB.Model(&system.Info{}).Where("project_detail_id = ?", id).Find(&infoList).Error
 	if err != nil {
@@ -113,6 +141,13 @@ func (s *ProjectDetailService) UploadProjectDetailFile(id uint, file *multipart.
 	}
 	os.Remove(filePath)
 	os.Remove(outParticipleBookPathBookPath)
+	err = taskService.UpdateTask(system.Task{
+		ProjectDetailId: id,
+		Status:          system.RESOLVED,
+	})
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -149,7 +184,7 @@ func (s *ProjectDetailService) UpdateProjectDetail(config request.UpdateProjectD
 		}
 		// 更新视频配置
 		if config.VideoConfig != (system.VideoConfig{}) {
-			err = tx.Model(&system.VideoConfig{}).Where("project_detail_id = ?", config.Id).Updates(&config.VideoConfig).Error
+			err = tx.Model(&system.VideoConfig{}).Where("project_detail_id = ?", config.Id).Updates(&config.VideoConfig).Update("open_animation", config.VideoConfig.OpenAnimation).Error
 			if err != nil {
 				return err
 			}

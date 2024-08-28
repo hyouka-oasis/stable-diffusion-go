@@ -56,7 +56,7 @@ func (s *StableDiffusionSettingsApi) UpdateStableDiffusionSettings(c *gin.Contex
 	response.OkWithMessage("更新成功", c)
 }
 
-// DeleteStableDiffusionSettings 更新stabled-diffusion通用配置
+// DeleteStableDiffusionSettings 删除stabled-diffusion通用配置
 func (s *StableDiffusionSettingsApi) DeleteStableDiffusionSettings(c *gin.Context) {
 	var params request.IdsReq
 	err := c.ShouldBindJSON(&params)

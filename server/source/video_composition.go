@@ -107,24 +107,40 @@ func createAnimatedSegment(params DisposableSynthesisVideoParams, duration float
 		"-y",
 		"-r",
 		fmt.Sprintf("%f", offsetTime),
-		"-loop",
-		"1",
-		"-t",
-		fmt.Sprintf("%.3f", duration),
-		"-i",
-		params.Url,
-		"-i",
-		audioPath,
-		"-filter_complex",
-		scale,
-		"-vframes",
-		fmt.Sprintf("%d", int(offsetTime*duration)),
-		"-c:v",
-		"libx264",
-		"-pix_fmt",
-		"yuv420p",
+		"-loop", "1",
+		"-t", fmt.Sprintf("%.3f", duration),
+		"-i", params.Url,
+		"-i", audioPath,
+		"-filter_complex", scale,
+		"-vframes", fmt.Sprintf("%d", int(offsetTime*duration)),
+		"-c:v", "libx264",
+		"-pix_fmt", "yuv420p",
 		params.VideoPath,
 	}
+	fmt.Println("最终参数", args)
+	err := utils.ExecCommand("ffmpeg", args)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 创建没有动画的视频
+func createVideoNotAnimation(params DisposableSynthesisVideoParams, audioPath string, srtPath string) error {
+	args := []string{
+		"-i", params.Url,
+		"-i", audioPath,
+		"-c:v", "libx264",
+		//"-vsync", "cfr",
+		"-pix_fmt", "yuv420p",
+		"-y",
+	}
+	if params.OpenSubtitles {
+		srtPath, _ = windowCmdArgsConversionPath(srtPath)
+		args = append(args, "-vf", "subtitles="+srtPath)
+	}
+	args = append(args, params.VideoPath)
+	fmt.Println("最终参数", args)
 	err := utils.ExecCommand("ffmpeg", args)
 	if err != nil {
 		return err
@@ -231,11 +247,15 @@ func DisposableSynthesisVideo(params DisposableSynthesisVideoParams) (err error)
 	if durationErr != nil {
 		return durationErr
 	}
-	err = createAnimatedSegment(params, duration, audioPath)
+	if params.VideoConfig.OpenAnimation {
+		err = createAnimatedSegment(params, duration, audioPath)
+	} else {
+		err = createVideoNotAnimation(params, audioPath, srtPath)
+	}
 	if err != nil {
 		return err
 	}
-	if params.OpenSubtitles {
+	if params.OpenSubtitles && params.VideoConfig.OpenAnimation {
 		err = createSubtitleVideo(params, srtPath)
 		if err != nil {
 			return err

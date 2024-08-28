@@ -3,6 +3,7 @@ package system
 type VideoConfig struct {
 	ProjectDetailId uint   `json:"projectDetailId"`                                    // 项目详情Id
 	InfoId          uint   `json:"infoId"`                                             // 单个列表ID
+	OpenAnimation   bool   `json:"openAnimation" gorm:"default:true"`                  // 是否开启动画
 	FontSize        int    `json:"fontSize" form:"fontSize" gorm:"default:12"`         // 字体大小
 	FontColor       string `json:"fontColor" form:"fontColor" gorm:"default:'FFFFFF'"` // 字体颜色
 	FontFile        string `json:"fontFile" form:"fontFile"`                           // 字体文件

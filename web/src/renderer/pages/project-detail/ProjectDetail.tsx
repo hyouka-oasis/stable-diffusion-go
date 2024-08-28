@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router";
 import styled from "styled-components";
-import { Button, Divider, Form, Radio, Select, Space, Spin, Tooltip, Upload } from "antd";
+import { Button, Divider, Form, Progress, Radio, Select, Space, Spin, Tooltip, Upload } from "antd";
 import { useContext, useEffect, useRef, useState } from "react";
 import { EditableProTable, ModalForm, ProColumns, ProForm, ProFormDigit, ProFormSelect, ProFormText, ProFormTextArea, ProFormUploadButton } from "@ant-design/pro-components";
 import { CloseOutlined, ExclamationOutlined, LoadingOutlined, NotificationOutlined, SettingOutlined } from "@ant-design/icons";
@@ -10,7 +10,7 @@ import { uploadFile } from "renderer/api/fileApi";
 import { createAudioSrt } from "renderer/api/audioSrtApi";
 import { host } from "renderer/request/request";
 import { audioList } from "renderer/utils/audio-list";
-import { infoApi, projectDetailApi, stableDiffusionImagesApi, stableDiffusionSettingsApi, videoApi } from "renderer/api";
+import { infoApi, projectDetailApi, stableDiffusionImagesApi, stableDiffusionSettingsApi, taskApi, videoApi } from "renderer/api";
 import { AppGlobalContext } from "renderer/shared/context/appGlobalContext";
 import { FileResponse } from "renderer/api/response/fileResponse";
 import { RcFile } from "antd/lib/upload";
@@ -19,6 +19,7 @@ import { ReactSmoothScrollbar } from "renderer/components/smooth-scroll/SmoothSc
 import { ipcApi } from "renderer/ipc/BasicRendererIpcAdapter";
 import { DefaultOptionType } from "rc-select/lib/Select";
 import StableDiffusionForm from "renderer/components/stable-diffusion-form/StableDiffusionForm";
+import { TaskResponse } from "renderer/api/response/taskResponse";
 
 const ProjectDetailPageWrap = styled.div`
 `;
@@ -75,8 +76,32 @@ const ProjectDetailPage = () => {
     const mp3Ref = useRef<HTMLAudioElement | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [ stableDiffusionSettings, setStableDiffusionSettings ] = useState<DefaultOptionType[]>([]);
-    // const [ fontColor, setFontColor ] = useState<string>();
+    const [ taskInfo, setTaskInfo ] = useState<TaskResponse>();
+    const taskRef = useRef<NodeJS.Timer | null>(null);
 
+    const getTaskDetail = async (detailId?: number) => {
+        const detail = await taskApi.getTaskDetail({ projectDetailId: detailId });
+        if (detail.status !== 3 && detail.status !== 4){
+            setTaskInfo(detail);
+            startTask();
+        }else {
+            setTaskInfo(undefined);
+            clearTask();
+        }
+    };
+
+    // const [ fontColor, setFontColor ] = useState<string>();
+    const clearTask = () => {
+        clearInterval(taskRef.current as NodeJS.Timeout);
+        taskRef.current = null;
+    };
+
+    const startTask = () => {
+        if (taskRef.current) return;
+        taskRef.current = setInterval(() => {
+            getTaskDetail(state?.id);
+        }, 1000);
+    };
     /**
      * 获取项目
      * @param id
@@ -86,33 +111,12 @@ const ProjectDetailPage = () => {
         const detail = await projectDetailApi.getProjectDetail({
             id: id
         });
+        getTaskDetail(detail.id);
         setProjectDetail(detail);
         form.setFieldsValue({
             ...detail,
         });
         setTableLoading(false);
-    };
-    /**
-     * 启动查询任务
-     */
-    const removeInterval = () => {
-        if (!intervalRef.current) {
-            return;
-        }
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-    };
-    /**
-     * 启动查询任务
-     */
-    const startInterval = () => {
-        if (intervalRef.current) {
-            openMessageBox({ type: "warning", message: "有正在执行的任务，请稍后执行。" });
-            return;
-        }
-        intervalRef.current = setInterval(() => {
-            getProjectDetailConfig(state.id);
-        }, 1000);
     };
     /**
      * 项目详情配置
@@ -198,6 +202,7 @@ const ProjectDetailPage = () => {
         projectDetailId?: number;
     }) => {
         if (!projectDetail) return;
+        startTask();
         setRenderLoading(true);
         await infoApi.translateProjectDetailParticipleList(data);
         setRenderLoading(false);
@@ -318,6 +323,7 @@ const ProjectDetailPage = () => {
      */
     const createAudioAndSrtHandler = async () => {
         if (projectDetail) {
+            startTask();
             setRenderLoading(true);
             await createAudioSrt({
                 id: projectDetail?.id
@@ -647,7 +653,6 @@ const ProjectDetailPage = () => {
         },
     ];
 
-
     useEffect(() => {
         if (state.id) {
             getProjectDetailConfig(state.id);
@@ -659,6 +664,7 @@ const ProjectDetailPage = () => {
         window.addEventListener("resize", getDocumentHeight);
         return () => {
             window.removeEventListener("resize", getDocumentHeight);
+            clearTask();
         };
     }, []);
 
@@ -697,6 +703,15 @@ const ProjectDetailPage = () => {
                     pagination={false}
                     search={false}
                     toolBarRender={() => [
+                        taskInfo && <Progress
+                            key={"renderer"}
+                            type="circle"
+                            trailColor="#e6f4ff"
+                            percent={(taskInfo.progress ?? 0) * 100}
+                            strokeWidth={20}
+                            size={14}
+                            format={(number) => `进行中,当前进度${taskInfo.message}`}
+                        />,
                         <Tooltip key={"loading"} title={"生成状态中，建议不要点击修改操作。没有做这部分的处理。避免没必要的错误"}>
                             {
                                 renderLoading && <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1009,6 +1024,25 @@ const ProjectDetailPage = () => {
                                     />
                                 </ProForm.Group>
                                 <ProForm.Group title={"视频配置"}>
+                                    <ProFormSelect
+                                        width="md"
+                                        name={[ "videoConfig", "openAnimation" ]}
+                                        label="是否开启动画"
+                                        placeholder="请选择是否开启动画"
+                                        rules={[ { required: true, message: '请选择是否开启动画' } ]}
+                                        options={[
+                                            {
+                                                label: "是",
+                                                // @ts-ignore
+                                                value: true,
+                                            },
+                                            {
+                                                label: "否",
+                                                // @ts-ignore
+                                                value: false,
+                                            }
+                                        ]}
+                                    />
                                     <ProFormDigit
                                         width="md"
                                         name={[ "videoConfig", "fontSize" ]}

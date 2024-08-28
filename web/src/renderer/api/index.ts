@@ -9,6 +9,7 @@ import * as stableDiffusionImagesApi from "./stableDiffusionImagesApi";
 import * as stableDiffusionSettingsApi from "./stableDiffusionSettingsApi";
 import * as stableDiffusionLorasApi from "./stableDiffusionLorasApi";
 import * as ollamaApi from "./ollamaApi";
+import * as taskApi from "./taskApi";
 
 
 export {
@@ -22,5 +23,6 @@ export {
     stableDiffusionApi,
     stableDiffusionImagesApi,
     stableDiffusionSettingsApi,
-    stableDiffusionLorasApi
+    stableDiffusionLorasApi,
+    taskApi
 };

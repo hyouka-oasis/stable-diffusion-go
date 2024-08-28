@@ -8,6 +8,7 @@ type ApiGroup struct {
 	ProjectApi
 	ProjectDetailApi
 	InfoApi
+	TaskApi
 
 	AudioSrtApi
 	VideoApi
@@ -26,6 +27,7 @@ var (
 	projectService       = service.ServiceGroupApp.SystemServiceGroup.ProjectService
 	projectDetailService = service.ServiceGroupApp.SystemServiceGroup.ProjectDetailService
 	infoService          = service.ServiceGroupApp.SystemServiceGroup.InfoService
+	taskService          = service.ServiceGroupApp.SystemServiceGroup.TaskService
 
 	audioSrtService = service.ServiceGroupApp.SystemServiceGroup.AudioSrtService
 	videoService    = service.ServiceGroupApp.SystemServiceGroup.VideoService

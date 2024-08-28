@@ -19,7 +19,7 @@ import (
 
 type AudioSrtService struct{}
 
-// CreateAudioAndSrt 批量文字转图片
+// CreateAudioAndSrt 生成字幕和音频
 func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequestParams) error {
 	tmpFile, err := os.Create(filepath.Join(config.ExecutePath, "voice-caption.py"))
 	if err != nil {
@@ -66,36 +66,72 @@ func (s *AudioSrtService) CreateAudioAndSrt(params systemRequest.AudioSrtRequest
 	if err != nil {
 		return errors.New("创建目录失败:" + err.Error())
 	}
+	err = taskService.DeleteTaskWhereProjectDetailId(projectDetail.Id)
+	if err != nil {
+		return err
+	}
+	var taskErrors []system.TaskErrors
+	// 创建任务
+	task := system.Task{
+		ProjectDetailId: projectDetail.Id,
+		Progress:        0,
+		Status:          system.START,
+		Errors:          taskErrors,
+		Message:         "正在进行文本转语音",
+	}
+	systemTask, err := taskService.CreateTask(task)
+	if err != nil {
+		return err
+	}
 	var audioPathList []string
-	for _, info := range infoList {
-		if err != nil {
-			continue
-		}
+	for index, info := range infoList {
 		savePath := path.Join(projectPath, strconv.Itoa(int(info.Id)))
-		var config source.AudioAndSrtParams
-		config.SavePath = savePath
-		config.Language = projectDetail.Language
-		config.Content = info.Text
-		config.BreakAudio = projectDetail.BreakAudio
+		var audioConfig source.AudioAndSrtParams
+		audioConfig.SavePath = savePath
+		audioConfig.Language = projectDetail.Language
+		audioConfig.Content = info.Text
+		audioConfig.BreakAudio = projectDetail.BreakAudio
 		if params.AudioConfig.InfoId != 0 {
-			config.BreakAudio = false
+			audioConfig.BreakAudio = false
 		}
 		err = utils.EnsureDirectory(savePath)
 		if err != nil {
+			taskErrors = append(taskErrors, system.TaskErrors{Error: "文字转语音失败:" + err.Error()})
 			continue
 		}
 		if info.AudioConfig == (system.AudioConfig{}) {
-			config.AudioConfig = projectDetail.AudioConfig
+			audioConfig.AudioConfig = projectDetail.AudioConfig
 		} else {
-			config.AudioConfig = info.AudioConfig
+			audioConfig.AudioConfig = info.AudioConfig
 		}
-		config.Name = filename + "-" + strconv.Itoa(int(info.Id))
-		config.AudioPath = path.Join(config.SavePath, config.Name+".mp3")
-		err = source.CreateAudioAndSrt(config, tmpFile.Name())
+		audioConfig.Name = filename + "-" + strconv.Itoa(int(info.Id))
+		audioConfig.AudioPath = path.Join(audioConfig.SavePath, audioConfig.Name+".mp3")
+		err = taskService.UpdateTask(system.Task{
+			Model: global.Model{
+				Id: systemTask.Id,
+			},
+			Progress: float64(index+1) / float64(len(infoList)),
+			Message:  strconv.Itoa(index+1) + "/" + strconv.Itoa(len(infoList)),
+		})
 		if err != nil {
+			return err
+		}
+		err = source.CreateAudioAndSrt(audioConfig, tmpFile.Name())
+		if err != nil {
+			taskErrors = append(taskErrors, system.TaskErrors{Error: "文字转语音失败:" + err.Error()})
 			continue
 		}
-		audioPathList = append(audioPathList, config.AudioPath)
+		audioPathList = append(audioPathList, audioConfig.AudioPath)
+	}
+	err = taskService.UpdateTask(system.Task{
+		Model: global.Model{
+			Id: systemTask.Id,
+		},
+		Status:   system.RESOLVED,
+		Progress: 1,
+	})
+	if err != nil {
+		return err
 	}
 	// 只有合并音频和infoId不存在时代表生成全部音频
 	if projectDetail.ConcatAudio && params.InfoId == 0 {
